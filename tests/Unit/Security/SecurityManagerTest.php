@@ -127,13 +127,36 @@ class SecurityManagerTest extends TestCase
         $this->assertStringContainsString('Hello', $result);
     }
 
-    public function test_sanitize_encodes_special_characters(): void
+    public function test_sanitize_keeps_special_characters_raw(): void
     {
         $input = 'Test & "Quotes" and \'Apostrophe\'';
         $result = $this->security->sanitize($input);
-        
-        $this->assertStringContainsString('&amp;', $result);
-        $this->assertStringContainsString('&quot;', $result);
+
+        // Fix #13: raw karakter dipertahankan, encoding dilakukan di view layer
+        $this->assertStringContainsString('Test & "Quotes"', $result);
+        $this->assertStringNotContainsString('&amp;', $result);
+        $this->assertStringNotContainsString('&quot;', $result);
+    }
+
+    public function test_sanitize_does_not_double_encode_ampersand(): void
+    {
+        $input = 'Rakyat&Jakarta <script>alert(1)</script>';
+        $result = $this->security->sanitize($input);
+
+        // strip_tags menghapus tag; '&' tetap raw tanpa htmlspecialchars()
+        $this->assertEquals('Rakyat&Jakarta alert(1)', $result);
+        $this->assertStringNotContainsString('&amp;', $result);
+        $this->assertStringNotContainsString('&lt;', $result);
+        $this->assertStringNotContainsString('&gt;', $result);
+    }
+
+    public function test_sanitize_removes_null_bytes(): void
+    {
+        $input = "Data\x00Bersih";
+        $result = $this->security->sanitize($input);
+
+        $this->assertEquals('DataBersih', $result);
+        $this->assertStringNotContainsString("\x00", $result);
     }
 
     public function test_generate_token_returns_random_string(): void

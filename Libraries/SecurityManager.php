@@ -340,7 +340,7 @@ class SecurityManager
     public function sanitize(string $input): string
     {
         $input = strip_tags($input);
-        $input = htmlspecialchars($input, ENT_QUOTES, 'UTF-8');
+        // Raw strip_tags only — safe with PDO binding; let view layer encode
         $input = trim($input);
         $input = str_replace(chr(0), '', $input);
 
