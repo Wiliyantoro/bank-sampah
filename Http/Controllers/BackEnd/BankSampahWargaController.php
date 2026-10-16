@@ -41,7 +41,7 @@ class BankSampahWargaController extends Controller
         $settings = null;
 
         $configId = identitas('id');
-        $settings = Cache::remember('banksampah_warga_settings_' . $configId, 300, function () use ($configId) {
+        $settings = Cache::remember(BankSampahWargaSetting::cacheKey($configId), BankSampahWargaSetting::CACHE_TTL, function () use ($configId) {
             return BankSampahWargaSetting::getSettings($configId);
         });
 
@@ -293,7 +293,7 @@ class BankSampahWargaController extends Controller
     public function shareAccess(Request $request, $token)
     {
         $configId = identitas('id');
-        $settings = Cache::remember('banksampah_warga_settings_' . $configId, 300, function () use ($configId) {
+        $settings = Cache::remember(BankSampahWargaSetting::cacheKey($configId), BankSampahWargaSetting::CACHE_TTL, function () use ($configId) {
             return BankSampahWargaSetting::getSettings($configId);
         });
 

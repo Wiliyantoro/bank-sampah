@@ -152,6 +152,23 @@ class SecurityManagerTest extends TestCase
         $this->assertEquals(json_encode(['foo' => 'bar']), $row->data);
     }
 
+    public function test_update_setting_invalidates_cache(): void
+    {
+        // BS-011: perubahan settings mengiringi cache settings lama dibuang
+        $this->createBankSampahTables();
+
+        $settings = \Modules\BankSampah\Models\BankSampahWargaSetting::getSettings($this->configId);
+        $cacheKey = \Modules\BankSampah\Models\BankSampahWargaSetting::cacheKey($this->configId);
+
+        // Isi cache basi
+        \Cache::put($cacheKey, 'STALE', 60);
+        $this->assertEquals('STALE', \Cache::get($cacheKey));
+
+        $settings->update(['require_pin' => false]);
+
+        $this->assertNull(\Cache::get($cacheKey)); // dibuang oleh event saved
+    }
+
     public function test_validate_uuid_invalid(): void
     {
         $this->assertFalse($this->security->validateUuid('not-a-uuid'));

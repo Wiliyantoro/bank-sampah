@@ -13,6 +13,8 @@
 
 namespace Modules\BankSampah\Models;
 
+use Illuminate\Support\Facades\Cache;
+
 class BankSampahWargaSetting extends BaseModel
 {
     protected $table = 'bank_sampah_warga_settings';
@@ -37,6 +39,35 @@ class BankSampahWargaSetting extends BaseModel
         'require_pin'        => 'boolean',
         'max_riwayat'        => 'integer',
     ];
+
+    /**
+     * TTL cache settings (detik)
+     */
+    public const CACHE_TTL = 300;
+
+    /**
+     * Key cache settings per desa (BS-011: satu sumber kebenaran)
+     */
+    public static function cacheKey(int $configId): string
+    {
+        return 'banksampah_warga_settings_' . $configId;
+    }
+
+    /**
+     * Hapus cache settings desa ini
+     */
+    public function invalidateCache(): void
+    {
+        Cache::forget(static::cacheKey((int) $this->config_id));
+    }
+
+    protected static function booted(): void
+    {
+        // BS-011: setiap perubahan settings harus langsung efektif,
+        // termasuk require_pin/warga_aktif yang berdan game keamanan.
+        static::saved(fn (self $settings) => $settings->invalidateCache());
+        static::deleted(fn (self $settings) => $settings->invalidateCache());
+    }
 
     /**
      * Get or create settings for config

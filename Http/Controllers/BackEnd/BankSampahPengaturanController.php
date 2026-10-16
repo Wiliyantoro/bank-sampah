@@ -15,6 +15,7 @@ namespace Modules\BankSampah\Http\Controllers\BackEnd;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Modules\BankSampah\Models\BankSampahWargaSetting;
 
 class BankSampahPengaturanController extends Controller
@@ -60,6 +61,10 @@ class BankSampahPengaturanController extends Controller
             'pesan_selamat_datang' => $request->pesan_selamat_datang,
             'pesan_footer'         => $request->pesan_footer,
         ]);
+
+        // BS-011: ubah pengaturan harus langsung efektif — cache lama dibuang
+        // (model juga invalidate via event saved)
+        Cache::forget('banksampah_warga_settings_' . $configId);
 
         return redirect()->route('bank-sampah/pengaturan')
             ->with('success', 'Pengaturan dashboard warga berhasil disimpan');
