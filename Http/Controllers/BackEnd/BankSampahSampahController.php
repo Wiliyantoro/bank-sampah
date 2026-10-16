@@ -13,6 +13,7 @@ namespace Modules\BankSampah\Http\Controllers\BackEnd;
 
 use Illuminate\Routing\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Modules\BankSampah\Models\BankSampahSampah;
 use Modules\BankSampah\Models\BankSampahKategori;
 
@@ -64,7 +65,11 @@ class BankSampahSampahController extends Controller
     {
         $request->validate([
             'nama'        => 'required|string|max:150',
-            'kategori_id' => 'required|integer',
+            // BS-034: kategori wajib ada & milik desa aktif — tanpa ini
+            // id ngawur melempar QueryException FK (500) dan id milik
+            // desa lain bisa lolos (referensi lintas desa)
+            'kategori_id' => ['required', Rule::exists('bank_sampah_kategori', 'id')
+                ->where('config_id', identitas('id'))],
             'satuan'      => 'required|string|max:20',
             'harga_beli'  => 'required|numeric|min:0',
             'harga_jual'  => 'nullable|numeric|min:0',
@@ -110,7 +115,9 @@ class BankSampahSampahController extends Controller
 
         $request->validate([
             'nama'        => 'required|string|max:150',
-            'kategori_id' => 'required|integer',
+            // BS-034: lihat komentar store()
+            'kategori_id' => ['required', Rule::exists('bank_sampah_kategori', 'id')
+                ->where('config_id', identitas('id'))],
             'satuan'      => 'required|string|max:20',
             'harga_beli'  => 'required|numeric|min:0',
             'harga_jual'  => 'nullable|numeric|min:0',
