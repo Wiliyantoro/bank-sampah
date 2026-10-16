@@ -36,7 +36,7 @@ class WhatsAppNotification
             return false;
         }
 
-        $pesan = "🏦 *{$this->config('banksampah.nama')}*\n\n"
+        $pesan = "🏦 *" . config('banksampah.nama', 'Bank Sampah') . "*\n\n"
             . "Halo *{$member->nama}*! 👋\n\n"
             . "Transaksi *SETOR* berhasil:\n"
             . "📋 No: {$transaksi->no_transaksi}\n"
@@ -58,7 +58,7 @@ class WhatsAppNotification
             return false;
         }
 
-        $pesan = "🏦 *{$this->config('banksampah.nama')}*\n\n"
+        $pesan = "🏦 *" . config('banksampah.nama', 'Bank Sampah') . "*\n\n"
             . "Halo *{$member->nama}*! 👋\n\n"
             . "Transaksi *TARIK* berhasil:\n"
             . "📋 No: {$transaksi->no_transaksi}\n"
@@ -78,7 +78,7 @@ class WhatsAppNotification
             return false;
         }
 
-        $pesan = "🏦 *{$this->config('banksampah.nama')}*\n\n"
+        $pesan = "🏦 *" . config('banksampah.nama', 'Bank Sampah') . "*\n\n"
             . "Halo *{$member->nama}*! 👋\n\n"
             . "Poin berhasil ditukar:\n"
             . "⭐ Poin ditukar: {$poin}\n"

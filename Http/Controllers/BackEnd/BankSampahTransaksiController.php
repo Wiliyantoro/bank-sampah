@@ -166,14 +166,6 @@ class BankSampahTransaksiController extends Controller
             }
 
             DB::commit();
-
-            if (config('banksampah.whatsapp.enabled') && $member->no_hp) {
-                $this->whatsapp->kirimNotifikasiSetor($member, $transaksi);
-            }
-
-            return redirect()->route('bank-sampah/transaksi/detail', $transaksi->id)
-                ->with('success', 'Transaksi setor berhasil! Total: Rp ' . number_format($total, 0, ',', '.'));
-
         } catch (\Exception $e) {
             DB::rollBack();
             // BS-014: pesan exception bisa bocorkan SQL/tabel/path — log penuh, UI generik
@@ -182,6 +174,24 @@ class BankSampahTransaksiController extends Controller
                 ->with('error', 'Gagal memproses transaksi. Silakan coba lagi.')
                 ->withInput();
         }
+
+        // BS-032: notifikasi WA SETELAH commit dan LUAR try transaksi.
+        // Kegagalan WA tidak boleh menyulap transaksi yang sudah sukses
+        // jadi kelihatan gagal (dulu: Error uncaught setelah commit menimbulkan
+        // halaman 500 dan bisa memancing retry -> double-entry).
+        if (config('banksampah.whatsapp.enabled') && $member->no_hp) {
+            try {
+                $this->whatsapp->kirimNotifikasiSetor($member, $transaksi);
+            } catch (\Throwable $e) {
+                Log::warning('[BankSampah] Gagal kirim notifikasi WA setor', [
+                    'transaksi_id' => $transaksi->id,
+                    'exception'    => $e,
+                ]);
+            }
+        }
+
+        return redirect()->route('bank-sampah/transaksi/detail', $transaksi->id)
+            ->with('success', 'Transaksi setor berhasil! Total: Rp ' . number_format($total, 0, ',', '.'));
     }
 
     /**
@@ -239,14 +249,6 @@ class BankSampahTransaksiController extends Controller
             }
 
             DB::commit();
-
-            if (config('banksampah.whatsapp.enabled') && $member->no_hp) {
-                $this->whatsapp->kirimNotifikasiTarik($member, $transaksi);
-            }
-
-            return redirect()->route('bank-sampah/transaksi/detail', $transaksi->id)
-                ->with('success', 'Transaksi tarik berhasil! Nominal: Rp ' . number_format($request->nominal, 0, ',', '.'));
-
         } catch (\Exception $e) {
             DB::rollBack();
             // BS-014: pesan exception bisa bocorkan SQL/tabel/path — log penuh, UI generik
@@ -255,6 +257,21 @@ class BankSampahTransaksiController extends Controller
                 ->with('error', 'Gagal memproses transaksi. Silakan coba lagi.')
                 ->withInput();
         }
+
+        // BS-032: lihat komentar prosesSetor — WA di luar transaksi utama.
+        if (config('banksampah.whatsapp.enabled') && $member->no_hp) {
+            try {
+                $this->whatsapp->kirimNotifikasiTarik($member, $transaksi);
+            } catch (\Throwable $e) {
+                Log::warning('[BankSampah] Gagal kirim notifikasi WA tarik', [
+                    'transaksi_id' => $transaksi->id,
+                    'exception'    => $e,
+                ]);
+            }
+        }
+
+        return redirect()->route('bank-sampah/transaksi/detail', $transaksi->id)
+            ->with('success', 'Transaksi tarik berhasil! Nominal: Rp ' . number_format($request->nominal, 0, ',', '.'));
     }
 
     /**
