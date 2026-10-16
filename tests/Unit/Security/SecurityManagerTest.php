@@ -321,4 +321,35 @@ class SecurityManagerTest extends TestCase
         $result = $this->security->checkRateLimit($key, 3, 1);
         $this->assertFalse($result['blocked']);
     }
+
+    public function test_record_attempt_counts_every_hit(): void
+    {
+        // BS-028: recordAttempt() kini RateLimiter::hit() (increment atomik) —
+        // N kali memanggil harus terhitung SEMUA (get+put lama bisa kehilangan
+        // hitungan saat konkurensi)
+        $key = 'test_atomic_' . uniqid();
+
+        for ($i = 0; $i < 20; $i++) {
+            $this->security->recordAttempt($key, 25, 1);
+        }
+
+        $result = $this->security->checkRateLimit($key, 25, 1);
+        $this->assertFalse($result['blocked']);
+        $this->assertSame(5, $result['remaining']); // 25 - 20 = 5
+    }
+
+    public function test_rate_limit_retry_after_seconds(): void
+    {
+        // BS-028: ketika terblokir, retry_after = sisa detik window (0 < x <= decay)
+        $key = 'test_retry_' . uniqid();
+
+        for ($i = 0; $i < 5; $i++) {
+            $this->security->recordAttempt($key, 5, 15);
+        }
+
+        $result = $this->security->checkRateLimit($key, 5, 15);
+        $this->assertTrue($result['blocked']);
+        $this->assertGreaterThan(0, $result['retry_after']);
+        $this->assertLessThanOrEqual(15 * 60, $result['retry_after']);
+    }
 }

@@ -14,6 +14,7 @@
 
 namespace Modules\BankSampah\Libraries;
 
+use Illuminate\Cache\RateLimiter;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
@@ -23,6 +24,11 @@ use Illuminate\Support\Str;
 
 class SecurityManager
 {
+    /**
+     * Laravel RateLimiter (BS-028: hit() atomic increment, bukan get+put)
+     */
+    protected ?RateLimiter $rateLimiter = null;
+
     /**
      * Maximum PIN attempts before lockout
      */
@@ -56,52 +62,55 @@ class SecurityManager
     // ==================== RATE LIMITING ====================
 
     /**
+     * Laravel RateLimiter instance (cache store bawaan aplikasi).
+     * BS-028: counter lewat increment() yang atomic pada driver
+     * redis/memcached — tidak lagi get-then-put yang kalah race.
+     */
+    protected function rateLimiter(): RateLimiter
+    {
+        if ($this->rateLimiter === null) {
+            $this->rateLimiter = new RateLimiter(app('cache')->store());
+        }
+
+        return $this->rateLimiter;
+    }
+
+    /**
      * Check rate limit for a given key
+     *
+     * BS-028: dibangun di atas Laravel RateLimiter (timer + hits atomik).
+     * Key lama `banksampah_rl_*` tidak dipakai lagi — RateLimiter menyimpan
+     * `<key>:timer` dan `<key>:hits` di cache store.
      */
     public function checkRateLimit(string $key, int $maxAttempts, int $decayMinutes): array
     {
-        $cacheKey = 'banksampah_rl_' . $key;
-        $attempts = Cache::get($cacheKey . '_attempts', 0);
-        $blockedUntil = Cache::get($cacheKey . '_blocked');
+        $limiter = $this->rateLimiter();
 
-        if ($blockedUntil && now()->timestamp < $blockedUntil) {
+        if ($limiter->tooManyAttempts($key, $maxAttempts)) {
             return [
                 'remaining'   => 0,
                 'blocked'     => true,
-                'retry_after' => $blockedUntil - now()->timestamp,
+                'retry_after' => $limiter->availableIn($key),
             ];
         }
 
-        if ($blockedUntil && now()->timestamp >= $blockedUntil) {
-            Cache::forget($cacheKey . '_attempts');
-            Cache::forget($cacheKey . '_blocked');
-            $attempts = 0;
-        }
-
         return [
-            'remaining'   => max(0, $maxAttempts - $attempts),
+            'remaining'   => $limiter->remaining($key, $maxAttempts),
             'blocked'     => false,
             'retry_after' => 0,
         ];
     }
 
     /**
-     * Record a rate limit attempt
+     * Record a rate limit attempt (atomic increment)
      */
     public function recordAttempt(string $key, int $maxAttempts, int $decayMinutes): void
     {
-        $cacheKey = 'banksampah_rl_' . $key;
-        $attempts = Cache::get($cacheKey . '_attempts', 0) + 1;
+        $limiter = $this->rateLimiter();
 
-        Cache::put($cacheKey . '_attempts', $attempts, now()->addMinutes($decayMinutes));
+        $limiter->hit($key, $decayMinutes * 60);
 
-        if ($attempts >= $maxAttempts) {
-            Cache::put(
-                $cacheKey . '_blocked',
-                now()->addMinutes($decayMinutes)->timestamp,
-                now()->addMinutes($decayMinutes)
-            );
-
+        if ($limiter->tooManyAttempts($key, $maxAttempts)) {
             Log::warning("BankSampah: Rate limit exceeded for key: {$key}");
         }
     }
@@ -111,9 +120,7 @@ class SecurityManager
      */
     public function resetRateLimit(string $key): void
     {
-        $cacheKey = 'banksampah_rl_' . $key;
-        Cache::forget($cacheKey . '_attempts');
-        Cache::forget($cacheKey . '_blocked');
+        $this->rateLimiter()->clear($key);
     }
 
     /**
