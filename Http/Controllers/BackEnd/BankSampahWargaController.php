@@ -276,7 +276,6 @@ class BankSampahWargaController extends Controller
             'data'    => [
                 'uuid'       => $member->uuid,
                 'share_url'  => $shareUrl,
-                'qr_svg'     => $this->generateQrSvg($shareUrl),
                 'expires_in' => '1 jam',
             ],
         ]);
@@ -336,63 +335,6 @@ class BankSampahWargaController extends Controller
         $this->security->logEvent('share_link_login', ['member_id' => $member->id]);
 
         return redirect(url('bank-sampah/warga'));
-    }
-
-    /**
-     * Generate self-hosted QR code as SVG
-     */
-    private function generateQrSvg(string $data): string
-    {
-        $size = 200;
-        $dataUrl = 'data:image/svg+xml;base64,' . base64_encode($this->buildQrSvg($data, $size));
-        return $dataUrl;
-    }
-
-    private function buildQrSvg(string $data, int $size): string
-    {
-        $moduleCount = 25;
-        $moduleSize = $size / $moduleCount;
-        $hash = md5($data);
-        $modules = [];
-
-        for ($row = 0; $row < $moduleCount; $row++) {
-            $modules[$row] = [];
-            for ($col = 0; $col < $moduleCount; $col++) {
-                if ($this->isFinderPattern($row, $col, $moduleCount)) {
-                    $modules[$row][$col] = true;
-                    continue;
-                }
-                $bitIndex = ($row * $moduleCount + $col) % 128;
-                $byteIndex = intdiv($bitIndex, 8);
-                $bitOffset = $bitIndex % 8;
-                $byte = hexdec(substr($hash, intdiv($byteIndex, 2) % 32, 2));
-                $modules[$row][$col] = (bool) (($byte >> $bitOffset) & 1);
-            }
-        }
-
-        $svg = '<svg xmlns="http://www.w3.org/2000/svg" width="' . $size . '" height="' . $size . '" viewBox="0 0 ' . $size . ' ' . $size . '">';
-        $svg .= '<rect width="100%" height="100%" fill="white"/>';
-
-        for ($row = 0; $row < $moduleCount; $row++) {
-            for ($col = 0; $col < $moduleCount; $col++) {
-                if ($modules[$row][$col]) {
-                    $x = $col * $moduleSize;
-                    $y = $row * $moduleSize;
-                    $svg .= '<rect x="' . $x . '" y="' . $y . '" width="' . $moduleSize . '" height="' . $moduleSize . '" fill="black"/>';
-                }
-            }
-        }
-
-        $svg .= '</svg>';
-        return $svg;
-    }
-
-    private function isFinderPattern(int $row, int $col, int $size): bool
-    {
-        if ($row < 8 && $col < 8) { return true; }
-        if ($row < 8 && $col >= $size - 8) { return true; }
-        if ($row >= $size - 8 && $col < 8) { return true; }
-        return false;
     }
 
     /**
