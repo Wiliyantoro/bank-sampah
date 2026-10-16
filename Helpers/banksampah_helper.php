@@ -41,6 +41,40 @@ if (! function_exists('format_berat')) {
     }
 }
 
+if (! function_exists('safe_like')) {
+    /**
+     * Escape wildcard SQL untuk dipakai di klausa LIKE '%...%' (BS-031).
+     *
+     * Tanpa ini input "%../_../\" dari user berperan sebagai wildcard bebas
+     * dan backslash dapat merusak pola pencarian. Helper ini wajib ada —
+     * fungsi yang hilang akan menyebabkan fatal error 500 di semua
+     * halaman list dengan parameter cari.
+     */
+    function safe_like(string $value): string
+    {
+        return addcslashes($value, "%_\\");
+    }
+}
+
+if (! function_exists('sanitize_csv_field')) {
+    /**
+     * Sanitasi sel CSV (BS-031): cegah formula injection (OWASP WSTG).
+     * Sel berawalan =, +, -, @ dieksekusi sebagai rumus di Excel/LibreOffice —
+     * diberi prefix petik tunggal. Line-break dibuang agar baris CSV utuh.
+     */
+    function sanitize_csv_field(?string $value): string
+    {
+        $value = (string) $value;
+        $value = str_replace(["\r", "\n"], ' ', $value);
+
+        if ($value !== '' && in_array($value[0], ['=', '+', '-', '@'], true)) {
+            return "'" . $value;
+        }
+
+        return $value;
+    }
+}
+
 if (! function_exists('tipe_transaksi_label')) {
     /**
      * Label tipe transaksi
