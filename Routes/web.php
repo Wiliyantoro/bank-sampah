@@ -122,6 +122,7 @@ Route::group(['prefix' => 'bank-sampah', 'as' => 'bank-sampah/', 'middleware' =>
 // Akses via session: login → session stores member_id → no UUID in URL
 Route::group(['prefix' => 'bank-sampah/warga', 'as' => 'bank-sampah/warga/', 'middleware' => ['web']], function () {
     Route::get('/', [BankSampahWargaController::class, 'index'])->name('index');
+    Route::post('/', [BankSampahWargaController::class, 'index'])->name('verify');
     Route::post('login', [BankSampahWargaController::class, 'login'])->name('login');
     Route::get('logout', [BankSampahWargaController::class, 'logout'])->name('logout');
     Route::get('share/{token}', [BankSampahWargaController::class, 'shareAccess'])->name('share');

@@ -225,7 +225,12 @@ class BankSampahTransaksiController extends Controller
                 'user_id'      => auth()->id(),
             ]);
 
-            $member->kurangiSaldo($request->nominal);
+            if (! $member->kurangiSaldo($request->nominal)) {
+                DB::rollBack();
+                return redirect()->back()
+                    ->with('error', 'Saldo tidak mencukupi. Silakan coba lagi.')
+                    ->withInput();
+            }
 
             DB::commit();
 
