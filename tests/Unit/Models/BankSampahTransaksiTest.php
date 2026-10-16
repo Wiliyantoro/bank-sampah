@@ -34,8 +34,8 @@ class BankSampahTransaksiTest extends TestCase
     {
         $noTransaksi = \Modules\BankSampah\Models\BankSampahTransaksi::generateNoTransaksi();
         
-        // Format: TRX-YYYYMMDD-XXXX
-        $this->assertMatchesRegularExpression('/^TRX-\d{8}-\d{4}$/', $noTransaksi);
+        // Format: TRX-YYYYMMDD-XXXX (4+ digit — 5+ digit bila overflow > 9999, BS-022)
+        $this->assertMatchesRegularExpression('/^TRX-\d{8}-\d{4,}$/', $noTransaksi);
     }
 
     public function test_generate_no_transaksi_increments(): void
@@ -65,6 +65,30 @@ class BankSampahTransaksiTest extends TestCase
         
         // Should start from 0001 for new day
         $this->assertStringEndsWith('-0001', $noTransaksi);
+    }
+
+    public function test_generate_no_transaksi_overflow_past_9999(): void
+    {
+        // BS-022: urut ke-10000 harus 5 digit, bukan kembali ke 0000 (duplikat)
+        $this->createTransaksi([
+            'no_transaksi' => 'TRX-' . date('Ymd') . '-9999',
+        ]);
+
+        $noTransaksi = \Modules\BankSampah\Models\BankSampahTransaksi::generateNoTransaksi();
+
+        $this->assertStringEndsWith('-10000', $noTransaksi);
+    }
+
+    public function test_generate_no_transaksi_increments_after_overflow(): void
+    {
+        // BS-022: parse 5 digit — lanjutan 10001, bukan terpotong jadi 0001
+        $this->createTransaksi([
+            'no_transaksi' => 'TRX-' . date('Ymd') . '-10000',
+        ]);
+
+        $noTransaksi = \Modules\BankSampah\Models\BankSampahTransaksi::generateNoTransaksi();
+
+        $this->assertStringEndsWith('-10001', $noTransaksi);
     }
 
     public function test_member_relationship(): void

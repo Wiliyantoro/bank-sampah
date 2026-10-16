@@ -98,7 +98,10 @@ class BankSampahTransaksi extends BaseModel
 
             $nextNumber = 1;
             if ($last) {
-                $lastNumber = (int) substr($last->no_transaksi, -4);
+                // BS-022: parse semua digit setelah prefix (bukan -4) agar
+                // nomor urut > 9999 (5+ digit) tetap terhitung tanpa duplikat —
+                // str_pad(min 4) tidak memangkas angka yang lebih panjang
+                $lastNumber = (int) substr($last->no_transaksi, strlen($prefix));
                 $nextNumber = $lastNumber + 1;
             }
 
