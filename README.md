@@ -127,8 +127,6 @@ Modules/BankSampah/
 │   └── security_helper.php                  # Helper keamanan
 ├── Http/
 │   ├── Controllers/
-│   │   ├── API/
-│   │   │   └── BankSampahApiController.php  # API (belum aktif)
 │   │   └── BackEnd/
 │   │       ├── BankSampahDashboardController.php
 │   │       ├── BankSampahKategoriController.php
@@ -165,7 +163,6 @@ Modules/BankSampah/
 │   └── BankSampahServiceProvider.php        # Register routes, views, middleware
 ├── Routes/
 │   ├── web.php                              # 57 routes
-│   └── api.php                              # API routes (belum aktif)
 ├── Views/backend/
 │   ├── dashboard.blade.php
 │   ├── navigasi.blade.php
