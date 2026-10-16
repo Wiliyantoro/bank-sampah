@@ -1,0 +1,13 @@
+{
+    "name": "BankSampah",
+    "alias": "Modul Bank Sampah",
+    "description": "Modul Bank Sampah untuk pengelolaan sampah desa meliputi nasabah, transaksi setor/tarik, multi lokasi, reward, dan laporan",
+    "keywords": ["bank sampah", "sampah", "nasabah", "setor", "tabsampah"],
+    "priority": 0,
+    "providers": [],
+    "files": [],
+    "thumbnail": "",
+    "totalInstall": 0,
+    "price": "RP. 0",
+    "version": "2608.0.0"
+}

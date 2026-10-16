@@ -1,0 +1,19 @@
+{
+    "name": "opensid-modules/banksampah",
+    "description": "Modul Bank Sampah untuk OpenSID",
+    "license": "GPL-3.0-or-later",
+    "type": "library",
+    "keywords": [
+        "bank-sampah",
+        "modules",
+        "opensid"
+    ],
+    "require": {
+        "php": "^8.2"
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "config": {
+        "sort-packages": true
+    }
+}

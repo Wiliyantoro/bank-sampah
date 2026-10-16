@@ -1,0 +1,108 @@
+<?php
+
+/*
+ * File ini bagian dari OpenSID - Modul Bank Sampah
+ *
+ * @package   OpenSID
+ * @author    Tim Pengembang OpenDesa
+ * @copyright Hak Cipta 2016 - 2026 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
+ * @license   http://www.gnu.org/licenses/gpl.html GPL V3
+ */
+
+namespace Modules\BankSampah\Models;
+
+use Illuminate\Support\Facades\DB;
+
+class BankSampahTransaksi extends BaseModel
+{
+    protected $table = 'bank_sampah_transaksi';
+
+    protected $fillable = [
+        'config_id',
+        'no_transaksi',
+        'member_id',
+        'lokasi_id',
+        'tipe',
+        'total',
+        'bayar',
+        'potongan',
+        'poin',
+        'keterangan',
+        'user_id',
+    ];
+
+    protected $casts = [
+        'total'    => 'decimal:2',
+        'bayar'    => 'decimal:2',
+        'potongan' => 'decimal:2',
+        'poin'     => 'integer',
+    ];
+
+    protected static function booted(): void
+    {
+        static::creating(function (BankSampahTransaksi $trx) {
+            if (empty($trx->config_id)) {
+                $trx->config_id = identitas('id');
+            }
+        });
+    }
+
+    /**
+     * Relasi ke member
+     */
+    public function member()
+    {
+        return $this->belongsTo(BankSampahMember::class, 'member_id');
+    }
+
+    /**
+     * Relasi ke lokasi
+     */
+    public function lokasi()
+    {
+        return $this->belongsTo(BankSampahLokasi::class, 'lokasi_id');
+    }
+
+    /**
+     * Relasi ke detail transaksi
+     */
+    public function detail()
+    {
+        return $this->hasMany(BankSampahTransaksiDetail::class, 'transaksi_id');
+    }
+
+    /**
+     * Scope: hanya data desa yang sedang login
+     */
+    public function scopeDesa($query)
+    {
+        return $query->where('config_id', identitas('id'));
+    }
+
+    /**
+     * Generate nomor transaksi unik per desa (thread-safe)
+     * Format: TRX-YYYYMMDD-XXXX
+     */
+    public static function generateNoTransaksi(): string
+    {
+        $configId = identitas('id');
+        $date = date('Ymd');
+        $prefix = 'TRX-' . $date . '-';
+
+        return DB::transaction(function () use ($configId, $prefix) {
+            $last = static::where('config_id', $configId)
+                ->where('no_transaksi', 'LIKE', $prefix . '%')
+                ->orderBy('id', 'desc')
+                ->lockForUpdate()
+                ->first();
+
+            $nextNumber = 1;
+            if ($last) {
+                $lastNumber = (int) substr($last->no_transaksi, -4);
+                $nextNumber = $lastNumber + 1;
+            }
+
+            return $prefix . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
+        });
+    }
+}
