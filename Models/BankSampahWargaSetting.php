@@ -13,6 +13,7 @@
 
 namespace Modules\BankSampah\Models;
 
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Cache;
 
 class BankSampahWargaSetting extends BaseModel
@@ -70,22 +71,30 @@ class BankSampahWargaSetting extends BaseModel
     }
 
     /**
-     * Get or create settings for config
+     * Get or create settings for config.
+     *
+     * BS-027: dengan UNIQUE(config_id), dua request yang sama-sama kehilangan
+     * race dapat saling memanggil insert — yang kalah QueryException dan cukup
+     * membaca ulang baris yang sudah dibuat pemenangnya.
      */
     public static function getSettings(int $configId): self
     {
-        return static::firstOrCreate(
-            ['config_id' => $configId],
-            [
-                'warga_aktif'        => true,
-                'show_saldo'         => true,
-                'show_riwayat'       => true,
-                'show_poin'          => true,
-                'require_pin'        => true,
-                'max_riwayat'        => 10,
-                'pesan_selamat_datang' => 'Selamat datang di dashboard Bank Sampah desa kami!',
-                'pesan_footer'       => 'Terima kasih sudah menjaga lingkungan!',
-            ]
-        );
+        try {
+            return static::firstOrCreate(
+                ['config_id' => $configId],
+                [
+                    'warga_aktif'        => true,
+                    'show_saldo'         => true,
+                    'show_riwayat'       => true,
+                    'show_poin'          => true,
+                    'require_pin'        => true,
+                    'max_riwayat'        => 10,
+                    'pesan_selamat_datang' => 'Selamat datang di dashboard Bank Sampah desa kami!',
+                    'pesan_footer'       => 'Terima kasih sudah menjaga lingkungan!',
+                ]
+            );
+        } catch (QueryException $e) {
+            return static::where('config_id', $configId)->firstOrFail();
+        }
     }
 }

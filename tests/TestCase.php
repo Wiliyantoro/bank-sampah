@@ -386,6 +386,7 @@ abstract class TestCase extends BaseTestCase
         )');
 
         // Warga Settings
+        // BS-027: UNIQUE(config_id) — selaras dengan migrasi 2026_1016_000002
         \DB::statement('CREATE TABLE IF NOT EXISTS bank_sampah_warga_settings (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             config_id INTEGER NOT NULL,
@@ -398,7 +399,8 @@ abstract class TestCase extends BaseTestCase
             pesan_selamat_datang TEXT,
             pesan_footer TEXT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE (config_id)
         )');
 
         // Audit Log
