@@ -108,18 +108,18 @@ class BankSampahWargaController extends Controller
                         ]);
                     }
 
-                    if ($this->security->detectSuspiciousInput($pin)) {
-                        $this->security->logEvent('suspicious_input_detected', [
-                            'type' => 'pin',
-                            'ip'   => $request->ip(),
-                        ], 'critical');
+                    if (! $this->security->validatePinFormat($pin)) {
+                        $this->security->logEvent('pin_invalid_format', [
+                            'member_id' => $member->id,
+                            'ip'        => $request->ip(),
+                        ], 'warning');
 
                         return view('banksampah::backend.warga.index', [
                             'member'   => null,
                             'riwayat'  => collect(),
                             'settings' => $settings,
                             'showPin'  => true,
-                            'error'    => 'Input tidak valid.',
+                            'error'    => 'PIN tidak valid.',
                         ]);
                     }
 
@@ -188,20 +188,15 @@ class BankSampahWargaController extends Controller
                 ->with('error', "Terlalu banyak percobaan login. Tunggu {$minutes} menit.");
         }
 
+        // BS-012: format check beneran di validasi Laravel — detectSuspiciousInput
+        // tidak lagi dipakai untuk memblok (false positive tinggi pada input sah)
         $request->validate([
-            'no_member' => 'required|string|max:20',
-            'no_hp'     => 'required|string|max:20',
+            'no_member' => ['required', 'string', 'max:20', 'regex:/^[A-Za-z0-9\-]+$/'],
+            'no_hp'     => ['required', 'string', 'max:20', 'regex:/^[0-9+()\- ]+$/'],
         ]);
 
         $noMember = $this->security->sanitize($request->no_member);
         $noHp = $this->security->sanitize($request->no_hp);
-
-        if ($this->security->detectSuspiciousInput($noMember) || $this->security->detectSuspiciousInput($noHp)) {
-            $this->security->logLoginAttempt($noMember, false, 'suspicious_input');
-
-            return redirect(url('bank-sampah/warga'))
-                ->with('error', 'Input tidak valid.');
-        }
 
         // Rate limit per IP + per no_member (aksi #3: tahan brute-force via rotasi IP)
         $rateLimit = $this->security->checkLoginRateLimit($ip, $noMember);

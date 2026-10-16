@@ -456,7 +456,12 @@ class SecurityManager
     }
 
     /**
-     * Detect suspicious input
+     * Detect suspicious input.
+     *
+     * CATATAN (BS-012): JANGAN memakai method ini untuk memblokir input normal —
+     * regex ini positif palsu (false positive) tinggi (kata umum OR/AND/SELECT,
+     * apostrophe, dash). Lapisan proteksi yang benar: validasi Laravel,
+     * parameter binding, dan Blade escaping. Gunakan hanya untuk log/forensik.
      */
     public function detectSuspiciousInput(string $input): bool
     {
