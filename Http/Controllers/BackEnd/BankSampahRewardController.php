@@ -14,6 +14,7 @@ namespace Modules\BankSampah\Http\Controllers\BackEnd;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Modules\BankSampah\Models\BankSampahMember;
 use Modules\BankSampah\Models\BankSampahReward;
 
@@ -108,8 +109,10 @@ class BankSampahRewardController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
+            // BS-014: pesan exception bisa bocorkan SQL/tabel/path — log penuh, UI generik
+            Log::error('[BankSampah] prosesTukar gagal', ['exception' => $e]);
             return redirect()->back()
-                ->with('error', 'Gagal menukar poin: ' . $e->getMessage());
+                ->with('error', 'Gagal menukar poin. Silakan coba lagi.');
         }
     }
 

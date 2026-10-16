@@ -14,6 +14,7 @@ namespace Modules\BankSampah\Http\Controllers\BackEnd;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Modules\BankSampah\Models\BankSampahMember;
 use Modules\BankSampah\Models\BankSampahSampah;
 use Modules\BankSampah\Models\BankSampahTransaksi;
@@ -172,8 +173,10 @@ class BankSampahTransaksiController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
+            // BS-014: pesan exception bisa bocorkan SQL/tabel/path — log penuh, UI generik
+            Log::error('[BankSampah] prosesSetor gagal', ['exception' => $e]);
             return redirect()->back()
-                ->with('error', 'Gagal memproses transaksi: ' . $e->getMessage())
+                ->with('error', 'Gagal memproses transaksi. Silakan coba lagi.')
                 ->withInput();
         }
     }
@@ -243,8 +246,10 @@ class BankSampahTransaksiController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
+            // BS-014: pesan exception bisa bocorkan SQL/tabel/path — log penuh, UI generik
+            Log::error('[BankSampah] prosesTarik gagal', ['exception' => $e]);
             return redirect()->back()
-                ->with('error', 'Gagal memproses transaksi: ' . $e->getMessage())
+                ->with('error', 'Gagal memproses transaksi. Silakan coba lagi.')
                 ->withInput();
         }
     }
