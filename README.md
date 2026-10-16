@@ -141,8 +141,7 @@ Modules/BankSampah/
 │   │       └── TestController.php           # Hapus di production
 │   └── Middleware/
 │       ├── RequireAdminAuth.php             # Auth middleware
-│       ├── SecurityHeaders.php              # Security headers
-│       └── Ci3Auth.php                      # Duplikat (hapus)
+│       └── SecurityHeaders.php              # Security headers
 ├── Libraries/
 │   ├── SecurityManager.php                  # Audit, rate limit, encryption
 │   └── WhatsAppNotification.php             # Notifikasi WA (belum aktif)
@@ -1013,14 +1012,13 @@ php artisan view:clear
 2. **WhatsApp** — Fitur notifikasi belum diaktifkan
 3. **API** — Endpoint belum diimplementasikan
 4. **TestController** — Hapus di production
-5. **Ci3Auth** — Duplikat, hapus
 
 ### Roadmap
 
 #### v1.1 (Prioritas Tinggi)
 - [ ] Install `chillerlan/php-qrcode`
 - [ ] Aktifkan WhatsApp notification
-- [ ] Hapus TestController & Ci3Auth
+- [ ] Hapus TestController
 - [ ] Feature tests (Controller tests)
 
 #### v1.2 (Fitur Baru)
