@@ -597,7 +597,6 @@ generateNoTransaksi(): string        // Thread-safe: lockForUpdate
 ### Helper Functions (`banksampah_helper.php`)
 
 ```php
-ci_route(string $route, mixed $param = null): string
 format_rupiah(float $angka): string
 format_berat(float $berat, string $satuan = 'kg'): string
 tipe_transaksi_label(string $tipe): string
@@ -606,20 +605,14 @@ safe_like(string $input): string
 sanitize_csv_field(string $val): string
 ```
 
-### Security Helper (`security_helper.php`)
+> `ci_route()` TIDAK ada dan TIDAK PERNAH boleh didefinisikan modul — lihat
+> catatan di `Helpers/banksampah_helper.php`.
 
-```php
-banksampah_rate_limit(string $key, int $max, int $decay): array
-banksampah_rate_limit_attempt(string $key, int $max, int $decay): void
-banksampah_rate_limit_reset(string $key): void
-banksampah_sanitize(string $input): string
-banksampah_encrypt(string $data): string
-banksampah_decrypt(string $encrypted): string
-banksampah_generate_token(int $length = 64): string
-banksampah_validate_pin(string $pin): bool
-banksampah_mask_phone(string $phone): string
-banksampah_generate_uuid(): string
-```
+### Security Helper (`security_helper.php`) — DIHAPUS
+
+Seluruh fungsi `banksampah_*` (rate limit, sanitize, encrypt, token, PIN, dll.)
+tidak pernah dipakai dan sudah digantikan `SecurityManager` (BS-025). File ini
+dihapus pada BS-040. Gunakan `SecurityManager` untuk kebutuhan serupa.
 
 ### SecurityManager (`Libraries/SecurityManager.php`)
 

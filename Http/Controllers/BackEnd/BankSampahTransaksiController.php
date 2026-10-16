@@ -146,7 +146,7 @@ class BankSampahTransaksiController extends Controller
                     'transaksi_id' => $transaksi->id,
                 ]));
 
-                $sampah = BankSampahSampah::find($detail['sampah_id']);
+                $sampah = BankSampahSampah::desa()->find($detail['sampah_id']); // BS-040: konsisten scope desa
                 $sampah->tambahStok($detail['berat']);
             }
 

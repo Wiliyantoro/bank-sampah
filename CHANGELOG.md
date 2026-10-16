@@ -240,7 +240,7 @@ Modul Bank Sampah untuk OpenSID - Sistem informasi bank sampah desa dengan fitur
 ### 🔧 Helpers
 
 #### banksampah_helper.php
-- `ci_route()` — CI3-compatible route helper
+- ~~`ci_route()` — CI3-compatible route helper~~ (tidak ada dan tidak boleh ada — lihat catatan file)
 - `format_rupiah()` — Format angka ke Rupiah
 - `format_berat()` — Format berat dengan satuan
 - `tipe_transaksi_label()` — Label tipe transaksi
@@ -248,16 +248,9 @@ Modul Bank Sampah untuk OpenSID - Sistem informasi bank sampah desa dengan fitur
 - `safe_like()` — Escape LIKE wildcard
 - `sanitize_csv_field()` — CSV injection prevention
 
-#### security_helper.php
-- `banksampah_rate_limit()` — Rate limiting
-- `banksampah_rate_limit_attempt()` — Record attempt
-- `banksampah_rate_limit_reset()` — Reset rate limit
-- `banksampah_sanitize()` — Input sanitization
-- `banksampah_encrypt()` / `banksampah_decrypt()` — Encryption
-- `banksampah_generate_token()` — Token generation
-- `banksampah_validate_pin()` — PIN validation
-- `banksampah_mask_phone()` — Phone masking
-- `banksampah_generate_uuid()` — UUID generation
+#### security_helper.php — DIHAPUS
+- Seluruh `banksampah_*` tidak pernah dipakai; digantikan `SecurityManager` (BS-025).
+  File dihapus pada BS-040.
 
 ---
 

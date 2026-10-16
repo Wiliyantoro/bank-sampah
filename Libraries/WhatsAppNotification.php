@@ -101,7 +101,11 @@ class WhatsAppNotification
             $response = Http::withHeaders([
                 'Authorization' => 'Bearer ' . $this->config['api_key'],
                 'Content-Type'  => 'application/json',
-            ])->post($this->config['api_url'], [
+            ])
+            // BS-040: timeout eksplisit — dulu default 30 detik menahan
+            // respons proses setor/tarik penuh kalau API WA lambat/mati
+            ->timeout(10)
+            ->post($this->config['api_url'], [
                 'phone'   => $nomor,
                 'message' => $pesan,
             ]);

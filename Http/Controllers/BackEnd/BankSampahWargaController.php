@@ -155,6 +155,8 @@ class BankSampahWargaController extends Controller
 
                     $this->security->resetPinRateLimit($member->id);
                     $this->security->logPinVerification($member->id, true);
+                    // BS-040: elevasi hak akses sesi — regenerasi id sesi
+                    $request->session()->regenerate();
                     $request->session()->put('warga_authenticated', true);
                 }
             }

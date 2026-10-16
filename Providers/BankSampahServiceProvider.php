@@ -227,7 +227,9 @@ class BankSampahServiceProvider extends ServiceProvider
     {
         $helpers = [
             __DIR__ . '/../Helpers/banksampah_helper.php',
-            __DIR__ . '/../Helpers/security_helper.php',
+            // BS-040: security_helper.php dihapus — seluruh fungsi
+            // banksampah_* di dalamnya tidak pernah dipakai (digantikan
+            // SecurityManager sejak BS-025).
         ];
 
         foreach ($helpers as $file) {

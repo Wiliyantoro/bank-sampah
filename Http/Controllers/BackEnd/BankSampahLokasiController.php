@@ -60,6 +60,10 @@ class BankSampahLokasiController extends Controller
             'nama'   => 'required|string|max:150',
             'kode'   => "required|string|max:20|unique:bank_sampah_lokasi,kode,NULL,id,config_id,{$configId}",
             'alamat' => 'nullable|string',
+            // BS-040: batas panjang mengikuti kolom DB (penanggung_jawab 150,
+            // no_hp 20) — tanpa ini MySQL strict melempar error 1406 (500)
+            'penanggung_jawab' => 'nullable|string|max:150',
+            'no_hp'            => 'nullable|string|max:20',
         ]);
 
         BankSampahLokasi::create([
@@ -100,8 +104,12 @@ class BankSampahLokasiController extends Controller
         $configId = identitas('id');
 
         $request->validate([
-            'nama' => 'required|string|max:150',
-            'kode' => "required|string|max:20|unique:bank_sampah_lokasi,kode,{$id},id,config_id,{$configId}",
+            'nama'             => 'required|string|max:150',
+            'kode'             => "required|string|max:20|unique:bank_sampah_lokasi,kode,{$id},id,config_id,{$configId}",
+            'alamat'           => 'nullable|string',
+            // BS-040: lihat komentar store()
+            'penanggung_jawab' => 'nullable|string|max:150',
+            'no_hp'            => 'nullable|string|max:20',
         ]);
 
         $lokasi->update([
