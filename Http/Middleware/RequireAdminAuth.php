@@ -16,6 +16,8 @@ namespace Modules\BankSampah\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class RequireAdminAuth
 {
@@ -45,6 +47,30 @@ class RequireAdminAuth
             // Redirect to CI3 login page
             return redirect(url('siteman'))
                 ->with('error', 'Silakan login terlebih dahulu.');
+        }
+
+        // Authorization: grup harus punya akses modul 'bank-sampah' di
+        // grup_akses x setting_modul (pola hak akses inti OpenSID).
+        // Fail-closed: kalau verifikasi gagal/tabel belum ada, akses ditolak.
+        try {
+            $boleh = DB::table('grup_akses')
+                ->where('id_grup', $isAdmin->id_grup)
+                ->whereIn('id_modul', function ($q) {
+                    $q->select('id')->from('setting_modul')
+                        ->where('slug', 'bank-sampah');
+                })
+                ->exists();
+        } catch (\Throwable $e) {
+            Log::warning('[BankSampah] Gagal memverifikasi grup_akses: ' . $e->getMessage());
+            $boleh = false;
+        }
+
+        if (! $boleh) {
+            if ($request->expectsJson()) {
+                return response()->json(['error' => 'Forbidden'], 403);
+            }
+
+            abort(403, 'Anda tidak memiliki hak akses ke modul Bank Sampah.');
         }
 
         // Admin is authenticated, share auth data for views
