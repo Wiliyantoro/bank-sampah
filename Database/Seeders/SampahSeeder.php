@@ -13,6 +13,7 @@ namespace Modules\BankSampah\Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class SampahSeeder extends Seeder
 {
@@ -23,6 +24,12 @@ class SampahSeeder extends Seeder
     public function run(): void
     {
         $configId = identitas('id');
+
+        // CRI safety: table belum dibuat oleh migration → skip seeding
+        if (! Schema::hasTable('bank_sampah_sampah') || ! Schema::hasTable('bank_sampah_kategori')) {
+            $this->command?->warn('[BankSampah] SampahSeeder skip: table belum ada.');
+            return;
+        }
 
         // Skip jika DESA INI sudah punya data sampah
         $exists = DB::table('bank_sampah_sampah')

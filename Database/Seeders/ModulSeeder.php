@@ -16,6 +16,7 @@ namespace Modules\BankSampah\Database\Seeders;
 use App\Traits\Migrator;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Schema;
 
 class ModulSeeder extends Seeder
 {
@@ -28,6 +29,12 @@ class ModulSeeder extends Seeder
      */
     public function run()
     {
+        // CRI safety: hanya table core OpenSID yang diperlukan
+        if (! Schema::hasTable('setting_modul')) {
+            $this->command?->warn('[BankSampah] ModulSeeder skip: table setting_modul belum ada.');
+            return;
+        }
+
         // Skip jika modul sudah terdaftar (idempotent)
         $exists = \DB::table('setting_modul')
             ->where('slug', 'bank-sampah')
