@@ -93,6 +93,40 @@ class BankSampahSampahTest extends TestCase
         $this->assertEquals(3, $stok);
     }
 
+    public function test_tambah_stok_atomic_uses_db_value_not_memory(): void
+    {
+        // BS-010: increment harus terhadap nilai DB saat ini (atomik),
+        // bukan terhadap nilai in-memory yang bisa basi (stale)
+        $sampah = $this->createSampah(['stok' => 7]);
+
+        $model = new \Modules\BankSampah\Models\BankSampahSampah();
+        $model->id = $sampah->id;
+        $model->stok = 10; // nilai in-memory basi, tidak boleh dijadikan dasar
+
+        $result = $model->tambahStok(5);
+
+        $this->assertTrue($result);
+        $stok = \DB::table('bank_sampah_sampah')->where('id', $sampah->id)->value('stok');
+        $this->assertEquals(12, $stok); // 7 + 5 (bukan 10 + 5)
+        $this->assertEquals(12, $model->stok); // model ikut sinkron
+    }
+
+    public function test_kurangi_stok_atomic_guard_race(): void
+    {
+        // BS-010: guard ketersediaan dilakukan DB, bukan in-memory.
+        // Nilai in-memory basi tidak boleh loloskan stok minus.
+        $sampah = $this->createSampah(['stok' => 3]);
+
+        $model = new \Modules\BankSampah\Models\BankSampahSampah();
+        $model->id = $sampah->id;
+        $model->stok = 999; // basi
+
+        $this->assertFalse($model->kurangiStok(5));
+
+        $stok = \DB::table('bank_sampah_sampah')->where('id', $sampah->id)->value('stok');
+        $this->assertEquals(3, $stok);
+    }
+
     public function test_kategori_relationship(): void
     {
         $sampah = new \Modules\BankSampah\Models\BankSampahSampah();

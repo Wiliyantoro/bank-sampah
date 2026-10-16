@@ -100,23 +100,47 @@ class BankSampahSampah extends BaseModel
     }
 
     /**
-     * Tambah stok
+     * Tambah stok — atomik (UPDATE stok = stok + $jumlah), anti lost update (BS-010)
      */
     public function tambahStok(float $jumlah): bool
     {
-        $this->stok += $jumlah;
-        return $this->save();
+        $affected = static::query()
+            ->whereKey($this->getKey())
+            ->increment('stok', $jumlah);
+
+        // Sinkronkan nilai in-memory dari DB (refresh() no-op untuk model
+        // yang belum persist — baca eksplisit agar selalu akurat)
+        if ($affected > 0) {
+            $stokBaru = static::query()->whereKey($this->getKey())->value('stok');
+            if ($stokBaru !== null) {
+                $this->stok = $stokBaru;
+                $this->exists = true;
+            }
+        }
+
+        return $affected > 0;
     }
 
     /**
-     * Kurangi stok
+     * Kurangi stok — atomik dengan guard stok >= jumlah (BS-010).
+     * Cek ketersediaan dan pengurangan dilakukan dalam 1 statement agar
+     * dua transaksi tarik konkuren tidak bisa membuat stok minus.
      */
     public function kurangiStok(float $jumlah): bool
     {
-        if ($this->stok < $jumlah) {
-            return false;
+        $affected = static::query()
+            ->whereKey($this->getKey())
+            ->where('stok', '>=', $jumlah)
+            ->decrement('stok', $jumlah);
+
+        if ($affected > 0) {
+            $stokBaru = static::query()->whereKey($this->getKey())->value('stok');
+            if ($stokBaru !== null) {
+                $this->stok = $stokBaru;
+                $this->exists = true;
+            }
         }
-        $this->stok -= $jumlah;
-        return $this->save();
+
+        return $affected > 0;
     }
 }
