@@ -205,6 +205,10 @@ class BankSampahMemberController extends Controller
 
         $query = \DB::table('tweb_penduduk')
             ->select('id', 'nama', 'nik', 'alamat_sekarang', 'telepon', 'sex')
+            // BS-036: penduduk hanya milik desa aktif (kolom config_id ada,
+            // dipakai validasi BS-015) — tanpa ini autocomplete bocor PII
+            // penduduk desa lain pada instalasi multi-desa
+            ->where('config_id', identitas('id'))
             ->where('status_dasar', 1)
             ->orderBy('nama');
 
@@ -239,6 +243,8 @@ class BankSampahMemberController extends Controller
     {
         $p = \DB::table('tweb_penduduk')
             ->select('id', 'nama', 'nik', 'alamat_sekarang', 'telepon', 'sex')
+            // BS-036: id wajib penduduk desa aktif
+            ->where('config_id', identitas('id'))
             ->where('id', $id)
             ->where('status_dasar', 1)
             ->first();
