@@ -54,6 +54,16 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Log Channel
+    |--------------------------------------------------------------------------
+    | Channel logging modul. Default 'stack' — yang didefinisikan di host.
+    | Konfigurasi host bisa menambah channel kustom 'banksampah' di
+    | config/logging.php lalu set env BANK_SAMPAH_LOG_CHANNEL=banksampah.
+    */
+    'log_channel' => env('BANK_SAMPAH_LOG_CHANNEL', 'stack'),
+
+    /*
+    |--------------------------------------------------------------------------
     | WhatsApp API Configuration
     |--------------------------------------------------------------------------
     | Untuk notifikasi ke nasabah via WhatsApp

@@ -238,8 +238,14 @@ class SecurityManager
             ]);
         }
 
-        // Log ke Laravel
-        Log::channel('banksampah')->$level("[BankSampah] {$event}", $logData);
+        // Log ke Laravel — guard channel (BS-009): host tanpa channel kustom
+        // tidak boleh 500; fallback ke channel default.
+        try {
+            Log::channel(config('banksampah.log_channel', 'stack'))
+                ->{$level}("[BankSampah] {$event}", $logData);
+        } catch (\Throwable $e) {
+            Log::{$level}("[BankSampah] {$event}", $logData);
+        }
     }
 
     /**

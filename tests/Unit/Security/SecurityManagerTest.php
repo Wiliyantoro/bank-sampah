@@ -126,6 +126,18 @@ class SecurityManagerTest extends TestCase
         $this->assertFalse($result['blocked']);
     }
 
+    public function test_log_event_survives_missing_log_channel(): void
+    {
+        // BS-009: channel tak terdefinisi tidak boleh melempar exception ke caller
+        config(['banksampah.log_channel' => 'channel_tidak_ada_XXX']);
+        $this->createBankSampahTables();
+
+        $this->security->logEvent('test_fallback_log', ['x' => 1]);
+
+        $row = \DB::table('bank_sampah_audit_log')->where('event', 'test_fallback_log')->first();
+        $this->assertNotNull($row);
+    }
+
     public function test_log_event_writes_config_id_for_desa_scope(): void
     {
         // BS-008: logEvent() memakai DB::table() yang bypass model creating event,
