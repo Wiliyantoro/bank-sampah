@@ -39,6 +39,16 @@ class SecurityManager
     protected int $maxLoginAttempts = 10;
 
     /**
+     * Maximum warga login attempts per no_member (anti brute-force via rotasi IP)
+     */
+    protected int $maxMemberLoginAttempts = 5;
+
+    /**
+     * Member login lockout duration in minutes
+     */
+    protected int $memberLockoutMinutes = 30;
+
+    /**
      * Login lockout duration in minutes
      */
     protected int $loginLockoutMinutes = 30;
@@ -139,27 +149,58 @@ class SecurityManager
     }
 
     /**
-     * Check warga login rate limit
+     * Check warga login rate limit.
+     * Dua bucket: per-IP DAN per no_member (global, tahan rotasi IP).
+     * Bucket member lebih ketat (5 percobaan/30 menit) vs bucket IP (10/30 menit).
      */
-    public function checkLoginRateLimit(string $ip): array
+    public function checkLoginRateLimit(string $ip, ?string $noMember = null): array
     {
-        return $this->checkRateLimit(
+        $result = $this->checkRateLimit(
             'login_' . $ip,
             $this->maxLoginAttempts,
             $this->loginLockoutMinutes
         );
+
+        if ($result['blocked'] || $noMember === null) {
+            return $result;
+        }
+
+        $memberResult = $this->checkRateLimit(
+            'login_member_' . md5($noMember),
+            $this->maxMemberLoginAttempts,
+            $this->memberLockoutMinutes
+        );
+
+        if ($memberResult['blocked']) {
+            return [
+                'remaining'   => 0,
+                'blocked'     => true,
+                'retry_after' => $memberResult['retry_after'],
+            ];
+        }
+
+        return $result;
     }
 
     /**
-     * Record login attempt
+     * Record login attempt.
+     * Mencatat ke bucket IP DAN bucket member (jika noMember diketahui).
      */
-    public function recordLoginAttempt(string $ip): void
+    public function recordLoginAttempt(string $ip, ?string $noMember = null): void
     {
         $this->recordAttempt(
             'login_' . $ip,
             $this->maxLoginAttempts,
             $this->loginLockoutMinutes
         );
+
+        if ($noMember !== null) {
+            $this->recordAttempt(
+                'login_member_' . md5($noMember),
+                $this->maxMemberLoginAttempts,
+                $this->memberLockoutMinutes
+            );
+        }
     }
 
     // ==================== AUDIT LOGGING ====================

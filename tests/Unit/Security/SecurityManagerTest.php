@@ -80,6 +80,52 @@ class SecurityManagerTest extends TestCase
         $this->assertTrue($this->security->validateUuid($uuid));
     }
 
+    public function test_login_rate_limit_member_bucket_blocks_across_ips(): void
+    {
+        // Bucket per no_member bersifat global: 5 percobaan gagal -> lockout,
+        // terlepas dari rotasi IP (aksi BS-003)
+        $memberKey = 'BS-00001';
+
+        for ($i = 0; $i < 5; $i++) {
+            $this->security->recordLoginAttempt("10.0.0.{$i}", $memberKey);
+        }
+
+        $result = $this->security->checkLoginRateLimit('198.51.100.99', $memberKey);
+        $this->assertTrue($result['blocked']);
+    }
+
+    public function test_login_rate_limit_member_bucket_isolates_members(): void
+    {
+        $this->security->recordLoginAttempt('10.0.0.1', 'BS-00001');
+        $this->security->recordLoginAttempt('10.0.0.1', 'BS-00001');
+
+        $other = $this->security->checkLoginRateLimit('10.0.0.1', 'BS-00002');
+        $this->assertFalse($other['blocked']);
+    }
+
+    public function test_login_rate_limit_ip_bucket_still_enforced(): void
+    {
+        for ($i = 0; $i < 10; $i++) {
+            $this->security->recordLoginAttempt('192.0.2.7', 'BS-0000' . (($i % 9) + 1));
+        }
+
+        // Bucket IP penuh meski setiap no_member hanya sekali coba
+        $result = $this->security->checkLoginRateLimit('192.0.2.7', 'BS-00010');
+        $this->assertTrue($result['blocked']);
+    }
+
+    public function test_login_success_resets_member_bucket(): void
+    {
+        $this->security->recordLoginAttempt('10.0.0.1', 'BS-00001');
+        $this->security->recordLoginAttempt('10.0.0.1', 'BS-00001');
+
+        $this->security->resetRateLimit('login_' . '10.0.0.1');
+        $this->security->resetRateLimit('login_member_' . md5('BS-00001'));
+
+        $result = $this->security->checkLoginRateLimit('10.0.0.1', 'BS-00001');
+        $this->assertFalse($result['blocked']);
+    }
+
     public function test_validate_uuid_invalid(): void
     {
         $this->assertFalse($this->security->validateUuid('not-a-uuid'));

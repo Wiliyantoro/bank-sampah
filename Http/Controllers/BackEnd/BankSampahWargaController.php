@@ -76,7 +76,23 @@ class BankSampahWargaController extends Controller
             }
 
             // Verifikasi PIN
-            if ($settings->require_pin && ! empty($member->pin)) {
+            if ($settings->require_pin) {
+                // (BS-003) Fail-closed: member tanpa PIN TIDAK dapat akses apa pun.
+                // Aktivasi PIN hanya via admin (member/set-pin/{id}) — self-service
+                // tanpa PIN lama justru membuka pembajakan akun bagi login satu-faktor.
+                if (empty($member->pin)) {
+                    $request->session()->forget('warga_member_id');
+                    $request->session()->forget('warga_authenticated');
+                    $this->security->logEvent('warga_pin_missing', ['member_id' => $member->id], 'warning');
+
+                    return view('banksampah::backend.warga.index', [
+                        'member'   => null,
+                        'riwayat'  => collect(),
+                        'settings' => $settings,
+                        'error'    => 'Akun Anda belum memiliki PIN untuk keamanan data. Silakan hubungi pengurus Bank Sampah untuk aktivasi PIN, atau aktivasi di loket.',
+                    ]);
+                }
+
                 $isPinVerified = $request->session()->get('warga_authenticated', false);
 
                 if (! $isPinVerified) {
@@ -187,6 +203,17 @@ class BankSampahWargaController extends Controller
                 ->with('error', 'Input tidak valid.');
         }
 
+        // Rate limit per IP + per no_member (aksi #3: tahan brute-force via rotasi IP)
+        $rateLimit = $this->security->checkLoginRateLimit($ip, $noMember);
+
+        if ($rateLimit['blocked']) {
+            $minutes = ceil($rateLimit['retry_after'] / 60);
+            $this->security->logLoginAttempt($noMember, false, 'rate_limited');
+
+            return redirect(url('bank-sampah/warga'))
+                ->with('error', "Terlalu banyak percobaan login. Tunggu {$minutes} menit.");
+        }
+
         // Generic error message to prevent user enumeration
         $genericError = 'Nomor member atau nomor HP tidak valid';
 
@@ -196,7 +223,7 @@ class BankSampahWargaController extends Controller
             ->first();
 
         if (! $member) {
-            $this->security->recordLoginAttempt($ip);
+            $this->security->recordLoginAttempt($ip, $noMember);
             $this->security->logLoginAttempt($noMember, false, 'member_not_found');
 
             return redirect(url('bank-sampah/warga'))
@@ -204,7 +231,7 @@ class BankSampahWargaController extends Controller
         }
 
         if ($member->no_hp !== $noHp) {
-            $this->security->recordLoginAttempt($ip);
+            $this->security->recordLoginAttempt($ip, $noMember);
             $this->security->logLoginAttempt($noMember, false, 'invalid_phone');
 
             return redirect(url('bank-sampah/warga'))
@@ -213,6 +240,7 @@ class BankSampahWargaController extends Controller
 
         // Login berhasil
         $this->security->resetRateLimit('login_' . $ip);
+        $this->security->resetRateLimit('login_member_' . md5($noMember));
         $this->security->logLoginAttempt($noMember, true);
 
         // Regenerate session to prevent session fixation
