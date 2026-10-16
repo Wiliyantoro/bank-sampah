@@ -126,6 +126,20 @@ class SecurityManagerTest extends TestCase
         $this->assertFalse($result['blocked']);
     }
 
+    public function test_log_event_writes_config_id_for_desa_scope(): void
+    {
+        // BS-008: logEvent() memakai DB::table() yang bypass model creating event,
+        // jadi config_id harus diisi eksplisit agar BankSampahAuditLog::desa() melihat log
+        $this->createBankSampahTables();
+
+        $this->security->logEvent('test_audit_event', ['foo' => 'bar']);
+
+        $row = \DB::table('bank_sampah_audit_log')->where('event', 'test_audit_event')->first();
+        $this->assertNotNull($row);
+        $this->assertEquals($this->configId, $row->config_id);
+        $this->assertEquals(json_encode(['foo' => 'bar']), $row->data);
+    }
+
     public function test_validate_uuid_invalid(): void
     {
         $this->assertFalse($this->security->validateUuid('not-a-uuid'));

@@ -222,6 +222,7 @@ class SecurityManager
         // Simpan ke database
         try {
             DB::table('bank_sampah_audit_log')->insert([
+                'config_id'  => identitas('id'), // BS-008: scope per desa (DB::table bypass Eloquent creating event)
                 'event'      => $event,
                 'user_id'    => auth()->id(),
                 'ip_address' => request()->ip(),
