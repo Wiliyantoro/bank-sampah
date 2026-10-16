@@ -550,7 +550,6 @@ generateNoMember(string $prefix): string  // Thread-safe: lockForUpdate
 setPin(string $pin): bool            // Bcrypt hash
 verifyPin(string $pin): bool         // Hash check
 resetUuid(): string                  // Regenerate UUID
-getShareLink(): string               // URL dengan expiring token
 ```
 
 **BankSampahTransaksi:**

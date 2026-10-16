@@ -225,12 +225,4 @@ class BankSampahMember extends BaseModel
         $this->save();
         return $this->uuid;
     }
-
-    /**
-     * Generate shareable link
-     */
-    public function getShareLink(): string
-    {
-        return url('bank-sampah/warga/share/' . $this->uuid);
-    }
 }
