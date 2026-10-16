@@ -118,7 +118,7 @@
     </style>
 </head>
 <body>
-    <button class="print-btn" onclick="window.print()">
+    <button class="print-btn" id="tombolCetak">
         <i class="fa fa-print"></i> Cetak Kartu
     </button>
 
@@ -144,11 +144,15 @@
         </div>
     </div>
 
-    <script>
+    <script nonce="{{ $cspNonce ?? '' }}">
         QRCode.toCanvas(document.getElementById('qr'), '{{ $member->no_member }}', {
             width: 70,
             margin: 1,
             color: { dark: '#ffffff', light: '#00000000' }
+        });
+
+        document.getElementById('tombolCetak').addEventListener('click', function () {
+            window.print();
         });
     </script>
 </body>

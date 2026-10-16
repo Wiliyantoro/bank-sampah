@@ -45,7 +45,7 @@
     </style>
 </head>
 <body>
-    <button class="print-btn" onclick="window.print()">
+    <button class="print-btn" id="tombolCetak">
         <i class="fa fa-print"></i> Cetak Struk
     </button>
 
@@ -161,5 +161,11 @@
         <p>Struk ini dicetak secara otomatis oleh sistem</p>
         <p>{{ now()->format('d/m/Y H:i:s') }}</p>
     </div>
+
+    <script nonce="{{ $cspNonce ?? '' }}">
+        document.getElementById('tombolCetak').addEventListener('click', function () {
+            window.print();
+        });
+    </script>
 </body>
 </html>

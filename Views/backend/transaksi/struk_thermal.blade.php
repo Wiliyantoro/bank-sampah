@@ -16,7 +16,7 @@
         .text-right { text-align: right; }
     </style>
 </head>
-<body onload="window.print();">
+<body>
     <div class="center">
         <div class="header-logo">{{ $config['nama'] ?? 'BANK SAMPAH' }}</div>
         <div>{{ $config['alamat'] ?? '' }}</div>
@@ -82,8 +82,8 @@
     <div class="center" style="font-size: 9px;">Salam hijau! 💚</div>
     <div class="line"></div>
 
-    <script>
-        window.onload = function() { window.print(); }
+    <script nonce="{{ $cspNonce ?? '' }}">
+        window.addEventListener('load', function () { window.print(); });
     </script>
 </body>
 </html>

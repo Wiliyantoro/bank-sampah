@@ -42,7 +42,7 @@ use Modules\BankSampah\Http\Controllers\BackEnd\BankSampahPengaturanController;
 */
 
 // ==================== Admin Routes ====================
-Route::group(['prefix' => 'bank-sampah', 'as' => 'bank-sampah/', 'middleware' => ['web', 'banksampah.auth']], function () {
+Route::group(['prefix' => 'bank-sampah', 'as' => 'bank-sampah/', 'middleware' => ['web', 'banksampah.auth', 'banksampah.headers']], function () {
 
     // Dashboard
     Route::get('/', [BankSampahDashboardController::class, 'index'])->name('dashboard');
@@ -120,7 +120,7 @@ Route::group(['prefix' => 'bank-sampah', 'as' => 'bank-sampah/', 'middleware' =>
 
 // ==================== Dashboard Warga (Public - Session Based) ====================
 // Akses via session: login → session stores member_id → no UUID in URL
-Route::group(['prefix' => 'bank-sampah/warga', 'as' => 'bank-sampah/warga/', 'middleware' => ['web']], function () {
+Route::group(['prefix' => 'bank-sampah/warga', 'as' => 'bank-sampah/warga/', 'middleware' => ['web', 'banksampah.headers']], function () {
     Route::get('/', [BankSampahWargaController::class, 'index'])->name('index');
     Route::post('/', [BankSampahWargaController::class, 'index'])->name('verify');
     Route::post('login', [BankSampahWargaController::class, 'login'])->name('login');

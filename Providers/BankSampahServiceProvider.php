@@ -51,6 +51,7 @@ class BankSampahServiceProvider extends ServiceProvider
     {
         $router = $this->app['router'];
         $router->aliasMiddleware('banksampah.auth', \Modules\BankSampah\Http\Middleware\RequireAdminAuth::class);
+        $router->aliasMiddleware('banksampah.headers', \Modules\BankSampah\Http\Middleware\SecurityHeaders::class);
     }
 
     /**
