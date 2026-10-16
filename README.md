@@ -141,8 +141,6 @@ Modules/BankSampah/
 │   │       └── TestController.php           # Hapus di production
 │   └── Middleware/
 │       ├── RequireAdminAuth.php             # Auth middleware
-│       ├── RateLimitPin.php                 # Rate limit PIN
-│       ├── RateLimitWarga.php               # Rate limit warga
 │       ├── SecurityHeaders.php              # Security headers
 │       └── Ci3Auth.php                      # Duplikat (hapus)
 ├── Libraries/
@@ -669,10 +667,10 @@ detectSuspiciousInput(string $input): bool
 
 | Middleware | Alias | Fungsi |
 |-----------|-------|--------|
-| `RequireAdminAuth` | `banksampah.auth` | Cek CI3 session `isAdmin` |
-| `RateLimitPin` | — | Rate limit PIN verification |
-| `RateLimitWarga` | — | Rate limit warga login |
-| `SecurityHeaders` | — | Tambah security headers |
+| `RequireAdminAuth` | `banksampah.auth` | Cek CI3 session `isAdmin` + hak akses grup (`grup_akses`) |
+| `SecurityHeaders` | `banksampah.headers` | Security headers + CSP nonce |
+
+Catatan: rate limit login warga & verifikasi PIN dikerjakan di controller via `SecurityManager` (bucket per-IP + per-no_member, per-PIN per-member), bukan lewat middleware.
 
 ---
 
