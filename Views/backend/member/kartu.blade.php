@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Kartu Nasabah - {{ $member->no_member }}</title>
-    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
-    <style>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>    <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: Arial, sans-serif; background: #f5f5f5; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
 
@@ -79,22 +78,7 @@
             letter-spacing: 1px;
         }
 
-        .card-saldo {
-            position: absolute;
-            bottom: 5mm;
-            right: 5mm;
-            text-align: right;
-        }
-
-        .card-saldo small {
-            font-size: 7px;
-            opacity: 0.8;
-        }
-
-        .card-saldo div {
-            font-size: 10px;
-            font-weight: bold;
-        }
+        /* BS-023: hapus saldo dari kartu — data keuangan tidak mencetak di kartu fisik */
 
         .print-btn {
             position: fixed;
@@ -137,15 +121,12 @@
             <div class="card-name">{{ $member->nama }}</div>
             <div class="card-no">{{ $member->no_member }}</div>
         </div>
-
-        <div class="card-saldo">
-            <small>SALDO</small>
-            <div>Rp {{ number_format($member->saldo, 0, ',', '.') }}</div>
-        </div>
     </div>
 
     <script nonce="{{ $cspNonce ?? '' }}">
-        QRCode.toCanvas(document.getElementById('qr'), '{{ $member->no_member }}', {
+        // BS-023: QR memuat URL dashboard (halaman login), BUKAN no_member —
+        // no_member adalah separuh kredensial login warga
+        QRCode.toCanvas(document.getElementById('qr'), '{{ $shareUrl }}', {
             width: 70,
             margin: 1,
             color: { dark: '#ffffff', light: '#00000000' }

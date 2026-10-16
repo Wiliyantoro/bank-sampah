@@ -79,7 +79,7 @@ Modul Bank Sampah adalah modul OpenSID untuk mengelola sistem bank sampah desa. 
 | **Transaksi Setor** | Form multi-item, auto-hitung total & poin | ✅ |
 | **Transaksi Tarik** | Form tarik saldo | ✅ |
 | **Struk Transaksi** | Cetak struk thermal (58mm/80mm) atau A4 | ✅ |
-| **Kartu Nasabah** | Cetak kartu dengan QR code self-hosted | ✅ |
+| **Kartu Nasabah** | Cetak kartu dengan QR code (via CDN; tanpa saldo & tanpa data member di QR) | ✅ |
 | **Lokasi/TPS** | CRUD lokasi penampungan sampah | ✅ |
 | **Reward & Poin** | Kelola poin reward, tukar poin | ✅ |
 | **Laporan** | Rekap harian, per jenis, per lokasi, export CSV | ✅ |
@@ -482,7 +482,7 @@ Prefix: `bank-sampah/warga/` | Middleware: `web`
 ### MemberController
 - **CRUD:** Nasabah dengan select dari `tweb_penduduk` atau manual
 - **Unique:** `no_member` unik per desa (thread-safe)
-- **Kartu:** Generate kartu HTML dengan QR code self-hosted SVG
+- **Kartu:** Generate kartu HTML dengan QR code — QR memuat URL dashboard (bukan no_member), saldo tidak dicetak
 - **AJAX:** Autocomplete penduduk
 
 ### TransaksiController
@@ -754,7 +754,7 @@ BankSampahSeeder
 | **CSRF Protection** | OpenSID core | ✅ |
 | **Audit Logging** | 10+ event types | ✅ |
 | **Authorization** | `auth()->check()` | ✅ |
-| **Self-hosted QR Code** | SVG generated locally | ✅ |
+| **Self-hosted QR Code** | Belum — QR digenerate via qrcode.js CDN (generator SVG bawaan ternyata pola palsu, telah dihapus) | ⚠️ |
 | **Expiring Share Tokens** | 1 jam, 1x pakai | ✅ |
 
 ### Audit Events

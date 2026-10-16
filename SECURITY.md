@@ -30,7 +30,7 @@
 | **PIN** | Format validation (4-6 digits) | ✅ |
 | **Token** | Expiring share tokens (1 hour) | ✅ |
 | **Token** | Secure random token generation | ✅ |
-| **QR Code** | Self-hosted (no external API) | ✅ |
+| **QR Code** | Generated via CDN qrcode.js — QR berisi URL dashboard, tanpa data member | ✅ |
 | **Audit** | 10+ event types logged | ✅ |
 | **Privacy** | Phone masking in logs | ✅ |
 

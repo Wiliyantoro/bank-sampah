@@ -188,55 +188,11 @@ class BankSampahMemberController extends Controller
         $member = BankSampahMember::desa()->with('lokasi')->findOrFail($id);
         $config = config('banksampah');
 
+        // BS-023: QR memuat URL dashboard (halaman login) — bukan data member.
+        // no_member = separuh kredensial login warga; tidak boleh dikodekan di QR.
         $shareUrl = url('bank-sampah/warga');
-        $qrSvg = $this->generateQrSvg($shareUrl);
 
-        $qrData = json_encode([
-            'no_member' => $member->no_member,
-            'nama'      => $member->nama,
-            'saldo'     => $member->saldo,
-        ]);
-
-        return view('banksampah::backend.member.kartu', compact('member', 'config', 'qrData', 'qrSvg'));
-    }
-
-    /**
-     * Generate self-hosted QR code SVG
-     */
-    private function generateQrSvg(string $data): string
-    {
-        $size = 200;
-        $moduleCount = 25;
-        $moduleSize = $size / $moduleCount;
-        $hash = md5($data);
-        $modules = [];
-
-        for ($row = 0; $row < $moduleCount; $row++) {
-            $modules[$row] = [];
-            for ($col = 0; $col < $moduleCount; $col++) {
-                if ($row < 8 && $col < 8) { $modules[$row][$col] = true; continue; }
-                if ($row < 8 && $col >= $moduleCount - 8) { $modules[$row][$col] = true; continue; }
-                if ($row >= $moduleCount - 8 && $col < 8) { $modules[$row][$col] = true; continue; }
-                $bitIndex = ($row * $moduleCount + $col) % 128;
-                $byteIndex = intdiv($bitIndex, 8);
-                $bitOffset = $bitIndex % 8;
-                $byte = hexdec(substr($hash, intdiv($byteIndex, 2) % 32, 2));
-                $modules[$row][$col] = (bool) (($byte >> $bitOffset) & 1);
-            }
-        }
-
-        $svg = '<svg xmlns="http://www.w3.org/2000/svg" width="' . $size . '" height="' . $size . '">';
-        $svg .= '<rect width="100%" height="100%" fill="white"/>';
-        for ($row = 0; $row < $moduleCount; $row++) {
-            for ($col = 0; $col < $moduleCount; $col++) {
-                if ($modules[$row][$col]) {
-                    $svg .= '<rect x="' . ($col * $moduleSize) . '" y="' . ($row * $moduleSize) . '" width="' . $moduleSize . '" height="' . $moduleSize . '" fill="black"/>';
-                }
-            }
-        }
-        $svg .= '</svg>';
-
-        return $svg;
+        return view('banksampah::backend.member.kartu', compact('member', 'config', 'shareUrl'));
     }
 
     /**
