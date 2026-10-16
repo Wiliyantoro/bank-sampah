@@ -210,8 +210,10 @@ class BankSampahMember extends BaseModel
      */
     public function verifyPin(string $pin): bool
     {
+        // BS-039: fail-closed — member tanpa PIN TIDAK boleh lolos verifikasi.
+        // (dulu return true: resep bunuh diri bila method dipakai di tempat lain)
         if (empty($this->pin)) {
-            return true;
+            return false;
         }
         return Hash::check($pin, $this->pin);
     }
