@@ -41,7 +41,6 @@ class BankSampahServiceProvider extends ServiceProvider
         $this->registerMiddleware();
         $this->registerRoutes();
         $this->shareViewVariables();
-        $this->seedAdminMenuCache();
     }
 
     /**
@@ -56,17 +55,21 @@ class BankSampahServiceProvider extends ServiceProvider
 
     /**
      * Seed admin_menu cache for Laravel module routes.
-     * 
+     *
      * Problem: admin_menu() uses ci_auth()->id_grup as cache key.
-     * On CI3 routes (beranda), ci_auth() works → key = '454_admin_menu' → full menu.
+     * On CI3 routes (beranda), ci_auth() works → key = '<grup>_admin_menu' → full menu.
      * On Laravel routes (bank-sampah), ci_auth() returns null → key = '_admin_menu' → empty.
-     * 
-     * Fix: Ensure both cache keys have the correct data.
+     *
+     * Fix: Ensure both cache keys have the correct data, using the group id
+     * from the CI3 session (BS-020: no hardcoded group id).
      */
-    protected function seedAdminMenuCache(): void
+    protected function seedAdminMenuCache(?int $grupId = null): void
     {
         try {
-            $grupId = 454; // Administrator group ID
+            if (! $grupId) {
+                return;
+            }
+
             $correctKey = "{$grupId}_admin_menu";
             $nullKey = '_admin_menu';
 
@@ -119,6 +122,24 @@ class BankSampahServiceProvider extends ServiceProvider
     protected function shareViewVariables(): void
     {
         \view()->composer('*', function ($view) {
+            // BS-020: seed menu cache lazily per request memakai grup dari
+            // sesi CI3 — bukan grup hardcode di boot (session tak tersedia saat boot).
+            try {
+                if (! \app()->bound('banksampah.menu_seeded')) {
+                    $isAdmin = \session('isAdmin');
+                    $menuGrupId = (is_object($isAdmin) && ! empty($isAdmin->id_grup))
+                        ? (int) $isAdmin->id_grup
+                        : null;
+                    \app()->instance('banksampah.menu_seeded', $menuGrupId ?? 0);
+
+                    if ($menuGrupId) {
+                        $this->seedAdminMenuCache($menuGrupId);
+                    }
+                }
+            } catch (\Throwable $e) {
+                // Silently fail - don't break the module
+            }
+
             $defaults = [
                 'notif'                  => ['langganan' => null],
                 'notif_list'             => collect(),
@@ -142,7 +163,14 @@ class BankSampahServiceProvider extends ServiceProvider
             ];
 
             try {
-                $desa = \DB::table('config')->where('id', 17)->first();
+                // BS-020: desa aktif dari sesi (identitas), bukan id hardcode;
+                // sekali query per request via app-bound memo.
+                if (! \app()->bound('banksampah.desa_aktif')) {
+                    $configId = identitas('id');
+                    $desaAktif = $configId ? \DB::table('config')->where('id', (int) $configId)->first() : null;
+                    \app()->instance('banksampah.desa_aktif', $desaAktif);
+                }
+                $desa = \app('banksampah.desa_aktif');
                 if ($desa) {
                     $defaults['desa'] = (array) $desa;
                 }
