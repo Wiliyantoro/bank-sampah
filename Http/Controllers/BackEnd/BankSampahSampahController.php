@@ -143,6 +143,15 @@ class BankSampahSampahController extends Controller
                 ->with('error', 'Data bawaan sistem tidak bisa dihapus. Anda hanya bisa mengubah status aktif/nonaktif.');
         }
 
+        // BS-033: FK transaksi_detail.sampah_id = ON DELETE CASCADE — hapus jenis
+        // sampah yang punya riwayat akan ikut menghapus baris detail transaksi
+        // (berat/harga/subtotal snapshot) secara diam-diam. Tolak, arahkan
+        // nonaktifkan saja.
+        if ($sampah->transaksiDetail()->exists()) {
+            return redirect()->route('bank-sampah/sampah')
+                ->with('error', 'Tidak bisa hapus, jenis sampah ini sudah memiliki riwayat transaksi. Nonaktifkan saja bila tidak dipakai lagi.');
+        }
+
         $sampah->delete();
 
         return redirect()->route('bank-sampah/sampah')
