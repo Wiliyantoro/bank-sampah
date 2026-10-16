@@ -74,11 +74,14 @@ class BankSampahMemberController extends Controller
         $configId = identitas('id');
 
         $request->validate([
-            'no_member' => "required|string|max:20|unique:bank_sampah_member,no_member,NULL,id,config_id,{$configId}",
-            'nama'      => 'required|string|max:150',
-            'no_hp'     => 'nullable|string|max:20',
-            'alamat'    => 'nullable|string',
-            'lokasi_id' => 'nullable|integer',
+            'no_member'   => "required|string|max:20|unique:bank_sampah_member,no_member,NULL,id,config_id,{$configId}",
+            'nama'        => 'required|string|max:150',
+            'no_hp'       => 'nullable|string|max:20',
+            'alamat'      => 'nullable|string',
+            // BS-015: ID eksternal wajib ter-scope desa agar tidak bisa
+            // dilink ke data penduduk/lokasi desa lain
+            'penduduk_id' => "nullable|integer|exists:tweb_penduduk,id,config_id,{$configId}",
+            'lokasi_id'   => "nullable|integer|exists:bank_sampah_lokasi,id,config_id,{$configId}",
         ]);
 
         BankSampahMember::create([
@@ -117,13 +120,16 @@ class BankSampahMemberController extends Controller
      */
     public function update(Request $request, $id)
     {
+        $configId = identitas('id');
         $member = BankSampahMember::desa()->findOrFail($id);
 
         $request->validate([
-            'nama'      => 'required|string|max:150',
-            'no_hp'     => 'nullable|string|max:20',
-            'alamat'    => 'nullable|string',
-            'lokasi_id' => 'nullable|integer',
+            'nama'        => 'required|string|max:150',
+            'no_hp'       => 'nullable|string|max:20',
+            'alamat'      => 'nullable|string',
+            // BS-015: ID eksternal wajib ter-scope desa
+            'penduduk_id' => 'nullable|integer|exists:tweb_penduduk,id,config_id,' . $configId,
+            'lokasi_id'   => 'nullable|integer|exists:bank_sampah_lokasi,id,config_id,' . $configId,
         ]);
 
         $member->update([
