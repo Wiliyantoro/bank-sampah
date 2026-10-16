@@ -901,6 +901,9 @@ php artisan migrate
 # atau via web: http://opbeta.test/index.php/database/migrasi_cri
 ```
 
+Migrasi modul bersifat idempotent (#30): jalur CLI dan Migrasi CRI via UI
+boleh dipakai dalam urutan apa pun tanpa error duplicate FK/index.
+
 ### 3. Jalankan Seeder
 
 ```bash

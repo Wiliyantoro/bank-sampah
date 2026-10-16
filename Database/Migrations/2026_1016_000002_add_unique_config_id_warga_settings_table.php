@@ -10,6 +10,10 @@
  * dua baris settings untuk desa yang sama (getSettings() lalu membaca
  * baris arbitrer — pengaturan terlihat "tidak tersimpan").
  *
+ * #30: penambahan unique di-guard introspeksi agar migrasi modul yang
+ * diulang oleh Migrasi_module CRI (modul terlanjur dipasang via CLI)
+ * tidak gagal errno-1061 (duplicate key name).
+ *
  * @package   OpenSID
  * @author    Tim Pengembang OpenDesa
  * @copyright Hak Cipta 2016 - 2026 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
@@ -38,9 +42,11 @@ return new class extends Migration
             . '(SELECT id_tua FROM (SELECT MIN(id) AS id_tua FROM bank_sampah_warga_settings GROUP BY config_id) d)'
         );
 
-        Schema::table('bank_sampah_warga_settings', static function (Blueprint $table) {
-            $table->unique('config_id');
-        });
+        if (! $this->hasUnique('bank_sampah_warga_settings', ['config_id'])) {
+            Schema::table('bank_sampah_warga_settings', static function (Blueprint $table) {
+                $table->unique('config_id');
+            });
+        }
     }
 
     public function down(): void
@@ -52,5 +58,20 @@ return new class extends Migration
         Schema::table('bank_sampah_warga_settings', static function (Blueprint $table) {
             $table->dropUnique(['config_id']);
         });
+    }
+
+    /**
+     * Cek unique index dengan susunan kolom tertentu sudah ada (#30).
+     */
+    private function hasUnique(string $table, array $columns): bool
+    {
+        foreach (Schema::getIndexes($table) as $index) {
+            if (($index['unique'] ?? false)
+                && array_values($index['columns'] ?? []) === $columns) {
+                return true;
+            }
+        }
+
+        return false;
     }
 };

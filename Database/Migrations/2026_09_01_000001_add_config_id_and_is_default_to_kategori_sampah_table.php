@@ -50,13 +50,22 @@ return new class () extends Migration {
                     'sumber'     => 'system',
                 ]);
 
-            // Tambah foreign key + unique constraint
-            Schema::table('bank_sampah_kategori', function (Blueprint $table) {
-                $table->foreign('config_id')
-                    ->references('id')->on('config')
-                    ->onUpdate('cascade')->onDelete('cascade');
-                $table->unique(['config_id', 'nama']);
-            });
+            // Tambah foreign key + unique constraint (#30): setiap ALTER
+            // diperiksa dulu keberadaannya agar Migrasi_module CRI yang
+            // berjalan ulang tidak gagal errno-121 (duplicate FK).
+            if (! $this->hasForeignKey('bank_sampah_kategori', 'config_id')) {
+                Schema::table('bank_sampah_kategori', function (Blueprint $table) {
+                    $table->foreign('config_id')
+                        ->references('id')->on('config')
+                        ->onUpdate('cascade')->onDelete('cascade');
+                });
+            }
+
+            if (! $this->hasUnique('bank_sampah_kategori', ['config_id', 'nama'])) {
+                Schema::table('bank_sampah_kategori', function (Blueprint $table) {
+                    $table->unique(['config_id', 'nama']);
+                });
+            }
         }
 
         // ============================================================
@@ -87,14 +96,50 @@ return new class () extends Migration {
                     'sumber'     => 'system',
                 ]);
 
-            // Tambah foreign key + unique constraint
-            Schema::table('bank_sampah_sampah', function (Blueprint $table) {
-                $table->foreign('config_id')
-                    ->references('id')->on('config')
-                    ->onUpdate('cascade')->onDelete('cascade');
-                $table->unique(['config_id', 'kategori_id', 'nama']);
-            });
+            // Tambah foreign key + unique constraint (#30, idempotent)
+            if (! $this->hasForeignKey('bank_sampah_sampah', 'config_id')) {
+                Schema::table('bank_sampah_sampah', function (Blueprint $table) {
+                    $table->foreign('config_id')
+                        ->references('id')->on('config')
+                        ->onUpdate('cascade')->onDelete('cascade');
+                });
+            }
+
+            if (! $this->hasUnique('bank_sampah_sampah', ['config_id', 'kategori_id', 'nama'])) {
+                Schema::table('bank_sampah_sampah', function (Blueprint $table) {
+                    $table->unique(['config_id', 'kategori_id', 'nama']);
+                });
+            }
         }
+    }
+
+    /**
+     * Cek foreign key pada kolom tertentu sudah ada (#30).
+     */
+    private function hasForeignKey(string $table, string $column): bool
+    {
+        foreach (Schema::getForeignKeys($table) as $foreignKey) {
+            if (array_values($foreignKey['columns'] ?? []) === [$column]) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Cek unique index dengan susunan kolom tertentu sudah ada (#30).
+     */
+    private function hasUnique(string $table, array $columns): bool
+    {
+        foreach (Schema::getIndexes($table) as $index) {
+            if (($index['unique'] ?? false)
+                && array_values($index['columns'] ?? []) === $columns) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
