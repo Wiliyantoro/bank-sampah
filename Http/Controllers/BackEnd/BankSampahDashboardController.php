@@ -23,8 +23,8 @@ class BankSampahDashboardController extends Controller
 {
     public function index(Request $request)
     {
-        $bulan = $request->input('bulan', date('m'));
-        $tahun = $request->input('tahun', date('Y'));
+        // BS-017: param bulan/tahun divalidasi sebelum dipakai di cache key/DB
+        [$bulan, $tahun] = $this->periodeQuery($request);
         $configId = identitas('id');
         $cacheKey = "banksampah_dash_{$configId}_{$tahun}{$bulan}";
 
@@ -91,5 +91,19 @@ class BankSampahDashboardController extends Controller
         return view('banksampah::backend.dashboard', array_merge($data, compact(
             'grafikData', 'bulan', 'tahun'
         )));
+    }
+
+    /**
+     * Validasi & normalisasi param bulan/tahun (BS-017).
+     * Input garbage diblok sebelum menyentuh cache key / whereMonth/whereYear.
+     */
+    protected function periodeQuery(Request $request): array
+    {
+        $data = $request->validate([
+            'bulan' => 'nullable|integer|between:1,12',
+            'tahun' => 'nullable|integer|between:2000,2100',
+        ]);
+
+        return [(int) ($data['bulan'] ?? date('m')), (int) ($data['tahun'] ?? date('Y'))];
     }
 }

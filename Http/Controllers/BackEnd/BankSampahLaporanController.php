@@ -27,8 +27,7 @@ class BankSampahLaporanController extends Controller
      */
     public function index(Request $request)
     {
-        $bulan = $request->input('bulan', date('m'));
-        $tahun = $request->input('tahun', date('Y'));
+        [$bulan, $tahun] = $this->periodeQuery($request);
 
         // Rekap harian
         $rekapHarian = [];
@@ -109,8 +108,7 @@ class BankSampahLaporanController extends Controller
      */
     public function exportPdf(Request $request)
     {
-        $bulan = $request->input('bulan', date('m'));
-        $tahun = $request->input('tahun', date('Y'));
+        [$bulan, $tahun] = $this->periodeQuery($request);
         $config = config('banksampah');
 
         $rekapHarian = [];
@@ -176,8 +174,7 @@ class BankSampahLaporanController extends Controller
      */
     public function exportCsv(Request $request)
     {
-        $bulan = $request->input('bulan', date('m'));
-        $tahun = $request->input('tahun', date('Y'));
+        [$bulan, $tahun] = $this->periodeQuery($request);
 
         $transaksi = BankSampahTransaksi::desa()->with('member')
             ->whereMonth('created_at', $bulan)
@@ -213,5 +210,19 @@ class BankSampahLaporanController extends Controller
         };
 
         return response()->stream($callback, 200, $headers);
+    }
+
+    /**
+     * Validasi & normalisasi param bulan/tahun (BS-017).
+     * Input garbage diblok sebelum menyentuh cal_days_in_month / whereDate / header CSV.
+     */
+    protected function periodeQuery(Request $request): array
+    {
+        $data = $request->validate([
+            'bulan' => 'nullable|integer|between:1,12',
+            'tahun' => 'nullable|integer|between:2000,2100',
+        ]);
+
+        return [(int) ($data['bulan'] ?? date('m')), (int) ($data['tahun'] ?? date('Y'))];
     }
 }
