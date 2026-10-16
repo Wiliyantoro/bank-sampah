@@ -15,6 +15,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\Rule;
 use Modules\BankSampah\Models\BankSampahMember;
 use Modules\BankSampah\Models\BankSampahSampah;
 use Modules\BankSampah\Models\BankSampahTransaksi;
@@ -92,11 +93,13 @@ class BankSampahTransaksiController extends Controller
     public function prosesSetor(Request $request)
     {
         $request->validate([
-            'member_id'         => 'required|integer',
-            'lokasi_id'         => 'nullable|integer',
-            'item'              => 'required|array|min:1',
-            'item.*.sampah_id'  => 'required|integer',
-            'item.*.berat'      => 'required|numeric|min:0.01',
+            'member_id'        => 'required|integer',
+            // BS-016: lokasi/TPS wajib milik desa yang sedang login
+            'lokasi_id'        => ['nullable', 'integer', Rule::exists('bank_sampah_lokasi', 'id')
+                ->where('config_id', identitas('id'))],
+            'item'             => 'required|array|min:1',
+            'item.*.sampah_id' => 'required|integer',
+            'item.*.berat'     => 'required|numeric|min:0.01',
         ]);
 
         DB::beginTransaction();
