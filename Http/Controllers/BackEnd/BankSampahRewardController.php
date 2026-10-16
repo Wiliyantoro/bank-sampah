@@ -87,7 +87,11 @@ class BankSampahRewardController extends Controller
         DB::beginTransaction();
 
         try {
-            $member->tukarPoin($request->poin);
+            if (! $member->tukarPoin($request->poin)) {
+                DB::rollBack();
+                return redirect()->back()
+                    ->with('error', 'Poin tidak mencukupi. Silakan coba lagi.');
+            }
 
             BankSampahReward::create([
                 'config_id'   => identitas('id'),
