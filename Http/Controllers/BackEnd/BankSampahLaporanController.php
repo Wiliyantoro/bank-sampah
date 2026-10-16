@@ -29,30 +29,36 @@ class BankSampahLaporanController extends Controller
     {
         [$bulan, $tahun] = $this->periodeQuery($request);
 
-        // Rekap harian
+        // Rekap harian — BS-024: satu query agregasi (sebelumnya 2 query/hari,
+        // max 62 query per render) lalu dimap ke kalender di PHP
         $rekapHarian = [];
         $daysInMonth = cal_days_in_month(CAL_GREGORIAN, $bulan, $tahun);
+
+        $rekapRows = BankSampahTransaksi::desa()
+            ->selectRaw('DATE(created_at) as tgl, tipe, COUNT(*) as jumlah, COALESCE(SUM(total), 0) as nominal')
+            ->whereMonth('created_at', $bulan)
+            ->whereYear('created_at', $tahun)
+            ->groupBy('tgl', 'tipe')
+            ->get();
+
+        $rekapIndex = [];
+        foreach ($rekapRows as $row) {
+            $rekapIndex[$row->tgl . '_' . $row->tipe] = $row;
+        }
 
         for ($day = 1; $day <= $daysInMonth; $day++) {
             $date = sprintf('%s-%s-%02d', $tahun, $bulan, $day);
 
-            $setor = BankSampahTransaksi::desa()->where('tipe', 'setor')
-                ->whereDate('created_at', $date)
-                ->selectRaw('COUNT(*) as jumlah, COALESCE(SUM(total), 0) as nominal')
-                ->first();
-
-            $tarik = BankSampahTransaksi::desa()->where('tipe', 'tarik')
-                ->whereDate('created_at', $date)
-                ->selectRaw('COUNT(*) as jumlah, COALESCE(SUM(total), 0) as nominal')
-                ->first();
+            $setor = $rekapIndex[$date . '_setor'] ?? null;
+            $tarik = $rekapIndex[$date . '_tarik'] ?? null;
 
             $rekapHarian[] = [
                 'tanggal'       => $date,
                 'nama_hari'     => date('l', strtotime($date)),
-                'setor_jumlah'  => $setor->jumlah,
-                'setor_nominal' => $setor->nominal,
-                'tarik_jumlah'  => $tarik->jumlah,
-                'tarik_nominal' => $tarik->nominal,
+                'setor_jumlah'  => (int) ($setor->jumlah ?? 0),
+                'setor_nominal' => (float) ($setor->nominal ?? 0),
+                'tarik_jumlah'  => (int) ($tarik->jumlah ?? 0),
+                'tarik_nominal' => (float) ($tarik->nominal ?? 0),
             ];
         }
 

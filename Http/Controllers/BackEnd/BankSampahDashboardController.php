@@ -63,30 +63,39 @@ class BankSampahDashboardController extends Controller
             );
         });
 
-        // Grafik data (tidak di-cache karena date range dinamis)
-        $grafikData = [];
-        for ($i = 11; $i >= 0; $i--) {
-            $m = date('m', strtotime("-{$i} months"));
-            $y = date('Y', strtotime("-{$i} months"));
+        // Grafik data (12 bulan terakhir) — BS-024: 1 query agregasi + cache 5 menit
+        // (sebelumnya 2 query/bulan = 24 query per render, tanpa cache)
+        $grafikData = Cache::remember("banksampah_dash_grafik_{$configId}", 300, function () {
+            $mulai = now()->subMonths(11)->startOfMonth();
 
-            $setor = BankSampahTransaksi::desa()
-                ->where('tipe', 'setor')
-                ->whereMonth('created_at', $m)
-                ->whereYear('created_at', $y)
-                ->sum('total');
+            $rows = BankSampahTransaksi::desa()
+                ->select('created_at', 'tipe', 'total')
+                ->where('created_at', '>=', $mulai)
+                ->get();
 
-            $tarik = BankSampahTransaksi::desa()
-                ->where('tipe', 'tarik')
-                ->whereMonth('created_at', $m)
-                ->whereYear('created_at', $y)
-                ->sum('total');
+            // Bucket per bulan-tipe dilakukan di PHP agar portabel lintas DB
+            $map = [];
+            foreach ($rows as $row) {
+                $ym = $row->created_at->format('Y-m');
+                $key = $ym . '_' . $row->tipe;
+                $map[$key] = ($map[$key] ?? 0) + (float) $row->total;
+            }
 
-            $grafikData[] = [
-                'bulan' => date('M Y', strtotime("{$y}-{$m}-01")),
-                'setor' => (float) $setor,
-                'tarik' => (float) $tarik,
-            ];
-        }
+            $grafik = [];
+            for ($i = 11; $i >= 0; $i--) {
+                $m = date('m', strtotime("-{$i} months"));
+                $y = date('Y', strtotime("-{$i} months"));
+                $ym = "{$y}-{$m}";
+
+                $grafik[] = [
+                    'bulan' => date('M Y', strtotime("{$y}-{$m}-01")),
+                    'setor' => $map[$ym . '_setor'] ?? 0.0,
+                    'tarik' => $map[$ym . '_tarik'] ?? 0.0,
+                ];
+            }
+
+            return $grafik;
+        });
 
         return view('banksampah::backend.dashboard', array_merge($data, compact(
             'grafikData', 'bulan', 'tahun'
