@@ -275,7 +275,7 @@ Modul Bank Sampah untuk OpenSID - Sistem informasi bank sampah desa dengan fitur
 ### TODO
 - [ ] Install `chillerlan/php-qrcode` untuk QR code standar
 - [ ] Aktifkan WhatsApp notification
-- [ ] Hapus TestController & Ci3Auth middleware
+- [x] Hapus TestController & Ci3Auth middleware (selesai: BS-025, BS-026)
 - [ ] Feature tests (Controller tests)
 - [ ] Export Excel (.xlsx)
 - [ ] Sortable columns

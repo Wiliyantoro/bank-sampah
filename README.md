@@ -138,7 +138,6 @@ Modules/BankSampah/
 │   │       ├── BankSampahLaporanController.php
 │   │       ├── BankSampahPengaturanController.php
 │   │       ├── BankSampahWargaController.php
-│   │       └── TestController.php           # Hapus di production
 │   └── Middleware/
 │       ├── RequireAdminAuth.php             # Auth middleware
 │       └── SecurityHeaders.php              # Security headers
@@ -1011,14 +1010,12 @@ php artisan view:clear
 1. **QR Code** — Simplified pattern, bukan QR standar. Gunakan `chillerlan/php-qrcode` untuk production
 2. **WhatsApp** — Fitur notifikasi belum diaktifkan
 3. **API** — Endpoint belum diimplementasikan
-4. **TestController** — Hapus di production
 
 ### Roadmap
 
 #### v1.1 (Prioritas Tinggi)
 - [ ] Install `chillerlan/php-qrcode`
 - [ ] Aktifkan WhatsApp notification
-- [ ] Hapus TestController
 - [ ] Feature tests (Controller tests)
 
 #### v1.2 (Fitur Baru)
