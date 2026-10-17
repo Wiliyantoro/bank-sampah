@@ -100,3 +100,45 @@ if (! function_exists('status_aktif_label')) {
             : '<span class="label label-danger">Nonaktif</span>';
     }
 }
+
+if (! function_exists('hari_indonesia')) {
+    /**
+     * Nama hari bahasa Indonesia (BS-042) — date('l') selalu menghasilkan
+     * nama bahasa Inggris (Thursday) tanpa memperhatikan locale.
+     *
+     * @param string $tanggal Format Y-m-d
+     */
+    function hari_indonesia(string $tanggal): string
+    {
+        $map = [
+            'Sunday'    => 'Minggu',
+            'Monday'    => 'Senin',
+            'Tuesday'   => 'Selasa',
+            'Wednesday' => 'Rabu',
+            'Thursday'  => 'Kamis',
+            'Friday'    => 'Jumat',
+            'Saturday'  => 'Sabtu',
+        ];
+
+        $english = date('l', strtotime($tanggal));
+
+        return $map[$english] ?? $english;
+    }
+}
+
+if (! function_exists('bulan_indonesia')) {
+    /**
+     * Nama bulan bahasa Indonesia (BS-042) — pasangan dari hari_indonesia()
+     * untuk judul laporan cetak.
+     */
+    function bulan_indonesia(int $bulan): string
+    {
+        $map = [
+            1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April',
+            5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus',
+            9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember',
+        ];
+
+        return $map[$bulan] ?? '';
+    }
+}

@@ -54,7 +54,7 @@ class BankSampahLaporanController extends Controller
 
             $rekapHarian[] = [
                 'tanggal'       => $date,
-                'nama_hari'     => date('l', strtotime($date)),
+                'nama_hari'     => hari_indonesia($date),
                 'setor_jumlah'  => (int) ($setor->jumlah ?? 0),
                 'setor_nominal' => (float) ($setor->nominal ?? 0),
                 'tarik_jumlah'  => (int) ($tarik->jumlah ?? 0),
@@ -110,12 +110,13 @@ class BankSampahLaporanController extends Controller
     }
 
     /**
-     * Export laporan ke PDF (HTML print view)
+     * Export laporan ke PDF (BS-042: PDF asli via TCPDF bawaan core;
+     * fallback HTML print-view bila TCPDF tidak tersedia di instalasi).
      */
     public function exportPdf(Request $request)
     {
         [$bulan, $tahun] = $this->periodeQuery($request);
-        $config = config('banksampah');
+        $config = $this->kopLaporan($bulan, $tahun);
 
         $daysInMonth = cal_days_in_month(CAL_GREGORIAN, $bulan, $tahun);
 
@@ -143,7 +144,7 @@ class BankSampahLaporanController extends Controller
 
             $rekapHarian[] = [
                 'tanggal'       => $date,
-                'nama_hari'     => date('l', strtotime($date)),
+                'nama_hari'     => hari_indonesia($date),
                 'setor_jumlah'  => (int) ($setor->jumlah ?? 0),
                 'setor_nominal' => (float) ($setor->nominal ?? 0),
                 'tarik_jumlah'  => (int) ($tarik->jumlah ?? 0),
@@ -177,10 +178,57 @@ class BankSampahLaporanController extends Controller
             ->selectRaw('COUNT(*) as jumlah, COALESCE(SUM(total), 0) as nominal')
             ->first();
 
-        return view('banksampah::backend.laporan.cetak_pdf', compact(
+        $html = view('banksampah::backend.laporan.cetak_pdf', compact(
             'rekapHarian', 'rekapSampah', 'totalSetor', 'totalTarik',
             'bulan', 'tahun', 'config'
-        ));
+        ))->render();
+
+        $filename = "laporan_bank_sampah_{$bulan}_{$tahun}.pdf";
+
+        // BS-042: dokumen PDF asli (Content-Type application/pdf) — dulu
+        // hanya HTML print-view yang diunduh sebagai file .html.
+        try {
+            $pdf = new \TCPDF('P', 'mm', 'A4', true, 'UTF-8', false);
+            $pdf->SetCreator('OpenSID - Modul Bank Sampah');
+            $pdf->SetAuthor($config['nama']);
+            $pdf->SetTitle("Laporan Bank Sampah {$bulan}/{$tahun}");
+            $pdf->setPrintHeader(false);
+            $pdf->setPrintFooter(false);
+            $pdf->SetMargins(12, 10, 12, true);
+            $pdf->SetAutoPageBreak(true, 14);
+            $pdf->setFont('helvetica', '', 10);
+            $pdf->AddPage();
+            $pdf->writeHTML($html, true, false, true, false, '');
+
+            return response($pdf->Output($filename, 'S'), 200, [
+                'Content-Type'        => 'application/pdf',
+                'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+                'Cache-Control'       => 'max-age=0, private, must-revalidate',
+            ]);
+        } catch (\Throwable $e) {
+            // TCPDF tidak tersedia / gagal konversi — jangan buntu:
+            // degrade ke HTML print-view (perilaku lama) dan catat sebabnya.
+            report($e);
+
+            return response()->make($html, 200, [
+                'Content-Type' => 'text/html; charset=utf-8',
+            ]);
+        }
+    }
+
+    /**
+     * Kop laporan (BS-042): konfigurasi modul dulu; bila kosong, pakai profil
+     * desa (identitas) — dulu "Alamat: | Telp:" selalu kosong karena memang
+     * hanya membaca config('banksampah') yang punya nilai bawaan kosong.
+     */
+    protected function kopLaporan(int $bulan, int $tahun): array
+    {
+        $config             = config('banksampah') ?? [];
+        $config['nama']   = $config['nama']   ?: (identitas('nama_desa') ?: 'BANK SAMPAH');
+        $config['alamat'] = $config['alamat'] ?: (identitas('alamat_kantor') ?: '-');
+        $config['no_hp']  = $config['no_hp']  ?: (identitas('telepon') ?: '-');
+
+        return $config + ['periode_label' => bulan_indonesia($bulan) . ' ' . $tahun];
     }
 
     /**

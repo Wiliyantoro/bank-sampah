@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>Laporan Bank Sampah - {{ date('F Y', mktime(0, 0, 0, $bulan, 1, $tahun)) }}</title>
+    <title>Laporan Bank Sampah - {{ $config['periode_label'] ?? ($bulan . '/' . $tahun) }}</title>
     <style>
         body { font-family: Arial, sans-serif; font-size: 12px; }
         h1 { text-align: center; font-size: 18px; margin-bottom: 5px; }
@@ -15,9 +15,6 @@
         .text-center { text-align: center; }
         .total-row { background-color: #e9ecef; font-weight: bold; }
         .summary { margin-bottom: 20px; }
-        .summary-box { display: inline-block; width: 48%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; vertical-align: top; }
-        .summary-box.setor { border-left: 4px solid #27ae60; }
-        .summary-box.tarik { border-left: 4px solid #e74c3c; }
         .summary-title { font-size: 11px; color: #666; }
         .summary-value { font-size: 20px; font-weight: bold; }
         .summary-detail { font-size: 11px; color: #999; }
@@ -25,30 +22,34 @@
     </style>
 </head>
 <body>
-    <h1>{{ $config['nama'] ?? 'BANK SAMPAH' }}</h1>
-    <h2>Laporan Bulanan - {{ date('F Y', mktime(0, 0, 0, $bulan, 1, $tahun)) }}</h2>
+    <h1>{{ strtoupper($config['nama'] ?? 'BANK SAMPAH') }}</h1>
+    <h2>Laporan Bulanan - {{ $config['periode_label'] ?? $bulan . '/' . $tahun }}</h2>
 
     <div class="header-info">
         Alamat: {{ $config['alamat'] ?? '-' }} | Telp: {{ $config['no_hp'] ?? '-' }}
     </div>
 
-    {{-- Ringkasan --}}
+    {{-- Ringkasan: tabel dua kolom agar tata letak setia di HTML maupun TCPDF (BS-042) --}}
     <div class="summary">
-        <div class="summary-box setor">
-            <div class="summary-title">TOTAL SETOR</div>
-            <div class="summary-value" style="color: #27ae60;">{{ format_rupiah($totalSetor->nominal) }}</div>
-            <div class="summary-detail">{{ $totalSetor->jumlah }} transaksi</div>
-        </div>
-        &nbsp;
-        <div class="summary-box tarik">
-            <div class="summary-title">TOTAL TARIK</div>
-            <div class="summary-value" style="color: #e74c3c;">{{ format_rupiah($totalTarik->nominal) }}</div>
-            <div class="summary-detail">{{ $totalTarik->jumlah }} transaksi</div>
-        </div>
+        <table style="width:100%; border:none; background-color:transparent;">
+            <tr>
+                <td class="summary-box" style="border:none; border-left:4px solid #27ae60; padding:10px; width:48%;">
+                    <div class="summary-title">TOTAL SETOR</div>
+                    <div class="summary-value" style="color: #27ae60;">{{ format_rupiah($totalSetor->nominal) }}</div>
+                    <div class="summary-detail">{{ $totalSetor->jumlah }} transaksi</div>
+                </td>
+                <td style="border:none; width:4%;">&nbsp;</td>
+                <td class="summary-box" style="border:none; border-left:4px solid #e74c3c; padding:10px; width:48%;">
+                    <div class="summary-title">TOTAL TARIK</div>
+                    <div class="summary-value" style="color: #e74c3c;">{{ format_rupiah($totalTarik->nominal) }}</div>
+                    <div class="summary-detail">{{ $totalTarik->jumlah }} transaksi</div>
+                </td>
+            </tr>
+        </table>
     </div>
 
     {{-- Rekap Harian --}}
-    <h3 style="font-size: 14px; margin-bottom: 10px;">📋 Rekap Transaksi Harian</h3>
+    <h3 style="font-size: 14px; margin-bottom: 10px;">Rekap Transaksi Harian</h3>
     <table>
         <thead>
             <tr>
@@ -75,7 +76,7 @@
     </table>
 
     {{-- Rekap Jenis Sampah --}}
-    <h3 style="font-size: 14px; margin-bottom: 10px;">♻️ Rekap Jenis Sampah</h3>
+    <h3 style="font-size: 14px; margin-bottom: 10px;">Rekap Jenis Sampah</h3>
     <table>
         <thead>
             <tr>
