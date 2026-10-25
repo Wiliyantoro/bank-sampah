@@ -1,121 +1,88 @@
+@include('admin.layouts.components.asset_datatables')
+
 @extends('admin.layouts.index')
 
-@section('content')
-<section class="content-header">
+@section('title')
     <h1><i class="fa fa-users"></i> Nasabah / Member</h1>
-</section>
+@endsection
 
-<section class="content">
-    <div class="row">
-        <div class="col-md-12">
-            <div class="box box-primary">
-                <div class="box-header with-border">
-                    <h3 class="box-title">Daftar Nasabah</h3>
-                    <div class="box-tools pull-right">
-                        <a href="{{ url('bank-sampah/member/form') }}" class="btn btn-primary btn-sm">
-                            <i class="fa fa-plus"></i> Tambah Nasabah
-                        </a>
-                    </div>
-                </div>
+@section('breadcrumb')
+    <li class="active">Nasabah</li>
+@endsection
 
-                <div class="box-body">
-                    @if(session('success'))
-                        <div class="alert alert-success alert-dismissible">
-                            <button type="button" class="close" data-dismiss="alert">&times;</button>
-                            {{ session('success') }}
-                        </div>
-                    @endif
+@section('content')
+    @include('admin.layouts.components.notifikasi')
 
-                    @if(session('error'))
-                        <div class="alert alert-danger alert-dismissible">
-                            <button type="button" class="close" data-dismiss="alert">&times;</button>
-                            {{ session('error') }}
-                        </div>
-                    @endif
-
-                    {{-- Filter --}}
-                    <form action="{{ url('bank-sampah/member') }}" method="GET" class="form-inline" style="margin-bottom: 15px;">
-                        <div class="form-group">
-                            <input type="text" name="cari" class="form-control" placeholder="Cari nama/no member/HP..." value="{{ request('cari') }}">
-                        </div>
-                        <div class="form-group" style="margin-left: 5px;">
-                            <select name="lokasi_id" class="form-control">
-                                <option value="">Semua Lokasi</option>
-                                @foreach($lokasiList as $l)
-                                    <option value="{{ $l->id }}" {{ request('lokasi_id') == $l->id ? 'selected' : '' }}>{{ $l->nama }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="form-group" style="margin-left: 5px;">
-                            <select name="status" class="form-control">
-                                <option value="">Semua Status</option>
-                                <option value="1" {{ request('status') == '1' ? 'selected' : '' }}>Aktif</option>
-                                <option value="0" {{ request('status') == '0' ? 'selected' : '' }}>Nonaktif</option>
-                            </select>
-                        </div>
-                        <button type="submit" class="btn btn-primary" style="margin-left: 5px;"><i class="fa fa-search"></i> Cari</button>
-                    </form>
-
-                    <div class="table-responsive">
-                        <table class="table table-bordered table-striped">
-                            <thead>
-                                <tr>
-                                    <th width="50">No</th>
-                                    <th>No Member</th>
-                                    <th>Nama</th>
-                                    <th>Alamat</th>
-                                    <th>No HP</th>
-                                    <th>Lokasi</th>
-                                    <th class="text-right">Saldo</th>
-                                    <th class="text-center">Poin</th>
-                                    <th width="80">Status</th>
-                                    <th width="150">Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @forelse($member as $item)
-                                <tr>
-                                    <td>{{ ($member->currentPage() - 1) * $member->perPage() + $loop->iteration }}</td>
-                                    <td><span class="label label-info">{{ $item->no_member }}</span></td>
-                                    <td><strong>{{ $item->nama }}</strong></td>
-                                    <td>{{ Str::limit($item->alamat ?? '-', 30) }}</td>
-                                    <td>{{ $item->no_hp ?? '-' }}</td>
-                                    <td>{{ $item->lokasi->nama ?? '-' }}</td>
-                                    <td class="text-right text-success text-bold">{{ bank_sampah_format_rupiah($item->saldo) }}</td>
-                                    <td class="text-center"><span class="label label-warning">{{ $item->poin }} poin</span></td>
-                                    <td class="text-center">{!! bank_sampah_status_aktif_label($item->aktif) !!}</td>
-                                    <td>
-                                        <a href="{{ url('bank-sampah/member/detail', $item->id) }}" class="btn btn-info btn-xs" title="Detail">
-                                            <i class="fa fa-eye"></i>
-                                        </a>
-                                        <a href="{{ url('bank-sampah/member/form', $item->id) }}" class="btn btn-warning btn-xs" title="Edit">
-                                            <i class="fa fa-edit"></i>
-                                        </a>
-                                        <a href="{{ url('bank-sampah/member/kartu', $item->id) }}" class="btn btn-success btn-xs" title="Cetak Kartu" target="_blank">
-                                            <i class="fa fa-id-card"></i>
-                                        </a>
-                                        {!! form_open(url('bank-sampah/member/delete', $item->id), 'style="display:inline" onsubmit="return confirm('Yakin hapus nasabah ini?')"') !!}
-                                            <button type="submit" class="btn btn-danger btn-xs" title="Hapus">
-                                                <i class="fa fa-trash"></i>
-                                            </button>
-                                        </form>
-                                    </td>
-                                </tr>
-                                @empty
-                                <tr>
-                                    <td colspan="10" class="text-center">Belum ada data nasabah</td>
-                                </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <div class="text-center">
-                        {{ $member->withQueryString()->links() }}
-                    </div>
-                </div>
+    <div class="box box-info">
+        <div class="box-header with-border">
+            @if (can('u'))
+                <a href="{{ url('bank-sampah/member/form') }}" class="btn btn-social btn-success btn-sm"><i class="fa fa-plus"></i> Tambah Nasabah</a>
+            @endif
+        </div>
+        <div class="box-body">
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover" id="tabeldata">
+                    <thead>
+                        <tr>
+                            <th class="padat">NO</th>
+                            <th class="padat">AKSI</th>
+                            <th class="padat">NO MEMBER</th>
+                            <th>NAMA</th>
+                            <th class="padat">NO HP</th>
+                            <th>LOKASI</th>
+                            <th class="padat">SALDO</th>
+                            <th class="padat">POIN</th>
+                            <th class="padat">STATUS</th>
+                        </tr>
+                    </thead>
+                </table>
             </div>
         </div>
     </div>
-</section>
 @endsection
+
+@push('scripts')
+    <script>
+        $(document).ready(function() {
+            var TableData = $('#tabeldata').DataTable({
+                responsive: true,
+                processing: true,
+                serverSide: true,
+                ajax: {
+                    url: "{{ url('bank-sampah/member') }}",
+                    method: 'POST',
+                },
+                columns: [
+                    { data: 'DT_RowIndex', class: 'padat', searchable: false, orderable: false },
+                    { data: 'aksi', class: 'aksi', searchable: false, orderable: false },
+                    { data: 'no_member', name: 'no_member', class: 'padat' },
+                    { data: 'nama', name: 'nama' },
+                    { data: 'no_hp', name: 'no_hp', class: 'padat', searchable: false, defaultContent: '-' },
+                    { data: 'lokasi.nama', name: 'lokasi.nama', searchable: false, orderable: false, defaultContent: '-' },
+                    { data: 'saldo', name: 'saldo', class: 'padat', searchable: false, orderable: false,
+                      render: function(data) { return 'Rp ' + Number(data).toLocaleString('id-ID'); } },
+                    { data: 'poin', name: 'poin', class: 'padat', searchable: false, orderable: false },
+                    { data: 'aktif', name: 'aktif', class: 'padat', searchable: false, orderable: false,
+                      render: function(data) {
+                          return data == 1
+                              ? '<span class="label label-success">Aktif</span>'
+                              : '<span class="label label-danger">Nonaktif</span>';
+                      } },
+                ],
+            });
+
+            $(document).on('click', '.btn-hapus', function(e) {
+                e.preventDefault();
+                var url = $(this).data('href');
+                if (! confirm('Yakin hapus nasabah ini?')) return;
+                var data = {};
+                data[csrfParam] = getCsrfToken();
+                $.post(url, data).done(function() {
+                    TableData.ajax.reload();
+                }).fail(function() {
+                    alert('Gagal menghapus data');
+                });
+            });
+        });
+    </script>
+@endpush
