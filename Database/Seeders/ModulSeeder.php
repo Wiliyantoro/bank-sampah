@@ -135,16 +135,5 @@ class ModulSeeder extends Seeder
             'level'       => 2,
             'parent_slug' => 'bank-sampah',
         ]);
-
-        // Sub menu: Pengaturan
-        $this->createModul([
-            'modul'       => 'Pengaturan',
-            'url'         => 'bank-sampah/pengaturan',
-            'slug'        => 'bank-sampah-pengaturan',
-            'ikon'        => 'fa-gear',
-            'urut'        => 1000, // Biar paling bawah
-            'level'       => 2,
-            'parent_slug' => 'bank-sampah',
-        ]);
     }
 }

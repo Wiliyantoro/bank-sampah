@@ -42,6 +42,5 @@ return new class () extends Migration {
         $this->deleteModul(['config_id' => $id, 'slug' => 'bank-sampah-lokasi']);
         $this->deleteModul(['config_id' => $id, 'slug' => 'bank-sampah-reward']);
         $this->deleteModul(['config_id' => $id, 'slug' => 'bank-sampah-laporan']);
-        $this->deleteModul(['config_id' => $id, 'slug' => 'bank-sampah-pengaturan']);
     }
 };
