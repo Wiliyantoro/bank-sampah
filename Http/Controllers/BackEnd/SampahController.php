@@ -100,7 +100,7 @@ class SampahController extends AdminModulController
             'sumber'      => 'desa',
         ]);
 
-        return redirect_with('success', 'Jenis sampah berhasil ditambahkan');
+        return redirect_with('success', 'Jenis sampah berhasil ditambahkan', ci_route('bank-sampah.jenis-sampah'));
     }
 
     public function update($id = null)
@@ -127,7 +127,7 @@ class SampahController extends AdminModulController
             // is_default TIDAK diubah
         ]);
 
-        return redirect_with('success', 'Jenis sampah berhasil diubah');
+        return redirect_with('success', 'Jenis sampah berhasil diubah', ci_route('bank-sampah.jenis-sampah'));
     }
 
     public function delete($id = null): void
@@ -136,7 +136,7 @@ class SampahController extends AdminModulController
 
         // Data bawaan sistem tidak boleh dihapus
         if ($sampah->isDefault()) {
-            redirect_with('error', 'Data bawaan sistem tidak bisa dihapus. Anda hanya bisa mengubah status aktif/nonaktif.');
+            redirect_with('error', 'Data bawaan sistem tidak bisa dihapus. Anda hanya bisa mengubah status aktif/nonaktif.', ci_route('bank-sampah.jenis-sampah'));
             return;
         }
 
@@ -145,12 +145,12 @@ class SampahController extends AdminModulController
         // (berat/harga/subtotal snapshot) secara diam-diam. Tolak, arahkan
         // nonaktifkan saja.
         if ($sampah->transaksiDetail()->exists()) {
-            redirect_with('error', 'Tidak bisa hapus, jenis sampah ini sudah memiliki riwayat transaksi. Nonaktifkan saja bila tidak dipakai lagi.');
+            redirect_with('error', 'Tidak bisa hapus, jenis sampah ini sudah memiliki riwayat transaksi. Nonaktifkan saja bila tidak dipakai lagi.', ci_route('bank-sampah.jenis-sampah'));
             return;
         }
 
         $sampah->delete();
 
-        redirect_with('success', 'Jenis sampah berhasil dihapus');
+        redirect_with('success', 'Jenis sampah berhasil dihapus', ci_route('bank-sampah.jenis-sampah'));
     }
 }

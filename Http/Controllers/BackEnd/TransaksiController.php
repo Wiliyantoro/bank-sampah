@@ -156,7 +156,7 @@ class TransaksiController extends AdminModulController
             DB::rollBack();
             // BS-014: pesan exception bisa bocorkan SQL/tabel/path — log penuh, UI generik
             Log::error('[BankSampah] prosesSetor gagal', ['exception' => $e]);
-            return redirect_with('error', 'Gagal memproses transaksi. Silakan coba lagi.');
+            return redirect_with('error', 'Gagal memproses transaksi. Silakan coba lagi.', ci_route('bank-sampah.transaksi'));
         }
 
         // BS-032: notifikasi WA SETELAH commit dan LUAR try transaksi.
@@ -176,7 +176,7 @@ class TransaksiController extends AdminModulController
             }
         }
 
-        return redirect_with('success', 'Transaksi setor berhasil! Total: Rp ' . number_format($total, 0, ',', '.'));
+        return redirect_with('success', 'Transaksi setor berhasil! Total: Rp ' . number_format($total, 0, ',', '.'), ci_route('bank-sampah.transaksi'));
     }
 
     /**
@@ -211,7 +211,7 @@ class TransaksiController extends AdminModulController
 
             if ($member->saldo < request('nominal')) {
                 DB::rollBack();
-                return redirect_with('error', 'Saldo tidak mencukupi. Saldo saat ini: Rp ' . number_format($member->saldo, 0, ',', '.'));
+                return redirect_with('error', 'Saldo tidak mencukupi. Saldo saat ini: Rp ' . number_format($member->saldo, 0, ',', '.'), ci_route('bank-sampah.transaksi'));
             }
 
             $transaksi = TransaksiModel::create([
@@ -226,7 +226,7 @@ class TransaksiController extends AdminModulController
 
             if (! $member->kurangiSaldo(request('nominal'))) {
                 DB::rollBack();
-                return redirect_with('error', 'Saldo tidak mencukupi. Silakan coba lagi.');
+                return redirect_with('error', 'Saldo tidak mencukupi. Silakan coba lagi.', ci_route('bank-sampah.transaksi'));
             }
 
             DB::commit();
@@ -234,7 +234,7 @@ class TransaksiController extends AdminModulController
             DB::rollBack();
             // BS-014: pesan exception bisa bocorkan SQL/tabel/path — log penuh, UI generik
             Log::error('[BankSampah] prosesTarik gagal', ['exception' => $e]);
-            return redirect_with('error', 'Gagal memproses transaksi. Silakan coba lagi.');
+            return redirect_with('error', 'Gagal memproses transaksi. Silakan coba lagi.', ci_route('bank-sampah.transaksi'));
         }
 
         // BS-032: lihat komentar prosesSetor — WA di luar transaksi utama.
@@ -251,7 +251,7 @@ class TransaksiController extends AdminModulController
             }
         }
 
-        return redirect_with('success', 'Transaksi tarik berhasil! Nominal: Rp ' . number_format(request('nominal'), 0, ',', '.'));
+        return redirect_with('success', 'Transaksi tarik berhasil! Nominal: Rp ' . number_format(request('nominal'), 0, ',', '.'), ci_route('bank-sampah.transaksi'));
     }
 
     /**

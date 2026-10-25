@@ -106,7 +106,7 @@ class MemberController extends AdminModulController
             'aktif'       => request('aktif', 1),
         ]);
 
-        return redirect_with('success', 'Nasabah berhasil ditambahkan');
+        return redirect_with('success', 'Nasabah berhasil ditambahkan', ci_route('bank-sampah.member'));
     }
 
     public function update($id = null)
@@ -132,7 +132,7 @@ class MemberController extends AdminModulController
             'aktif'       => request('aktif', 1),
         ]);
 
-        return redirect_with('success', 'Nasabah berhasil diubah');
+        return redirect_with('success', 'Nasabah berhasil diubah', ci_route('bank-sampah.member'));
     }
 
     public function delete($id = null): void
@@ -140,13 +140,13 @@ class MemberController extends AdminModulController
         $member = MemberModel::desa()->findOrFail($id);
 
         if ($member->transaksi()->exists()) {
-            redirect_with('error', 'Tidak bisa hapus, nasabah masih memiliki transaksi');
+            redirect_with('error', 'Tidak bisa hapus, nasabah masih memiliki transaksi', ci_route('bank-sampah.member'));
             return;
         }
 
         $member->delete();
 
-        redirect_with('success', 'Nasabah berhasil dihapus');
+        redirect_with('success', 'Nasabah berhasil dihapus', ci_route('bank-sampah.member'));
     }
 
     /**
@@ -203,7 +203,7 @@ class MemberController extends AdminModulController
             'admin_id'  => auth()->id(),
         ]);
 
-        return redirect_with('success', 'UUID berhasil di-reset. Link lama tidak berlaku lagi.');
+        return redirect_with('success', 'UUID berhasil di-reset. Link lama tidak berlaku lagi.', ci_route('bank-sampah.member'));
     }
 
     /**
@@ -221,14 +221,14 @@ class MemberController extends AdminModulController
         $member = MemberModel::desa()->findOrFail($id);
 
         if (empty($member->penduduk_id)) {
-            return redirect_with('error', 'Nasabah belum terhubung dengan data penduduk. Hubungkan dulu untuk mengatur PIN Layanan Mandiri.');
+            return redirect_with('error', 'Nasabah belum terhubung dengan data penduduk. Hubungkan dulu untuk mengatur PIN Layanan Mandiri.', ci_route('bank-sampah.member'));
         }
 
         $pin = request('pin');
         $security = app(SecurityManager::class);
 
         if ($security->isCommonPin($pin)) {
-            return redirect_with('error', 'PIN terlalu umum. Gunakan kombinasi angka yang lebih unik.');
+            return redirect_with('error', 'PIN terlalu umum. Gunakan kombinasi angka yang lebih unik.', ci_route('bank-sampah.member'));
         }
 
         DB::table('tweb_penduduk')
@@ -242,7 +242,7 @@ class MemberController extends AdminModulController
             'admin_id'  => auth()->id(),
         ]);
 
-        return redirect_with('success', 'PIN berhasil diatur.');
+        return redirect_with('success', 'PIN berhasil diatur.', ci_route('bank-sampah.member'));
     }
 
     /**

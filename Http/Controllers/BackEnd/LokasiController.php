@@ -94,7 +94,7 @@ class LokasiController extends AdminModulController
             'sumber'           => 'desa',
         ]);
 
-        return redirect_with('success', 'Lokasi/TPS berhasil ditambahkan');
+        return redirect_with('success', 'Lokasi/TPS berhasil ditambahkan', ci_route('bank-sampah.lokasi'));
     }
 
     public function update($id = null)
@@ -120,7 +120,7 @@ class LokasiController extends AdminModulController
             'aktif'            => request('aktif', 1),
         ]);
 
-        return redirect_with('success', 'Lokasi/TPS berhasil diubah');
+        return redirect_with('success', 'Lokasi/TPS berhasil diubah', ci_route('bank-sampah.lokasi'));
     }
 
     public function delete($id = null): void
@@ -128,17 +128,17 @@ class LokasiController extends AdminModulController
         $lokasi = LokasiModel::desa()->findOrFail($id);
 
         if ($lokasi->isDefault()) {
-            redirect_with('error', 'Data bawaan sistem tidak bisa dihapus');
+            redirect_with('error', 'Data bawaan sistem tidak bisa dihapus', ci_route('bank-sampah.lokasi'));
             return;
         }
 
         if ($lokasi->member()->exists()) {
-            redirect_with('error', 'Tidak bisa hapus, masih ada nasabah di lokasi ini');
+            redirect_with('error', 'Tidak bisa hapus, masih ada nasabah di lokasi ini', ci_route('bank-sampah.lokasi'));
             return;
         }
 
         $lokasi->delete();
 
-        redirect_with('success', 'Lokasi/TPS berhasil dihapus');
+        redirect_with('success', 'Lokasi/TPS berhasil dihapus', ci_route('bank-sampah.lokasi'));
     }
 }

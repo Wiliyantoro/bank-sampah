@@ -85,7 +85,7 @@ class KategoriController extends AdminModulController
             'sumber'     => 'desa',
         ]);
 
-        return redirect_with('success', 'Kategori sampah berhasil ditambahkan');
+        return redirect_with('success', 'Kategori sampah berhasil ditambahkan', ci_route('bank-sampah.kategori-sampah'));
     }
 
     public function update($id = null)
@@ -104,7 +104,7 @@ class KategoriController extends AdminModulController
             // is_default TIDAK diubah
         ]);
 
-        return redirect_with('success', 'Kategori sampah berhasil diubah');
+        return redirect_with('success', 'Kategori sampah berhasil diubah', ci_route('bank-sampah.kategori-sampah'));
     }
 
     public function delete($id = null): void
@@ -113,18 +113,18 @@ class KategoriController extends AdminModulController
 
         // Data bawaan sistem tidak boleh dihapus
         if ($kategori->isDefault()) {
-            redirect_with('error', 'Data bawaan sistem tidak bisa dihapus. Anda hanya bisa mengubah status aktif/nonaktif.');
+            redirect_with('error', 'Data bawaan sistem tidak bisa dihapus. Anda hanya bisa mengubah status aktif/nonaktif.', ci_route('bank-sampah.kategori-sampah'));
             return;
         }
 
         // Kategori yang punya jenis sampah tidak boleh dihapus langsung
         if ($kategori->sampah()->exists()) {
-            redirect_with('error', 'Tidak bisa hapus, kategori ini masih memiliki jenis sampah.');
+            redirect_with('error', 'Tidak bisa hapus, kategori ini masih memiliki jenis sampah.', ci_route('bank-sampah.kategori-sampah'));
             return;
         }
 
         $kategori->delete();
 
-        redirect_with('success', 'Kategori sampah berhasil dihapus');
+        redirect_with('success', 'Kategori sampah berhasil dihapus', ci_route('bank-sampah.kategori-sampah'));
     }
 }

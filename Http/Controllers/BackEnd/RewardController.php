@@ -93,7 +93,7 @@ class RewardController extends AdminModulController
         }
 
         if (request('poin') < $minimal) {
-            return redirect_with('error', "Minimal poin untuk tukar adalah {$minimal}");
+            return redirect_with('error', "Minimal poin untuk tukar adalah {$minimal}", ci_route('bank-sampah.reward'));
         }
 
         DB::beginTransaction();
@@ -101,7 +101,7 @@ class RewardController extends AdminModulController
         try {
             if (! $member->tukarPoin(request('poin'))) {
                 DB::rollBack();
-                return redirect_with('error', 'Poin tidak mencukupi. Silakan coba lagi.');
+                return redirect_with('error', 'Poin tidak mencukupi. Silakan coba lagi.', ci_route('bank-sampah.reward'));
             }
 
             RewardModel::create([
@@ -118,7 +118,7 @@ class RewardController extends AdminModulController
             DB::rollBack();
             // BS-014: pesan exception bisa bocorkan SQL/tabel/path — log penuh, UI generik
             Log::error('[BankSampah] prosesTukar gagal', ['exception' => $e]);
-            return redirect_with('error', 'Gagal menukar poin. Silakan coba lagi.');
+            return redirect_with('error', 'Gagal menukar poin. Silakan coba lagi.', ci_route('bank-sampah.reward'));
         }
     }
 
