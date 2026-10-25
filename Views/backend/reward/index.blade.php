@@ -52,7 +52,7 @@
                                     <span class="label label-warning" style="font-size: 14px;">⭐ {{ number_format($item->poin) }}</span>
                                 </td>
                                 <td class="text-center">
-                                    @if($item->poin >= config('banksampah.reward.minimal_poin_tukar', 100))
+                                    @if($item->poin >= setting("bank_sampah_minimal_poin_tukar", 100))
                                         <a href="{{ url('bank-sampah/reward/tukar', $item->id) }}" class="btn btn-success btn-xs">
                                             <i class="fa fa-exchange"></i> Tukar Poin
                                         </a>

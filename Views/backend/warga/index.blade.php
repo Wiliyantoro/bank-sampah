@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ config('banksampah.nama', 'Bank Sampah') }} - Dashboard Nasabah</title>
+    <title>{{ setting("bank_sampah_nama", "Bank Sampah") }} - Dashboard Nasabah</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -45,7 +45,7 @@
 </head>
 <body>
     <div class="header">
-        <h1>🏦 {{ config('banksampah.nama', 'Bank Sampah Desa') }}</h1>
+        <h1>🏦 {{ setting("bank_sampah_nama", "Bank Sampah Desa") }}</h1>
         <p>Dashboard Nasabah</p>
     </div>
 

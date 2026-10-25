@@ -50,9 +50,9 @@
     </button>
 
     <div class="header">
-        <h1>🏦 {{ config('banksampah.nama', 'Bank Sampah Desa') }}</h1>
-        <p>{{ config('banksampah.alamat', '') }}</p>
-        <p>Telp: {{ config('banksampah.no_hp', '-') }}</p>
+        <h1>🏦 {{ setting("bank_sampah_nama", "Bank Sampah Desa") }}</h1>
+        <p>{{ setting("bank_sampah_alamat", "") }}</p>
+        <p>Telp: {{ setting("bank_sampah_no_hp", "-") }}</p>
     </div>
 
     <div class="info-grid">
@@ -157,7 +157,7 @@
     @endif
 
     <div class="footer">
-        <p>Terima kasih telah menggunakan layanan {{ config('banksampah.nama', 'Bank Sampah Desa') }}</p>
+        <p>Terima kasih telah menggunakan layanan {{ setting("bank_sampah_nama", "Bank Sampah Desa") }}</p>
         <p>Struk ini dicetak secara otomatis oleh sistem</p>
         <p>{{ now()->format('d/m/Y H:i:s') }}</p>
     </div>

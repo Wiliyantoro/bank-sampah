@@ -15,8 +15,8 @@ namespace Modules\BankSampah\Libraries;
 
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use Modules\BankSampah\Models\BankSampahMember;
-use Modules\BankSampah\Models\BankSampahTransaksi;
+use Modules\BankSampah\Models\MemberModel;
+use Modules\BankSampah\Models\TransaksiModel;
 
 class WhatsAppNotification
 {
@@ -24,19 +24,24 @@ class WhatsAppNotification
 
     public function __construct()
     {
-        $this->config = config('banksampah.whatsapp');
+        $this->config = [
+            'enabled' => setting('bank_sampah_whatsapp_aktif') == 1,
+            'api_url' => (string) setting('bank_sampah_whatsapp_api_url'),
+            'api_key' => (string) setting('bank_sampah_whatsapp_api_key'),
+            'sender'  => (string) setting('bank_sampah_whatsapp_sender'),
+        ];
     }
 
     /**
      * Kirim notifikasi transaksi setor
      */
-    public function kirimNotifikasiSetor(BankSampahMember $member, BankSampahTransaksi $transaksi): bool
+    public function kirimNotifikasiSetor(MemberModel $member, TransaksiModel $transaksi): bool
     {
         if (!$this->config['enabled'] || empty($member->no_hp)) {
             return false;
         }
 
-        $pesan = "🏦 *" . config('banksampah.nama', 'Bank Sampah') . "*\n\n"
+        $pesan = "🏦 *" . setting('bank_sampah_nama', 'Bank Sampah') . "*\n\n"
             . "Halo *{$member->nama}*! 👋\n\n"
             . "Transaksi *SETOR* berhasil:\n"
             . "📋 No: {$transaksi->no_transaksi}\n"
@@ -52,13 +57,13 @@ class WhatsAppNotification
     /**
      * Kirim notifikasi transaksi tarik
      */
-    public function kirimNotifikasiTarik(BankSampahMember $member, BankSampahTransaksi $transaksi): bool
+    public function kirimNotifikasiTarik(MemberModel $member, TransaksiModel $transaksi): bool
     {
         if (!$this->config['enabled'] || empty($member->no_hp)) {
             return false;
         }
 
-        $pesan = "🏦 *" . config('banksampah.nama', 'Bank Sampah') . "*\n\n"
+        $pesan = "🏦 *" . setting('bank_sampah_nama', 'Bank Sampah') . "*\n\n"
             . "Halo *{$member->nama}*! 👋\n\n"
             . "Transaksi *TARIK* berhasil:\n"
             . "📋 No: {$transaksi->no_transaksi}\n"
@@ -72,13 +77,13 @@ class WhatsAppNotification
     /**
      * Kirim notifikasi poin ditukar
      */
-    public function kirimNotifikasiTukarPoin(BankSampahMember $member, int $poin, string $keterangan): bool
+    public function kirimNotifikasiTukarPoin(MemberModel $member, int $poin, string $keterangan): bool
     {
         if (!$this->config['enabled'] || empty($member->no_hp)) {
             return false;
         }
 
-        $pesan = "🏦 *" . config('banksampah.nama', 'Bank Sampah') . "*\n\n"
+        $pesan = "🏦 *" . setting('bank_sampah_nama', 'Bank Sampah') . "*\n\n"
             . "Halo *{$member->nama}*! 👋\n\n"
             . "Poin berhasil ditukar:\n"
             . "⭐ Poin ditukar: {$poin}\n"

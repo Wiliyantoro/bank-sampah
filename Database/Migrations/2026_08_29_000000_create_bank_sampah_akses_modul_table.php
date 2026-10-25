@@ -13,6 +13,7 @@
 
 use App\Traits\Migrator;
 use Illuminate\Database\Migrations\Migration;
+use Illuminate\Support\Facades\DB;
 use Modules\BankSampah\Database\Seeders\BankSampahSeeder;
 
 return new class () extends Migration {
@@ -42,5 +43,11 @@ return new class () extends Migration {
         $this->deleteModul(['config_id' => $id, 'slug' => 'bank-sampah-lokasi']);
         $this->deleteModul(['config_id' => $id, 'slug' => 'bank-sampah-reward']);
         $this->deleteModul(['config_id' => $id, 'slug' => 'bank-sampah-laporan']);
+
+        // Hapus pengaturan milik modul (key berawalan bank_sampah_)
+        DB::table('setting_aplikasi')
+            ->where('config_id', $id)
+            ->where('key', 'like', 'bank_sampah_%')
+            ->delete();
     }
 };

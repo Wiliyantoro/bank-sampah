@@ -19,6 +19,7 @@ class LaporanController extends AdminModulController
     public $moduleName    = 'BankSampah';
     public $modul_ini     = 'bank-sampah';
     public $sub_modul_ini = 'bank-sampah-laporan';
+    public $kategori_pengaturan = 'Bank Sampah';
 
     public function __construct()
     {
@@ -173,14 +174,17 @@ class LaporanController extends AdminModulController
     /**
      * Kop laporan (BS-042): konfigurasi modul dulu; bila kosong, pakai profil
      * desa (identitas) — dulu "Alamat: | Telp:" selalu kosong karena memang
-     * hanya membaca config('banksampah') yang punya nilai bawaan kosong.
+     * hanya membaca setting Pengaturan Aplikasi yang bawaannya kosong.
      */
     protected function kopLaporan(int $bulan, int $tahun): array
     {
-        $config           = config('banksampah') ?? [];
-        $config['nama']   = $config['nama']   ?: (identitas('nama_desa') ?: 'BANK SAMPAH');
-        $config['alamat'] = $config['alamat'] ?: (identitas('alamat_kantor') ?: '-');
-        $config['no_hp']  = $config['no_hp']  ?: (identitas('telepon') ?: '-');
+        // BS-042: pengaturan modul dulu (Pengaturan Aplikasi, item 5); bila
+        // kosong, pakai profil desa (identitas) — dulu "Alamat: | Telp:"
+        // selalu kosong karena memang hanya membaca config dengan bawaan kosong.
+        $config           = [];
+        $config['nama']   = setting('bank_sampah_nama')   ?: (identitas('nama_desa') ?: 'BANK SAMPAH');
+        $config['alamat'] = setting('bank_sampah_alamat') ?: (identitas('alamat_kantor') ?: '-');
+        $config['no_hp']  = setting('bank_sampah_no_hp')  ?: (identitas('telepon') ?: '-');
 
         return $config + ['periode_label' => bulan_indonesia($bulan) . ' ' . $tahun];
     }

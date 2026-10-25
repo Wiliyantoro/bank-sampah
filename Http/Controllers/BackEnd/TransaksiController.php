@@ -27,6 +27,7 @@ class TransaksiController extends AdminModulController
     public $moduleName    = 'BankSampah';
     public $modul_ini     = 'bank-sampah';
     public $sub_modul_ini = 'bank-sampah-transaksi';
+    public $kategori_pengaturan = 'Bank Sampah';
 
     public function __construct()
     {
@@ -93,7 +94,6 @@ class TransaksiController extends AdminModulController
 
         try {
             $member = MemberModel::desa()->findOrFail(request('member_id'));
-            $config = config('banksampah');
 
             $total = 0;
             $details = [];
@@ -112,7 +112,7 @@ class TransaksiController extends AdminModulController
             }
 
             $totalBerat = array_sum(array_column(request('item'), 'berat'));
-            $poinPerKg = $config['reward']['poin_per_kg'] ?? 10;
+            $poinPerKg = (int) (setting('bank_sampah_poin_per_kg') ?: 10);
             $poinDidapat = (int) ($totalBerat * $poinPerKg);
 
             $transaksi = TransaksiModel::create([
@@ -138,7 +138,7 @@ class TransaksiController extends AdminModulController
 
             $member->tambahSaldo($total);
 
-            if ($config['reward']['enabled'] && $poinDidapat > 0) {
+            if (setting('bank_sampah_reward_aktif') == 1 && $poinDidapat > 0) {
                 $member->tambahPoin($poinDidapat);
 
                 RewardModel::create([
@@ -164,7 +164,7 @@ class TransaksiController extends AdminModulController
         // halaman 500 dan bisa memancing retry -> double-entry).
         // 1.4: tanpa constructor injection — resolve lewat app()
         $whatsapp = app(WhatsAppNotification::class);
-        if (config('banksampah.whatsapp.enabled') && $member->no_hp) {
+        if (setting('bank_sampah_whatsapp_aktif') == 1 && $member->no_hp) {
             try {
                 $whatsapp->kirimNotifikasiSetor($member, $transaksi);
             } catch (Throwable $e) {
@@ -239,7 +239,7 @@ class TransaksiController extends AdminModulController
         // BS-032: lihat komentar prosesSetor — WA di luar transaksi utama.
         // 1.4: tanpa constructor injection — resolve lewat app()
         $whatsapp = app(WhatsAppNotification::class);
-        if (config('banksampah.whatsapp.enabled') && $member->no_hp) {
+        if (setting('bank_sampah_whatsapp_aktif') == 1 && $member->no_hp) {
             try {
                 $whatsapp->kirimNotifikasiTarik($member, $transaksi);
             } catch (Throwable $e) {
@@ -274,9 +274,17 @@ class TransaksiController extends AdminModulController
             ->with(['member.lokasi', 'detail.sampah', 'lokasi'])
             ->findOrFail($id);
 
-        $config = config('banksampah');
+        $formatStruk = setting('bank_sampah_format_struk') ?: 'thermal';
 
-        if ($config['format_struk'] === 'thermal') {
+        // Identitas bank sampah untuk struk (Pengaturan Aplikasi, item 5)
+        $config = [
+            'nama'   => setting('bank_sampah_nama') ?: (identitas('nama_desa') ?: 'Bank Sampah Desa'),
+            'alamat' => setting('bank_sampah_alamat') ?: (identitas('alamat_kantor') ?: ''),
+            'no_hp'  => setting('bank_sampah_no_hp') ?: (identitas('telepon') ?: ''),
+            'logo'   => setting('bank_sampah_logo') ?: '',
+        ];
+
+        if ($formatStruk === 'thermal') {
             return view('banksampah::backend.transaksi.struk_thermal', compact('transaksi', 'config'));
         }
 

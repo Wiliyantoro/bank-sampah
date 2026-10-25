@@ -30,6 +30,9 @@ class BankSampahSeeder extends Seeder
         // Register menu di navigasi OpenSID
         $this->call(ModulSeeder::class);
 
+        // Pengaturan Aplikasi (issue #43 item 5)
+        $this->call(SettingSeeder::class);
+
         // Seed data default
         $this->call(KategoriSeeder::class);
         $this->call(SampahSeeder::class);

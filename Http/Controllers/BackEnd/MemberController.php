@@ -22,6 +22,7 @@ class MemberController extends AdminModulController
     public $moduleName    = 'BankSampah';
     public $modul_ini     = 'bank-sampah';
     public $sub_modul_ini = 'bank-sampah-member';
+    public $kategori_pengaturan = 'Bank Sampah';
 
     public function __construct()
     {
@@ -65,8 +66,8 @@ class MemberController extends AdminModulController
     public function form($id = null)
     {
         $member    = $id ? MemberModel::desa()->findOrFail($id) : null;
-        $config    = config('banksampah');
-        $noMember  = $member ? $member->no_member : MemberModel::generateNoMember($config['prefix_no_member']);
+        $prefix    = setting('bank_sampah_prefix_no_member') ?: 'BS';
+        $noMember  = $member ? $member->no_member : MemberModel::generateNoMember($prefix);
         $lokasiList = LokasiModel::desa()->aktif()->orderBy('nama')->get();
 
         return view('banksampah::backend.member.form', [
@@ -170,7 +171,9 @@ class MemberController extends AdminModulController
     public function cetakKartu($id)
     {
         $member = MemberModel::desa()->with('lokasi')->findOrFail($id);
-        $config = config('banksampah');
+
+        // Identitas bank sampah dari Pengaturan Aplikasi (item 5)
+        $config = $this->identitasBankSampah();
 
         // BS-023: QR memuat URL dashboard (halaman login) — bukan data member.
         // no_member = separuh kredensial login warga; tidak boleh dikodekan di QR.
@@ -336,5 +339,19 @@ class MemberController extends AdminModulController
             'id' => $p->id, 'nama' => $p->nama, 'nik' => $p->nik,
             'alamat' => $p->alamat_sekarang ?? '', 'telepon' => $p->telepon ?? '', 'jk' => $jk,
         ]);
+    }
+
+    /**
+     * Identitas bank sampah untuk cetakan/kartu (Pengaturan Aplikasi, item 5):
+     * nilai kosong otomatis memakai profil desa.
+     */
+    protected function identitasBankSampah(): array
+    {
+        return [
+            'nama'   => setting('bank_sampah_nama') ?: (identitas('nama_desa') ?: 'Bank Sampah Desa'),
+            'alamat' => setting('bank_sampah_alamat') ?: (identitas('alamat_kantor') ?: ''),
+            'no_hp'  => setting('bank_sampah_no_hp') ?: (identitas('telepon') ?: ''),
+            'logo'   => setting('bank_sampah_logo') ?: '',
+        ];
     }
 }

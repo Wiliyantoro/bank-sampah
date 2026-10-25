@@ -21,6 +21,7 @@ class RewardController extends AdminModulController
     public $moduleName    = 'BankSampah';
     public $modul_ini     = 'bank-sampah';
     public $sub_modul_ini = 'bank-sampah-reward';
+    public $kategori_pengaturan = 'Bank Sampah';
 
     public function __construct()
     {
@@ -63,7 +64,12 @@ class RewardController extends AdminModulController
     public function formTukar($memberId)
     {
         $member = MemberModel::desa()->findOrFail($memberId);
-        $config = config('banksampah');
+        $config = [
+            'reward' => [
+                'enabled'            => setting('bank_sampah_reward_aktif') == 1,
+                'minimal_poin_tukar' => (int) (setting('bank_sampah_minimal_poin_tukar') ?: 100),
+            ],
+        ];
 
         return view('banksampah::backend.reward.form_tukar', compact('member', 'config'));
     }
@@ -78,15 +84,14 @@ class RewardController extends AdminModulController
             'keterangan' => 'required|string|max:255',
         ]);
 
-        $member = MemberModel::desa()->findOrFail($memberId);
-        $config = config('banksampah');
+        $member  = MemberModel::desa()->findOrFail($memberId);
+        $minimal = (int) (setting('bank_sampah_minimal_poin_tukar') ?: 100);
 
         if ($member->poin < request('poin')) {
             return redirect_with('error', 'Poin tidak mencukupi. Poin saat ini: ' . $member->poin);
         }
 
-        if (request('poin') < $config['reward']['minimal_poin_tukar']) {
-            $minimal = $config['reward']['minimal_poin_tukar'];
+        if (request('poin') < $minimal) {
             return redirect_with('error', "Minimal poin untuk tukar adalah {$minimal}");
         }
 
