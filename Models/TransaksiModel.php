@@ -11,48 +11,33 @@
 
 namespace Modules\BankSampah\Models;
 
+use App\Models\BaseModel;
+use App\Traits\ConfigId;
 use Illuminate\Support\Facades\DB;
 
-class BankSampahTransaksi extends BaseModel
+class TransaksiModel extends BaseModel
 {
+    use ConfigId;
+
     protected $table = 'bank_sampah_transaksi';
 
-    protected $fillable = [
-        'config_id',
-        'no_transaksi',
-        'member_id',
-        'lokasi_id',
-        'tipe',
-        'total',
-        'bayar',
-        'potongan',
-        'poin',
-        'keterangan',
-        'user_id',
-    ];
+    protected $guarded = [];
 
     protected $casts = [
-        'total'    => 'decimal:2',
-        'bayar'    => 'decimal:2',
-        'potongan' => 'decimal:2',
-        'poin'     => 'integer',
+        'total'      => 'decimal:2',
+        'bayar'      => 'decimal:2',
+        'potongan'   => 'decimal:2',
+        'poin'       => 'integer',
+        'created_at' => 'date:Y-m-d H:i:s',
+        'updated_at' => 'date:Y-m-d H:i:s',
     ];
-
-    protected static function booted(): void
-    {
-        static::creating(function (BankSampahTransaksi $trx) {
-            if (empty($trx->config_id)) {
-                $trx->config_id = identitas('id');
-            }
-        });
-    }
 
     /**
      * Relasi ke member
      */
     public function member()
     {
-        return $this->belongsTo(BankSampahMember::class, 'member_id');
+        return $this->belongsTo(MemberModel::class, 'member_id');
     }
 
     /**
@@ -60,7 +45,7 @@ class BankSampahTransaksi extends BaseModel
      */
     public function lokasi()
     {
-        return $this->belongsTo(BankSampahLokasi::class, 'lokasi_id');
+        return $this->belongsTo(LokasiModel::class, 'lokasi_id');
     }
 
     /**
@@ -68,7 +53,7 @@ class BankSampahTransaksi extends BaseModel
      */
     public function detail()
     {
-        return $this->hasMany(BankSampahTransaksiDetail::class, 'transaksi_id');
+        return $this->hasMany(TransaksiDetailModel::class, 'transaksi_id');
     }
 
     /**
