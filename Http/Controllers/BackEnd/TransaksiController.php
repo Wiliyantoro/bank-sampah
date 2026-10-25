@@ -9,77 +9,64 @@
  * @license   http://www.gnu.org/licenses/gpl.html GPL V3
  */
 
-namespace Modules\BankSampah\Http\Controllers\BackEnd;
+defined('BASEPATH') || exit('No direct script access allowed');
 
-use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
-use Modules\BankSampah\Models\BankSampahMember;
-use Modules\BankSampah\Models\BankSampahSampah;
-use Modules\BankSampah\Models\BankSampahTransaksi;
-use Modules\BankSampah\Models\BankSampahTransaksiDetail;
-use Modules\BankSampah\Models\BankSampahReward;
-use Modules\BankSampah\Models\BankSampahLokasi;
 use Modules\BankSampah\Libraries\WhatsAppNotification;
+use Modules\BankSampah\Models\LokasiModel;
+use Modules\BankSampah\Models\MemberModel;
+use Modules\BankSampah\Models\RewardModel;
+use Modules\BankSampah\Models\SampahModel;
+use Modules\BankSampah\Models\TransaksiDetailModel;
+use Modules\BankSampah\Models\TransaksiModel;
 
-class BankSampahTransaksiController extends Controller
+class TransaksiController extends AdminModulController
 {
-    protected WhatsAppNotification $whatsapp;
+    public $moduleName    = 'BankSampah';
+    public $modul_ini     = 'bank-sampah';
+    public $sub_modul_ini = 'bank-sampah-transaksi';
 
-    public function __construct(WhatsAppNotification $whatsapp)
+    public function __construct()
     {
-        $this->whatsapp = $whatsapp;
+        parent::__construct();
+        isCan('b');
     }
 
     /**
      * Daftar transaksi (filtered per desa)
      */
-    public function index(Request $request)
+    public function index()
     {
-        $query = BankSampahTransaksi::desa()->with('member');
-
-        if ($request->has('tipe') && $request->tipe !== '') {
-            $query->where('tipe', $request->tipe);
+        if (request()->ajax()) {
+            return datatables()->of(TransaksiModel::desa()->with('member'))
+                ->addIndexColumn()
+                ->addColumn('aksi', static function ($row): string {
+                    $aksi = '';
+                    $aksi .= '<a href="' . ci_route('bank-sampah.transaksi.detail', $row->id) . '" class="btn btn-default btn-sm" title="Detail"><i class="fa fa-eye"></i></a> ';
+                    $aksi .= '<a href="' . ci_route('bank-sampah.transaksi.struk', $row->id) . '" class="btn btn-default btn-sm" title="Cetak Struk"><i class="fa fa-print"></i></a>';
+                    return $aksi;
+                })
+                ->rawColumns(['aksi'])
+                ->make();
         }
 
-        if ($request->has('tanggal_awal') && $request->tanggal_awal !== '') {
-            $query->whereDate('created_at', '>=', $request->tanggal_awal);
-        }
-
-        if ($request->has('tanggal_akhir') && $request->tanggal_akhir !== '') {
-            $query->whereDate('created_at', '<=', $request->tanggal_akhir);
-        }
-
-        if ($request->has('cari') && $request->cari !== '') {
-            $cari = $request->cari;
-            $safeCari = safe_like($cari);
-            $query->where(function ($q) use ($safeCari) {
-                $q->where('no_transaksi', 'LIKE', "%{$safeCari}%")
-                  ->orWhereHas('member', function ($mq) use ($safeCari) {
-                      $mq->where('nama', 'LIKE', "%{$safeCari}%");
-                  });
-            });
-        }
-
-        $transaksi = $query->orderBy('created_at', 'desc')->paginate(20);
-
-        return view('banksampah::backend.transaksi.index', compact('transaksi'));
+        return view('banksampah::backend.transaksi.index');
     }
 
     /**
      * Form setor sampah
      */
-    public function formSetor(Request $request)
+    public function formSetor()
     {
-        $memberList = BankSampahMember::desa()->aktif()->orderBy('nama')->get();
-        $sampahList = BankSampahSampah::desa()->aktif()->with('kategori')->orderBy('kategori_id')->orderBy('nama')->get();
-        $lokasiList = BankSampahLokasi::desa()->aktif()->orderBy('nama')->get();
+        $memberList = MemberModel::desa()->aktif()->orderBy('nama')->get();
+        $sampahList = SampahModel::desa()->aktif()->with('kategori')->orderBy('kategori_id')->orderBy('nama')->get();
+        $lokasiList = LokasiModel::desa()->aktif()->orderBy('nama')->get();
 
         $selectedMember = null;
-        if ($request->has('member_id')) {
-            $selectedMember = BankSampahMember::desa()->find($request->member_id);
+        if (request('member_id')) {
+            $selectedMember = MemberModel::desa()->find(request('member_id'));
         }
 
         return view('banksampah::backend.transaksi.form_setor', compact(
@@ -90,9 +77,9 @@ class BankSampahTransaksiController extends Controller
     /**
      * Proses transaksi setor
      */
-    public function prosesSetor(Request $request)
+    public function prosesSetor()
     {
-        $request->validate([
+        request()->validate([
             'member_id'        => 'required|integer',
             // BS-016: lokasi/TPS wajib milik desa yang sedang login
             'lokasi_id'        => ['nullable', 'integer', Rule::exists('bank_sampah_lokasi', 'id')
@@ -105,14 +92,14 @@ class BankSampahTransaksiController extends Controller
         DB::beginTransaction();
 
         try {
-            $member = BankSampahMember::desa()->findOrFail($request->member_id);
+            $member = MemberModel::desa()->findOrFail(request('member_id'));
             $config = config('banksampah');
 
             $total = 0;
             $details = [];
 
-            foreach ($request->item as $item) {
-                $sampah = BankSampahSampah::desa()->findOrFail($item['sampah_id']);
+            foreach (request('item') as $item) {
+                $sampah = SampahModel::desa()->findOrFail($item['sampah_id']);
                 $subtotal = $item['berat'] * $sampah->harga_beli;
                 $total += $subtotal;
 
@@ -124,29 +111,28 @@ class BankSampahTransaksiController extends Controller
                 ];
             }
 
-            $totalBerat = array_sum(array_column($request->item, 'berat'));
+            $totalBerat = array_sum(array_column(request('item'), 'berat'));
             $poinPerKg = $config['reward']['poin_per_kg'] ?? 10;
             $poinDidapat = (int) ($totalBerat * $poinPerKg);
 
-            $transaksi = BankSampahTransaksi::create([
-                'config_id'    => identitas('id'),
-                'no_transaksi' => BankSampahTransaksi::generateNoTransaksi(),
+            $transaksi = TransaksiModel::create([
+                'no_transaksi' => TransaksiModel::generateNoTransaksi(),
                 'member_id'    => $member->id,
-                'lokasi_id'    => $request->lokasi_id,
+                'lokasi_id'    => request('lokasi_id'),
                 'tipe'         => 'setor',
                 'total'        => $total,
                 'bayar'        => $total,
                 'poin'         => $poinDidapat,
-                'keterangan'   => $request->keterangan,
+                'keterangan'   => request('keterangan'),
                 'user_id'      => auth()->id(),
             ]);
 
             foreach ($details as $detail) {
-                BankSampahTransaksiDetail::create(array_merge($detail, [
+                TransaksiDetailModel::create(array_merge($detail, [
                     'transaksi_id' => $transaksi->id,
                 ]));
 
-                $sampah = BankSampahSampah::desa()->find($detail['sampah_id']); // BS-040: konsisten scope desa
+                $sampah = SampahModel::desa()->find($detail['sampah_id']); // BS-040: konsisten scope desa
                 $sampah->tambahStok($detail['berat']);
             }
 
@@ -155,8 +141,7 @@ class BankSampahTransaksiController extends Controller
             if ($config['reward']['enabled'] && $poinDidapat > 0) {
                 $member->tambahPoin($poinDidapat);
 
-                BankSampahReward::create([
-                    'config_id'    => identitas('id'),
+                RewardModel::create([
                     'member_id'    => $member->id,
                     'transaksi_id' => $transaksi->id,
                     'tipe'         => 'add',
@@ -166,23 +151,23 @@ class BankSampahTransaksiController extends Controller
             }
 
             DB::commit();
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             DB::rollBack();
             // BS-014: pesan exception bisa bocorkan SQL/tabel/path — log penuh, UI generik
             Log::error('[BankSampah] prosesSetor gagal', ['exception' => $e]);
-            return redirect()->back()
-                ->with('error', 'Gagal memproses transaksi. Silakan coba lagi.')
-                ->withInput();
+            return redirect_with('error', 'Gagal memproses transaksi. Silakan coba lagi.');
         }
 
         // BS-032: notifikasi WA SETELAH commit dan LUAR try transaksi.
         // Kegagalan WA tidak boleh menyulap transaksi yang sudah sukses
         // jadi kelihatan gagal (dulu: Error uncaught setelah commit menimbulkan
         // halaman 500 dan bisa memancing retry -> double-entry).
+        // 1.4: tanpa constructor injection — resolve lewat app()
+        $whatsapp = app(WhatsAppNotification::class);
         if (config('banksampah.whatsapp.enabled') && $member->no_hp) {
             try {
-                $this->whatsapp->kirimNotifikasiSetor($member, $transaksi);
-            } catch (\Throwable $e) {
+                $whatsapp->kirimNotifikasiSetor($member, $transaksi);
+            } catch (Throwable $e) {
                 Log::warning('[BankSampah] Gagal kirim notifikasi WA setor', [
                     'transaksi_id' => $transaksi->id,
                     'exception'    => $e,
@@ -190,20 +175,19 @@ class BankSampahTransaksiController extends Controller
             }
         }
 
-        return redirect()->route('bank-sampah/transaksi/detail', $transaksi->id)
-            ->with('success', 'Transaksi setor berhasil! Total: Rp ' . number_format($total, 0, ',', '.'));
+        return redirect_with('success', 'Transaksi setor berhasil! Total: Rp ' . number_format($total, 0, ',', '.'));
     }
 
     /**
      * Form tarik saldo
      */
-    public function formTarik(Request $request)
+    public function formTarik()
     {
-        $memberList = BankSampahMember::desa()->aktif()->orderBy('nama')->get();
+        $memberList = MemberModel::desa()->aktif()->orderBy('nama')->get();
 
         $selectedMember = null;
-        if ($request->has('member_id')) {
-            $selectedMember = BankSampahMember::desa()->find($request->member_id);
+        if (request('member_id')) {
+            $selectedMember = MemberModel::desa()->find(request('member_id'));
         }
 
         return view('banksampah::backend.transaksi.form_tarik', compact('memberList', 'selectedMember'));
@@ -212,9 +196,9 @@ class BankSampahTransaksiController extends Controller
     /**
      * Proses transaksi tarik
      */
-    public function prosesTarik(Request $request)
+    public function prosesTarik()
     {
-        $request->validate([
+        request()->validate([
             'member_id' => 'required|integer',
             'nominal'   => 'required|numeric|min:1',
         ]);
@@ -222,47 +206,43 @@ class BankSampahTransaksiController extends Controller
         DB::beginTransaction();
 
         try {
-            $member = BankSampahMember::desa()->findOrFail($request->member_id);
+            $member = MemberModel::desa()->findOrFail(request('member_id'));
 
-            if ($member->saldo < $request->nominal) {
-                return redirect()->back()
-                    ->with('error', 'Saldo tidak mencukupi. Saldo saat ini: Rp ' . number_format($member->saldo, 0, ',', '.'))
-                    ->withInput();
+            if ($member->saldo < request('nominal')) {
+                DB::rollBack();
+                return redirect_with('error', 'Saldo tidak mencukupi. Saldo saat ini: Rp ' . number_format($member->saldo, 0, ',', '.'));
             }
 
-            $transaksi = BankSampahTransaksi::create([
-                'config_id'    => identitas('id'),
-                'no_transaksi' => BankSampahTransaksi::generateNoTransaksi(),
+            $transaksi = TransaksiModel::create([
+                'no_transaksi' => TransaksiModel::generateNoTransaksi(),
                 'member_id'    => $member->id,
                 'tipe'         => 'tarik',
-                'total'        => $request->nominal,
-                'bayar'        => $request->nominal,
-                'keterangan'   => $request->keterangan,
+                'total'        => request('nominal'),
+                'bayar'        => request('nominal'),
+                'keterangan'   => request('keterangan'),
                 'user_id'      => auth()->id(),
             ]);
 
-            if (! $member->kurangiSaldo($request->nominal)) {
+            if (! $member->kurangiSaldo(request('nominal'))) {
                 DB::rollBack();
-                return redirect()->back()
-                    ->with('error', 'Saldo tidak mencukupi. Silakan coba lagi.')
-                    ->withInput();
+                return redirect_with('error', 'Saldo tidak mencukupi. Silakan coba lagi.');
             }
 
             DB::commit();
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             DB::rollBack();
             // BS-014: pesan exception bisa bocorkan SQL/tabel/path — log penuh, UI generik
             Log::error('[BankSampah] prosesTarik gagal', ['exception' => $e]);
-            return redirect()->back()
-                ->with('error', 'Gagal memproses transaksi. Silakan coba lagi.')
-                ->withInput();
+            return redirect_with('error', 'Gagal memproses transaksi. Silakan coba lagi.');
         }
 
         // BS-032: lihat komentar prosesSetor — WA di luar transaksi utama.
+        // 1.4: tanpa constructor injection — resolve lewat app()
+        $whatsapp = app(WhatsAppNotification::class);
         if (config('banksampah.whatsapp.enabled') && $member->no_hp) {
             try {
-                $this->whatsapp->kirimNotifikasiTarik($member, $transaksi);
-            } catch (\Throwable $e) {
+                $whatsapp->kirimNotifikasiTarik($member, $transaksi);
+            } catch (Throwable $e) {
                 Log::warning('[BankSampah] Gagal kirim notifikasi WA tarik', [
                     'transaksi_id' => $transaksi->id,
                     'exception'    => $e,
@@ -270,8 +250,7 @@ class BankSampahTransaksiController extends Controller
             }
         }
 
-        return redirect()->route('bank-sampah/transaksi/detail', $transaksi->id)
-            ->with('success', 'Transaksi tarik berhasil! Nominal: Rp ' . number_format($request->nominal, 0, ',', '.'));
+        return redirect_with('success', 'Transaksi tarik berhasil! Nominal: Rp ' . number_format(request('nominal'), 0, ',', '.'));
     }
 
     /**
@@ -279,7 +258,7 @@ class BankSampahTransaksiController extends Controller
      */
     public function detail($id)
     {
-        $transaksi = BankSampahTransaksi::desa()
+        $transaksi = TransaksiModel::desa()
             ->with(['member.lokasi', 'detail.sampah', 'lokasi'])
             ->findOrFail($id);
 
@@ -291,7 +270,7 @@ class BankSampahTransaksiController extends Controller
      */
     public function cetakStruk($id)
     {
-        $transaksi = BankSampahTransaksi::desa()
+        $transaksi = TransaksiModel::desa()
             ->with(['member.lokasi', 'detail.sampah', 'lokasi'])
             ->findOrFail($id);
 
@@ -307,9 +286,9 @@ class BankSampahTransaksiController extends Controller
     /**
      * Get data member via AJAX
      */
-    public function getMember(Request $request)
+    public function getMember()
     {
-        $member = BankSampahMember::desa()->findOrFail($request->id);
+        $member = MemberModel::desa()->findOrFail(request('id'));
 
         return response()->json([
             'id'        => $member->id,
@@ -324,9 +303,9 @@ class BankSampahTransaksiController extends Controller
     /**
      * Get harga sampah via AJAX
      */
-    public function getSampah(Request $request)
+    public function getSampah()
     {
-        $sampah = BankSampahSampah::desa()->with('kategori')->findOrFail($request->id);
+        $sampah = SampahModel::desa()->with('kategori')->findOrFail(request('id'));
 
         return response()->json([
             'id'         => $sampah->id,
