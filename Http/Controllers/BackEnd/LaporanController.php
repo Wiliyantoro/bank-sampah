@@ -50,7 +50,7 @@ class LaporanController extends AdminModulController
         $daysInMonth = cal_days_in_month(CAL_GREGORIAN, $bulan, $tahun);
 
         // Rekap harian — BS-024: satu query agregasi, dimap ke kalender di PHP
-        $rekapRows = TransaksiModel::desa()
+        $rekapRows = TransaksiModel::query()
             ->selectRaw('DATE(created_at) as tgl, tipe, COUNT(*) as jumlah, COALESCE(SUM(total), 0) as nominal')
             ->whereMonth('created_at', $bulan)
             ->whereYear('created_at', $tahun)
@@ -86,8 +86,7 @@ class LaporanController extends AdminModulController
                 SUM(subtotal) as total_nilai
             ')
             ->whereHas('transaksi', function ($q) use ($bulan, $tahun) {
-                $q->desa()
-                  ->whereMonth('created_at', $bulan)
+                $q->whereMonth('created_at', $bulan)
                   ->whereYear('created_at', $tahun);
             })
             ->with('sampah.kategori')
@@ -95,7 +94,7 @@ class LaporanController extends AdminModulController
             ->get();
 
         // Rekap per lokasi
-        $rekapLokasi = TransaksiModel::desa()->selectRaw('
+        $rekapLokasi = TransaksiModel::query()->selectRaw('
                 lokasi_id,
                 tipe,
                 COUNT(*) as jumlah,
@@ -108,13 +107,13 @@ class LaporanController extends AdminModulController
             ->get();
 
         // Total
-        $totalSetor = TransaksiModel::desa()->where('tipe', 'setor')
+        $totalSetor = TransaksiModel::query()->where('tipe', 'setor')
             ->whereMonth('created_at', $bulan)
             ->whereYear('created_at', $tahun)
             ->selectRaw('COUNT(*) as jumlah, COALESCE(SUM(total), 0) as nominal')
             ->first();
 
-        $totalTarik = TransaksiModel::desa()->where('tipe', 'tarik')
+        $totalTarik = TransaksiModel::query()->where('tipe', 'tarik')
             ->whereMonth('created_at', $bulan)
             ->whereYear('created_at', $tahun)
             ->selectRaw('COUNT(*) as jumlah, COALESCE(SUM(total), 0) as nominal')
@@ -197,7 +196,7 @@ class LaporanController extends AdminModulController
     {
         [$bulan, $tahun] = $this->periodeQuery();
 
-        $transaksi = TransaksiModel::desa()->with('member')
+        $transaksi = TransaksiModel::query()->with('member')
             ->whereMonth('created_at', $bulan)
             ->whereYear('created_at', $tahun)
             ->orderBy('created_at', 'asc')

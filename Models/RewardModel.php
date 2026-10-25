@@ -44,11 +44,4 @@ class RewardModel extends BaseModel
         return $this->belongsTo(TransaksiModel::class, 'transaksi_id');
     }
 
-    /**
-     * Scope: hanya data desa yang sedang login
-     */
-    public function scopeDesa($query)
-    {
-        return $query->where('config_id', identitas('id'));
-    }
 }

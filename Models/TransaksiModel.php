@@ -56,13 +56,6 @@ class TransaksiModel extends BaseModel
         return $this->hasMany(TransaksiDetailModel::class, 'transaksi_id');
     }
 
-    /**
-     * Scope: hanya data desa yang sedang login
-     */
-    public function scopeDesa($query)
-    {
-        return $query->where('config_id', identitas('id'));
-    }
 
     /**
      * Generate nomor transaksi unik per desa (thread-safe)

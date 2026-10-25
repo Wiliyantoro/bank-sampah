@@ -42,7 +42,7 @@ class TransaksiController extends AdminModulController
     public function index()
     {
         if (request()->ajax()) {
-            return datatables()->of(TransaksiModel::desa()->with('member'))
+            return datatables()->of(TransaksiModel::query()->with('member'))
                 ->addIndexColumn()
                 ->addColumn('aksi', static function ($row): string {
                     $aksi = '';
@@ -62,13 +62,13 @@ class TransaksiController extends AdminModulController
      */
     public function formSetor()
     {
-        $memberList = MemberModel::desa()->aktif()->orderBy('nama')->get();
-        $sampahList = SampahModel::desa()->aktif()->with('kategori')->orderBy('kategori_id')->orderBy('nama')->get();
-        $lokasiList = LokasiModel::desa()->aktif()->orderBy('nama')->get();
+        $memberList = MemberModel::query()->aktif()->orderBy('nama')->get();
+        $sampahList = SampahModel::query()->aktif()->with('kategori')->orderBy('kategori_id')->orderBy('nama')->get();
+        $lokasiList = LokasiModel::query()->aktif()->orderBy('nama')->get();
 
         $selectedMember = null;
         if (request('member_id')) {
-            $selectedMember = MemberModel::desa()->find(request('member_id'));
+            $selectedMember = MemberModel::query()->find(request('member_id'));
         }
 
         return view('banksampah::backend.transaksi.form_setor', compact(
@@ -94,13 +94,13 @@ class TransaksiController extends AdminModulController
         DB::beginTransaction();
 
         try {
-            $member = MemberModel::desa()->findOrFail(request('member_id'));
+            $member = MemberModel::query()->findOrFail(request('member_id'));
 
             $total = 0;
             $details = [];
 
             foreach (request('item') as $item) {
-                $sampah = SampahModel::desa()->findOrFail($item['sampah_id']);
+                $sampah = SampahModel::query()->findOrFail($item['sampah_id']);
                 $subtotal = $item['berat'] * $sampah->harga_beli;
                 $total += $subtotal;
 
@@ -133,7 +133,7 @@ class TransaksiController extends AdminModulController
                     'transaksi_id' => $transaksi->id,
                 ]));
 
-                $sampah = SampahModel::desa()->find($detail['sampah_id']); // BS-040: konsisten scope desa
+                $sampah = SampahModel::query()->find($detail['sampah_id']); // BS-040: konsisten scope desa
                 $sampah->tambahStok($detail['berat']);
             }
 
@@ -184,11 +184,11 @@ class TransaksiController extends AdminModulController
      */
     public function formTarik()
     {
-        $memberList = MemberModel::desa()->aktif()->orderBy('nama')->get();
+        $memberList = MemberModel::query()->aktif()->orderBy('nama')->get();
 
         $selectedMember = null;
         if (request('member_id')) {
-            $selectedMember = MemberModel::desa()->find(request('member_id'));
+            $selectedMember = MemberModel::query()->find(request('member_id'));
         }
 
         return view('banksampah::backend.transaksi.form_tarik', compact('memberList', 'selectedMember'));
@@ -207,7 +207,7 @@ class TransaksiController extends AdminModulController
         DB::beginTransaction();
 
         try {
-            $member = MemberModel::desa()->findOrFail(request('member_id'));
+            $member = MemberModel::query()->findOrFail(request('member_id'));
 
             if ($member->saldo < request('nominal')) {
                 DB::rollBack();
@@ -259,7 +259,7 @@ class TransaksiController extends AdminModulController
      */
     public function detail($id)
     {
-        $transaksi = TransaksiModel::desa()
+        $transaksi = TransaksiModel::query()
             ->with(['member.lokasi', 'detail.sampah', 'lokasi'])
             ->findOrFail($id);
 
@@ -271,7 +271,7 @@ class TransaksiController extends AdminModulController
      */
     public function cetakStruk($id)
     {
-        $transaksi = TransaksiModel::desa()
+        $transaksi = TransaksiModel::query()
             ->with(['member.lokasi', 'detail.sampah', 'lokasi'])
             ->findOrFail($id);
 
@@ -297,7 +297,7 @@ class TransaksiController extends AdminModulController
      */
     public function getMember()
     {
-        $member = MemberModel::desa()->findOrFail(request('id'));
+        $member = MemberModel::query()->findOrFail(request('id'));
 
         return response()->json([
             'id'        => $member->id,
@@ -314,7 +314,7 @@ class TransaksiController extends AdminModulController
      */
     public function getSampah()
     {
-        $sampah = SampahModel::desa()->with('kategori')->findOrFail(request('id'));
+        $sampah = SampahModel::query()->with('kategori')->findOrFail(request('id'));
 
         return response()->json([
             'id'         => $sampah->id,

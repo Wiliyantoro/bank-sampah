@@ -32,7 +32,7 @@ class SampahController extends AdminModulController
     public function index()
     {
         if (request()->ajax()) {
-            return datatables()->of(SampahModel::desa()->with('kategori'))
+            return datatables()->of(SampahModel::query()->with('kategori'))
                 ->addIndexColumn()
                 ->addColumn('aksi', static function ($row): string {
                     $aksi = '';
@@ -53,7 +53,7 @@ class SampahController extends AdminModulController
                 ->make();
         }
 
-        $kategoriList = KategoriModel::desa()->aktif()->orderBy('nama')->get();
+        $kategoriList = KategoriModel::query()->aktif()->orderBy('nama')->get();
 
         return view('banksampah::backend.sampah.index', compact('kategoriList'));
     }
@@ -63,8 +63,8 @@ class SampahController extends AdminModulController
      */
     public function form($id = null)
     {
-        $sampah      = $id ? SampahModel::desa()->findOrFail($id) : null;
-        $kategoriList = KategoriModel::desa()->aktif()->orderBy('nama')->get();
+        $sampah      = $id ? SampahModel::query()->findOrFail($id) : null;
+        $kategoriList = KategoriModel::query()->aktif()->orderBy('nama')->get();
 
         return view('banksampah::backend.sampah.form', [
             'sampah'       => $sampah,
@@ -105,7 +105,7 @@ class SampahController extends AdminModulController
 
     public function update($id = null)
     {
-        $sampah = SampahModel::desa()->findOrFail($id);
+        $sampah = SampahModel::query()->findOrFail($id);
 
         request()->validate([
             'nama'        => 'required|string|max:150',
@@ -132,7 +132,7 @@ class SampahController extends AdminModulController
 
     public function delete($id = null): void
     {
-        $sampah = SampahModel::desa()->findOrFail($id);
+        $sampah = SampahModel::query()->findOrFail($id);
 
         // Data bawaan sistem tidak boleh dihapus
         if ($sampah->isDefault()) {
