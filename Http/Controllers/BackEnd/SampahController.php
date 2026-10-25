@@ -21,6 +21,7 @@ class SampahController extends AdminModulController
     public $modul_ini     = 'bank-sampah';
     public $sub_modul_ini = 'bank-sampah-sampah';
     public $kategori_pengaturan = 'Bank Sampah';
+    public $aliasController   = 'bank-sampah.jenis-sampah';
 
     public function __construct()
     {

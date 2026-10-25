@@ -20,6 +20,7 @@ class LaporanController extends AdminModulController
     public $modul_ini     = 'bank-sampah';
     public $sub_modul_ini = 'bank-sampah-laporan';
     public $kategori_pengaturan = 'Bank Sampah';
+    public $aliasController   = 'bank-sampah.laporan';
 
     public function __construct()
     {

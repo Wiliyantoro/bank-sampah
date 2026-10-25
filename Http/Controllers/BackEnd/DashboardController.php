@@ -23,6 +23,7 @@ class DashboardController extends AdminModulController
     public $modul_ini     = 'bank-sampah';
     public $sub_modul_ini = 'bank-sampah-dashboard';
     public $kategori_pengaturan = 'Bank Sampah';
+    public $aliasController   = 'bank-sampah.dashboard';
 
     public function __construct()
     {

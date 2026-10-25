@@ -19,6 +19,7 @@ class LokasiController extends AdminModulController
     public $modul_ini     = 'bank-sampah';
     public $sub_modul_ini = 'bank-sampah-lokasi';
     public $kategori_pengaturan = 'Bank Sampah';
+    public $aliasController   = 'bank-sampah.lokasi';
 
     public function __construct()
     {

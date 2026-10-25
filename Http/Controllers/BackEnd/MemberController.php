@@ -23,6 +23,7 @@ class MemberController extends AdminModulController
     public $modul_ini     = 'bank-sampah';
     public $sub_modul_ini = 'bank-sampah-member';
     public $kategori_pengaturan = 'Bank Sampah';
+    public $aliasController   = 'bank-sampah.member';
 
     public function __construct()
     {

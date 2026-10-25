@@ -20,6 +20,7 @@ class KategoriController extends AdminModulController
     public $modul_ini     = 'bank-sampah';
     public $sub_modul_ini = 'bank-sampah-kategori';
     public $kategori_pengaturan = 'Bank Sampah';
+    public $aliasController   = 'bank-sampah.kategori-sampah';
 
     public function __construct()
     {

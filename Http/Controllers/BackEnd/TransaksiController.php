@@ -28,6 +28,7 @@ class TransaksiController extends AdminModulController
     public $modul_ini     = 'bank-sampah';
     public $sub_modul_ini = 'bank-sampah-transaksi';
     public $kategori_pengaturan = 'Bank Sampah';
+    public $aliasController   = 'bank-sampah.transaksi';
 
     public function __construct()
     {
