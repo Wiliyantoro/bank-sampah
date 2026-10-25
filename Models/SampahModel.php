@@ -11,28 +11,24 @@
 
 namespace Modules\BankSampah\Models;
 
-class BankSampahSampah extends BaseModel
+use App\Models\BaseModel;
+use App\Traits\ConfigId;
+
+class SampahModel extends BaseModel
 {
+    use ConfigId;
+
     protected $table = 'bank_sampah_sampah';
 
-    protected $fillable = [
-        'config_id',
-        'kategori_id',
-        'nama',
-        'satuan',
-        'harga_beli',
-        'harga_jual',
-        'stok',
-        'aktif',
-        'is_default',
-        'sumber',
-    ];
+    protected $guarded = [];
 
     protected $casts = [
         'is_default' => 'boolean',
         'harga_beli' => 'decimal:2',
         'harga_jual' => 'decimal:2',
         'stok'       => 'decimal:2',
+        'created_at' => 'date:Y-m-d H:i:s',
+        'updated_at' => 'date:Y-m-d H:i:s',
     ];
 
     /**
@@ -40,7 +36,7 @@ class BankSampahSampah extends BaseModel
      */
     public function kategori()
     {
-        return $this->belongsTo(BankSampahKategori::class, 'kategori_id');
+        return $this->belongsTo(KategoriModel::class, 'kategori_id');
     }
 
     /**
@@ -48,7 +44,7 @@ class BankSampahSampah extends BaseModel
      */
     public function transaksiDetail()
     {
-        return $this->hasMany(BankSampahTransaksiDetail::class, 'sampah_id');
+        return $this->hasMany(TransaksiDetailModel::class, 'sampah_id');
     }
 
     /**

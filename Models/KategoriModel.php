@@ -11,40 +11,29 @@
 
 namespace Modules\BankSampah\Models;
 
-class BankSampahLokasi extends BaseModel
-{
-    protected $table = 'bank_sampah_lokasi';
+use App\Models\BaseModel;
+use App\Traits\ConfigId;
 
-    protected $fillable = [
-        'config_id',
-        'nama',
-        'kode',
-        'alamat',
-        'penanggung_jawab',
-        'no_hp',
-        'aktif',
-        'is_default',
-        'sumber',
-    ];
+class KategoriModel extends BaseModel
+{
+    use ConfigId;
+
+    protected $table = 'bank_sampah_kategori';
+
+    protected $guarded = [];
 
     protected $casts = [
         'is_default' => 'boolean',
+        'created_at' => 'date:Y-m-d H:i:s',
+        'updated_at' => 'date:Y-m-d H:i:s',
     ];
 
     /**
-     * Relasi ke member
+     * Relasi ke jenis sampah
      */
-    public function member()
+    public function sampah()
     {
-        return $this->hasMany(BankSampahMember::class, 'lokasi_id');
-    }
-
-    /**
-     * Relasi ke transaksi
-     */
-    public function transaksi()
-    {
-        return $this->hasMany(BankSampahTransaksi::class, 'lokasi_id');
+        return $this->hasMany(SampahModel::class, 'kategori_id');
     }
 
     /**
@@ -64,10 +53,34 @@ class BankSampahLokasi extends BaseModel
     }
 
     /**
+     * Scope: hanya data bawaan (seeder)
+     */
+    public function scopeDefault($query)
+    {
+        return $query->where('is_default', 1);
+    }
+
+    /**
+     * Scope: hanya data custom desa
+     */
+    public function scopeCustom($query)
+    {
+        return $query->where('is_default', 0);
+    }
+
+    /**
      * Cek apakah ini data bawaan sistem
      */
     public function isDefault(): bool
     {
         return $this->is_default === true || $this->is_default == 1;
+    }
+
+    /**
+     * Cek apakah ini data custom desa
+     */
+    public function isCustom(): bool
+    {
+        return ! $this->isDefault();
     }
 }
