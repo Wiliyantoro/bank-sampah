@@ -24,6 +24,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Modules\BankSampah\Models\{AuditLogModel, KategoriModel, LokasiModel, MemberModel, RewardModel, SampahModel, TransaksiDetailModel, TransaksiModel};
 
 return new class () extends Migration {
     /**
@@ -34,25 +35,22 @@ return new class () extends Migration {
         if (! Schema::hasTable('bank_sampah_kategori')) {
             Schema::create('bank_sampah_kategori', static function (Blueprint $table): void {
                 $table->integer('id', true);
-                $table->integer('config_id');
+                $table->configId();
                 $table->string('nama', 100);
                 $table->text('keterangan')->nullable();
                 $table->tinyInteger('is_default')->default(0);
                 $table->string('sumber', 20)->default('system');
                 $table->tinyInteger('aktif')->default(1);
-                $table->timestamps();
+                $table->timesWithUserstamps();
 
                 $table->unique(['config_id', 'nama']);
-                $table->foreign('config_id')
-                    ->references('id')->on('config')
-                    ->onUpdate('cascade')->onDelete('cascade');
             });
         }
 
         if (! Schema::hasTable('bank_sampah_sampah')) {
             Schema::create('bank_sampah_sampah', static function (Blueprint $table): void {
                 $table->integer('id', true);
-                $table->integer('config_id');
+                $table->configId();
                 $table->integer('kategori_id');
                 $table->string('nama', 150);
                 $table->string('satuan', 20)->default('kg');
@@ -62,12 +60,9 @@ return new class () extends Migration {
                 $table->tinyInteger('is_default')->default(0);
                 $table->string('sumber', 20)->default('system');
                 $table->tinyInteger('aktif')->default(1);
-                $table->timestamps();
+                $table->timesWithUserstamps();
 
                 $table->unique(['config_id', 'kategori_id', 'nama']);
-                $table->foreign('config_id')
-                    ->references('id')->on('config')
-                    ->onUpdate('cascade')->onDelete('cascade');
                 $table->foreign('kategori_id')
                     ->references('id')->on('bank_sampah_kategori')
                     ->onUpdate('cascade')->onDelete('cascade');
@@ -77,7 +72,7 @@ return new class () extends Migration {
         if (! Schema::hasTable('bank_sampah_lokasi')) {
             Schema::create('bank_sampah_lokasi', static function (Blueprint $table): void {
                 $table->integer('id', true);
-                $table->integer('config_id');
+                $table->configId();
                 $table->string('nama', 150);
                 $table->string('kode', 20);
                 $table->text('alamat')->nullable();
@@ -86,20 +81,17 @@ return new class () extends Migration {
                 $table->tinyInteger('is_default')->default(0);
                 $table->string('sumber', 20)->default('desa');
                 $table->tinyInteger('aktif')->default(1);
-                $table->timestamps();
+                $table->timesWithUserstamps();
 
                 $table->unique(['config_id', 'kode']);
                 $table->index(['config_id', 'aktif'], 'idx_lokasi_config_active');
-                $table->foreign('config_id')
-                    ->references('id')->on('config')
-                    ->onUpdate('cascade')->onDelete('cascade');
             });
         }
 
         if (! Schema::hasTable('bank_sampah_member')) {
             Schema::create('bank_sampah_member', static function (Blueprint $table): void {
                 $table->integer('id', true);
-                $table->integer('config_id');
+                $table->configId();
                 $table->string('uuid', 36);
                 $table->string('no_member', 20);
                 $table->string('nama', 150);
@@ -110,13 +102,10 @@ return new class () extends Migration {
                 $table->decimal('saldo', 15, 2)->default(0);
                 $table->integer('poin')->default(0);
                 $table->tinyInteger('aktif')->default(1);
-                $table->timestamps();
+                $table->timesWithUserstamps();
 
                 $table->unique(['config_id', 'no_member']);
                 $table->index(['config_id', 'aktif'], 'idx_member_config_active');
-                $table->foreign('config_id')
-                    ->references('id')->on('config')
-                    ->onUpdate('cascade')->onDelete('cascade');
                 $table->foreign('lokasi_id')
                     ->references('id')->on('bank_sampah_lokasi')
                     ->onUpdate('cascade')->onDelete('set null');
@@ -126,7 +115,7 @@ return new class () extends Migration {
         if (! Schema::hasTable('bank_sampah_transaksi')) {
             Schema::create('bank_sampah_transaksi', static function (Blueprint $table): void {
                 $table->integer('id', true);
-                $table->integer('config_id');
+                $table->configId();
                 $table->string('no_transaksi', 30);
                 $table->integer('member_id');
                 $table->integer('lokasi_id')->nullable();
@@ -137,14 +126,11 @@ return new class () extends Migration {
                 $table->integer('poin')->default(0);
                 $table->text('keterangan')->nullable();
                 $table->integer('user_id')->nullable();
-                $table->timestamps();
+                $table->timesWithUserstamps();
 
                 $table->unique(['config_id', 'no_transaksi']);
                 $table->index(['config_id', 'created_at'], 'idx_transaksi_config_date');
                 $table->index(['config_id', 'tipe', 'created_at'], 'idx_transaksi_config_tipe');
-                $table->foreign('config_id')
-                    ->references('id')->on('config')
-                    ->onUpdate('cascade')->onDelete('cascade');
                 $table->foreign('member_id')
                     ->references('id')->on('bank_sampah_member')
                     ->onUpdate('cascade')->onDelete('cascade');
@@ -163,7 +149,7 @@ return new class () extends Migration {
                 $table->decimal('berat', 10, 2)->default(0);
                 $table->decimal('harga', 15, 2)->default(0);
                 $table->decimal('subtotal', 15, 2)->default(0);
-                $table->timestamps();
+                $table->timesWithUserstamps();
 
                 $table->foreign('transaksi_id')
                     ->references('id')->on('bank_sampah_transaksi')
@@ -177,18 +163,15 @@ return new class () extends Migration {
         if (! Schema::hasTable('bank_sampah_reward')) {
             Schema::create('bank_sampah_reward', static function (Blueprint $table): void {
                 $table->integer('id', true);
-                $table->integer('config_id');
+                $table->configId();
                 $table->integer('member_id');
                 $table->integer('transaksi_id')->nullable();
                 $table->enum('tipe', ['add', 'tukar']);
                 $table->integer('poin');
                 $table->string('keterangan', 255)->nullable();
-                $table->timestamps();
+                $table->timesWithUserstamps();
 
                 $table->index(['config_id', 'member_id'], 'idx_reward_config_member');
-                $table->foreign('config_id')
-                    ->references('id')->on('config')
-                    ->onUpdate('cascade')->onDelete('cascade');
                 $table->foreign('member_id')
                     ->references('id')->on('bank_sampah_member')
                     ->onUpdate('cascade')->onDelete('cascade');
@@ -198,21 +181,18 @@ return new class () extends Migration {
         if (! Schema::hasTable('bank_sampah_audit_log')) {
             Schema::create('bank_sampah_audit_log', static function (Blueprint $table): void {
                 $table->id();
-                $table->integer('config_id');
+                $table->configId();
                 $table->string('event', 100);
                 $table->integer('user_id')->nullable();
                 $table->string('ip_address', 45)->nullable();
                 $table->string('user_agent', 500)->nullable();
                 $table->json('data')->nullable();
-                $table->timestamps();
+                $table->timesWithUserstamps();
 
                 $table->index('event');
                 $table->index('created_at');
                 $table->index(['event', 'created_at']);
                 $table->index(['config_id', 'event'], 'idx_audit_config_event');
-                $table->foreign('config_id')
-                    ->references('id')->on('config')
-                    ->onUpdate('cascade')->onDelete('cascade');
             });
         }
     }
@@ -222,17 +202,15 @@ return new class () extends Migration {
      */
     public function down(): void
     {
-        foreach ([
-            'bank_sampah_audit_log',
-            'bank_sampah_reward',
-            'bank_sampah_transaksi_detail',
-            'bank_sampah_transaksi',
-            'bank_sampah_member',
-            'bank_sampah_lokasi',
-            'bank_sampah_sampah',
-            'bank_sampah_kategori',
-        ] as $table) {
-            Schema::dropIfExists($table);
-        }
+        // dropIfExistsDBGabungan: aman untuk database gabungan multi-desa
+        // (review #43 item 6, pola modul-ppid).
+        Schema::dropIfExistsDBGabungan('bank_sampah_audit_log', AuditLogModel::class);
+        Schema::dropIfExistsDBGabungan('bank_sampah_reward', RewardModel::class);
+        Schema::dropIfExistsDBGabungan('bank_sampah_transaksi_detail', TransaksiDetailModel::class);
+        Schema::dropIfExistsDBGabungan('bank_sampah_transaksi', TransaksiModel::class);
+        Schema::dropIfExistsDBGabungan('bank_sampah_member', MemberModel::class);
+        Schema::dropIfExistsDBGabungan('bank_sampah_lokasi', LokasiModel::class);
+        Schema::dropIfExistsDBGabungan('bank_sampah_sampah', SampahModel::class);
+        Schema::dropIfExistsDBGabungan('bank_sampah_kategori', KategoriModel::class);
     }
 };
