@@ -9,48 +9,56 @@
  * @license   http://www.gnu.org/licenses/gpl.html GPL V3
  */
 
-namespace Modules\BankSampah\Http\Controllers\BackEnd;
+defined('BASEPATH') || exit('No direct script access allowed');
 
-use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
-use Modules\BankSampah\Models\BankSampahMember;
-use Modules\BankSampah\Models\BankSampahTransaksi;
-use Modules\BankSampah\Models\BankSampahSampah;
-use Modules\BankSampah\Models\BankSampahLokasi;
+use Modules\BankSampah\Models\LokasiModel;
+use Modules\BankSampah\Models\MemberModel;
+use Modules\BankSampah\Models\SampahModel;
+use Modules\BankSampah\Models\TransaksiModel;
 
-class BankSampahDashboardController extends Controller
+class DashboardController extends AdminModulController
 {
-    public function index(Request $request)
+    public $moduleName    = 'BankSampah';
+    public $modul_ini     = 'bank-sampah';
+    public $sub_modul_ini = 'bank-sampah-dashboard';
+
+    public function __construct()
+    {
+        parent::__construct();
+        isCan('b');
+    }
+
+    public function index()
     {
         // BS-017: param bulan/tahun divalidasi sebelum dipakai di cache key/DB
-        [$bulan, $tahun] = $this->periodeQuery($request);
+        [$bulan, $tahun] = $this->periodeQuery();
         $configId = identitas('id');
         $cacheKey = "banksampah_dash_{$configId}_{$tahun}{$bulan}";
 
         $data = Cache::remember($cacheKey, 300, function () use ($configId, $bulan, $tahun) {
-            $totalMember = BankSampahMember::desa()->aktif()->count();
+            $totalMember = MemberModel::desa()->aktif()->count();
 
-            $transaksiHariIni = BankSampahTransaksi::desa()
+            $transaksiHariIni = TransaksiModel::desa()
                 ->whereDate('created_at', today())->count();
 
-            $setoranBulan = BankSampahTransaksi::desa()
+            $setoranBulan = TransaksiModel::desa()
                 ->where('tipe', 'setor')
                 ->whereMonth('created_at', $bulan)
                 ->whereYear('created_at', $tahun)
                 ->sum('total');
 
-            $tarikanBulan = BankSampahTransaksi::desa()
+            $tarikanBulan = TransaksiModel::desa()
                 ->where('tipe', 'tarik')
                 ->whereMonth('created_at', $bulan)
                 ->whereYear('created_at', $tahun)
                 ->sum('total');
 
             $saldoKas = $setoranBulan - $tarikanBulan;
-            $totalStok = BankSampahSampah::desa()->sum('stok');
-            $totalLokasi = BankSampahLokasi::desa()->aktif()->count();
+            $totalStok = SampahModel::desa()->sum('stok');
+            $totalLokasi = LokasiModel::desa()->aktif()->count();
 
-            $transaksiTerakhir = BankSampahTransaksi::desa()
+            $transaksiTerakhir = TransaksiModel::desa()
                 ->with('member')
                 ->orderBy('created_at', 'desc')
                 ->limit(10)
@@ -68,7 +76,7 @@ class BankSampahDashboardController extends Controller
         $grafikData = Cache::remember("banksampah_dash_grafik_{$configId}", 300, function () {
             $mulai = now()->subMonths(11)->startOfMonth();
 
-            $rows = BankSampahTransaksi::desa()
+            $rows = TransaksiModel::desa()
                 ->select('created_at', 'tipe', 'total')
                 ->where('created_at', '>=', $mulai)
                 ->get();
@@ -106,9 +114,9 @@ class BankSampahDashboardController extends Controller
      * Validasi & normalisasi param bulan/tahun (BS-017).
      * Input garbage diblok sebelum menyentuh cache key / whereMonth/whereYear.
      */
-    protected function periodeQuery(Request $request): array
+    protected function periodeQuery(): array
     {
-        $data = $request->validate([
+        $data = request()->validate([
             'bulan' => 'nullable|integer|between:1,12',
             'tahun' => 'nullable|integer|between:2000,2100',
         ]);

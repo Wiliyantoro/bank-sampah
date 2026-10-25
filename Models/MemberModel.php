@@ -11,36 +11,24 @@
 
 namespace Modules\BankSampah\Models;
 
-use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Hash;
+use App\Models\BaseModel;
+use App\Traits\ConfigId;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
-class BankSampahMember extends BaseModel
+class MemberModel extends BaseModel
 {
+    use ConfigId;
+
     protected $table = 'bank_sampah_member';
 
-    protected $fillable = [
-        'config_id',
-        'uuid',
-        'no_member',
-        'nama',
-        'alamat',
-        'no_hp',
-        'pin',
-        'penduduk_id',
-        'lokasi_id',
-        'saldo',
-        'poin',
-        'aktif',
-    ];
-
-    protected $hidden = [
-        'pin',
-    ];
+    protected $guarded = [];
 
     protected $casts = [
-        'saldo' => 'decimal:2',
-        'poin'  => 'integer',
+        'saldo'      => 'decimal:2',
+        'poin'       => 'integer',
+        'created_at' => 'date:Y-m-d H:i:s',
+        'updated_at' => 'date:Y-m-d H:i:s',
     ];
 
     /**
@@ -48,12 +36,9 @@ class BankSampahMember extends BaseModel
      */
     protected static function booted(): void
     {
-        static::creating(function (BankSampahMember $member) {
+        static::creating(function (MemberModel $member) {
             if (empty($member->uuid)) {
                 $member->uuid = Str::uuid()->toString();
-            }
-            if (empty($member->config_id)) {
-                $member->config_id = identitas('id');
             }
         });
     }
@@ -63,7 +48,7 @@ class BankSampahMember extends BaseModel
      */
     public function lokasi()
     {
-        return $this->belongsTo(BankSampahLokasi::class, 'lokasi_id');
+        return $this->belongsTo(LokasiModel::class, 'lokasi_id');
     }
 
     /**
@@ -71,7 +56,7 @@ class BankSampahMember extends BaseModel
      */
     public function penduduk()
     {
-        return $this->belongsTo('App\Models\TwebPenduduk', 'penduduk_id');
+        return $this->belongsTo(Penduduk::class, 'penduduk_id');
     }
 
     /**
@@ -79,7 +64,7 @@ class BankSampahMember extends BaseModel
      */
     public function transaksi()
     {
-        return $this->hasMany(BankSampahTransaksi::class, 'member_id');
+        return $this->hasMany(TransaksiModel::class, 'member_id');
     }
 
     /**
@@ -87,7 +72,7 @@ class BankSampahMember extends BaseModel
      */
     public function reward()
     {
-        return $this->hasMany(BankSampahReward::class, 'member_id');
+        return $this->hasMany(RewardModel::class, 'member_id');
     }
 
     /**
@@ -194,28 +179,6 @@ class BankSampahMember extends BaseModel
             return true;
         }
         return false;
-    }
-
-    /**
-     * Set PIN (hashed)
-     */
-    public function setPin(string $pin): bool
-    {
-        $this->pin = Hash::make($pin);
-        return $this->save();
-    }
-
-    /**
-     * Verify PIN
-     */
-    public function verifyPin(string $pin): bool
-    {
-        // BS-039: fail-closed — member tanpa PIN TIDAK boleh lolos verifikasi.
-        // (dulu return true: resep bunuh diri bila method dipakai di tempat lain)
-        if (empty($this->pin)) {
-            return false;
-        }
-        return Hash::check($pin, $this->pin);
     }
 
     /**

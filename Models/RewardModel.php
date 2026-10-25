@@ -11,38 +11,29 @@
 
 namespace Modules\BankSampah\Models;
 
-class BankSampahReward extends BaseModel
+use App\Models\BaseModel;
+use App\Traits\ConfigId;
+
+class RewardModel extends BaseModel
 {
+    use ConfigId;
+
     protected $table = 'bank_sampah_reward';
 
-    protected $fillable = [
-        'config_id',
-        'member_id',
-        'transaksi_id',
-        'tipe',
-        'poin',
-        'keterangan',
-    ];
+    protected $guarded = [];
 
     protected $casts = [
-        'poin' => 'integer',
+        'poin'       => 'integer',
+        'created_at' => 'date:Y-m-d H:i:s',
+        'updated_at' => 'date:Y-m-d H:i:s',
     ];
-
-    protected static function booted(): void
-    {
-        static::creating(function (BankSampahReward $reward) {
-            if (empty($reward->config_id)) {
-                $reward->config_id = identitas('id');
-            }
-        });
-    }
 
     /**
      * Relasi ke member
      */
     public function member()
     {
-        return $this->belongsTo(BankSampahMember::class, 'member_id');
+        return $this->belongsTo(MemberModel::class, 'member_id');
     }
 
     /**
@@ -50,7 +41,7 @@ class BankSampahReward extends BaseModel
      */
     public function transaksi()
     {
-        return $this->belongsTo(BankSampahTransaksi::class, 'transaksi_id');
+        return $this->belongsTo(TransaksiModel::class, 'transaksi_id');
     }
 
     /**
