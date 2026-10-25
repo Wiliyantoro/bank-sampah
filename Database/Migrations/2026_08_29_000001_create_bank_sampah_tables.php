@@ -156,8 +156,10 @@ return new class () extends Migration {
 
         if (! Schema::hasTable('bank_sampah_transaksi_detail')) {
             Schema::create('bank_sampah_transaksi_detail', static function (Blueprint $table): void {
-                // TANPA config_id: tabel detail mengikuti induknya lewat FK transaksi_id.
+                // issue #52: config_id di SEMUA tabel (detail ikut induk, tetap diisi
+                // untuk kepatuhan scoping dan query audit lintas modul).
                 $table->integer('id', true);
+                $table->integer('config_id');
                 $table->integer('transaksi_id');
                 $table->integer('sampah_id');
                 $table->decimal('berat', 10, 2)->default(0);
@@ -165,6 +167,9 @@ return new class () extends Migration {
                 $table->decimal('subtotal', 15, 2)->default(0);
                 $table->timestamps();
 
+                $table->foreign('config_id')
+                    ->references('id')->on('config')
+                    ->onUpdate('cascade')->onDelete('cascade');
                 $table->foreign('transaksi_id')
                     ->references('id')->on('bank_sampah_transaksi')
                     ->onUpdate('cascade')->onDelete('cascade');
