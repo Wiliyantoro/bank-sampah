@@ -1,4 +1,4 @@
-@extends('admin::layouts.index')
+@extends('admin.layouts.index')
 
 @section('content')
 <section class="content-header">
@@ -81,9 +81,9 @@
                                     <td>{{ Str::limit($item->alamat ?? '-', 30) }}</td>
                                     <td>{{ $item->no_hp ?? '-' }}</td>
                                     <td>{{ $item->lokasi->nama ?? '-' }}</td>
-                                    <td class="text-right text-success text-bold">{{ format_rupiah($item->saldo) }}</td>
+                                    <td class="text-right text-success text-bold">{{ bank_sampah_format_rupiah($item->saldo) }}</td>
                                     <td class="text-center"><span class="label label-warning">{{ $item->poin }} poin</span></td>
-                                    <td class="text-center">{!! status_aktif_label($item->aktif) !!}</td>
+                                    <td class="text-center">{!! bank_sampah_status_aktif_label($item->aktif) !!}</td>
                                     <td>
                                         <a href="{{ url('bank-sampah/member/detail', $item->id) }}" class="btn btn-info btn-xs" title="Detail">
                                             <i class="fa fa-eye"></i>

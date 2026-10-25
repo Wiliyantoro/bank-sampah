@@ -21,27 +21,27 @@
  * DataTables "Ajax error". Gunakan url()/route() milik Laravel di view modul.
  */
 
-if (! function_exists('format_rupiah')) {
+if (! function_exists('bank_sampah_format_rupiah')) {
     /**
      * Format angka ke Rupiah
      */
-    function format_rupiah($angka): string
+    function bank_sampah_format_rupiah($angka): string
     {
         return 'Rp ' . number_format($angka, 0, ',', '.');
     }
 }
 
-if (! function_exists('format_berat')) {
+if (! function_exists('bank_sampah_format_berat')) {
     /**
      * Format berat dengan satuan
      */
-    function format_berat($berat, $satuan = 'kg'): string
+    function bank_sampah_format_berat($berat, $satuan = 'kg'): string
     {
         return number_format($berat, 2, ',', '.') . ' ' . $satuan;
     }
 }
 
-if (! function_exists('safe_like')) {
+if (! function_exists('bank_sampah_safe_like')) {
     /**
      * Escape wildcard SQL untuk dipakai di klausa LIKE '%...%' (BS-031).
      *
@@ -50,19 +50,19 @@ if (! function_exists('safe_like')) {
      * fungsi yang hilang akan menyebabkan fatal error 500 di semua
      * halaman list dengan parameter cari.
      */
-    function safe_like(string $value): string
+    function bank_sampah_safe_like(string $value): string
     {
         return addcslashes($value, "%_\\");
     }
 }
 
-if (! function_exists('sanitize_csv_field')) {
+if (! function_exists('bank_sampah_sanitize_csv_field')) {
     /**
      * Sanitasi sel CSV (BS-031): cegah formula injection (OWASP WSTG).
      * Sel berawalan =, +, -, @ dieksekusi sebagai rumus di Excel/LibreOffice —
      * diberi prefix petik tunggal. Line-break dibuang agar baris CSV utuh.
      */
-    function sanitize_csv_field(?string $value): string
+    function bank_sampah_sanitize_csv_field(?string $value): string
     {
         $value = (string) $value;
         $value = str_replace(["\r", "\n"], ' ', $value);
@@ -75,11 +75,11 @@ if (! function_exists('sanitize_csv_field')) {
     }
 }
 
-if (! function_exists('tipe_transaksi_label')) {
+if (! function_exists('bank_sampah_tipe_transaksi_label')) {
     /**
      * Label tipe transaksi
      */
-    function tipe_transaksi_label($tipe): string
+    function bank_sampah_tipe_transaksi_label($tipe): string
     {
         return match ($tipe) {
             'setor' => '<span class="label label-success">SETOR</span>',
@@ -89,11 +89,11 @@ if (! function_exists('tipe_transaksi_label')) {
     }
 }
 
-if (! function_exists('status_aktif_label')) {
+if (! function_exists('bank_sampah_status_aktif_label')) {
     /**
      * Label status aktif
      */
-    function status_aktif_label($aktif): string
+    function bank_sampah_status_aktif_label($aktif): string
     {
         return $aktif
             ? '<span class="label label-success">Aktif</span>'
@@ -101,14 +101,14 @@ if (! function_exists('status_aktif_label')) {
     }
 }
 
-if (! function_exists('hari_indonesia')) {
+if (! function_exists('bank_sampah_hari_indonesia')) {
     /**
      * Nama hari bahasa Indonesia (BS-042) — date('l') selalu menghasilkan
      * nama bahasa Inggris (Thursday) tanpa memperhatikan locale.
      *
      * @param string $tanggal Format Y-m-d
      */
-    function hari_indonesia(string $tanggal): string
+    function bank_sampah_hari_indonesia(string $tanggal): string
     {
         $map = [
             'Sunday'    => 'Minggu',
@@ -126,12 +126,12 @@ if (! function_exists('hari_indonesia')) {
     }
 }
 
-if (! function_exists('bulan_indonesia')) {
+if (! function_exists('bank_sampah_bulan_indonesia')) {
     /**
      * Nama bulan bahasa Indonesia (BS-042) — pasangan dari hari_indonesia()
      * untuk judul laporan cetak.
      */
-    function bulan_indonesia(int $bulan): string
+    function bank_sampah_bulan_indonesia(int $bulan): string
     {
         $map = [
             1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April',

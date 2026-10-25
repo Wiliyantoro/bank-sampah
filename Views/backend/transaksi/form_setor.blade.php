@@ -1,4 +1,4 @@
-@extends('admin::layouts.index')
+@extends('admin.layouts.index')
 
 @section('content')
 <section class="content-header">
@@ -98,7 +98,7 @@
                                                 <option value="{{ $s->id }}"
                                                     data-harga="{{ $s->harga_beli }}"
                                                     data-satuan="{{ $s->satuan }}">
-                                                    {{ $s->kategori->nama }} - {{ $s->nama }} ({{ format_rupiah($s->harga_beli) }}/{{ $s->satuan }})
+                                                    {{ $s->kategori->nama }} - {{ $s->nama }} ({{ bank_sampah_format_rupiah($s->harga_beli) }}/{{ $s->satuan }})
                                                 </option>
                                             @endforeach
                                         </select>
@@ -171,7 +171,7 @@ $(document).ready(function() {
                         <option value="{{ $s->id }}"
                             data-harga="{{ $s->harga_beli }}"
                             data-satuan="{{ $s->satuan }}">
-                            {{ $s->kategori->nama }} - {{ $s->nama }} ({{ format_rupiah($s->harga_beli) }}/{{ $s->satuan }})
+                            {{ $s->kategori->nama }} - {{ $s->nama }} ({{ bank_sampah_format_rupiah($s->harga_beli) }}/{{ $s->satuan }})
                         </option>
                     @endforeach
                 </select>

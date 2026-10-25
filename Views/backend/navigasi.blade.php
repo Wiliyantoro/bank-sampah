@@ -30,7 +30,7 @@
                 <span class="info-box-icon"><i class="fa fa-money"></i></span>
                 <div class="info-box-content">
                     <span class="info-box-text">SETORAN BULAN INI</span>
-                    <span class="info-box-number">{{ format_rupiah($setoranBulan) }}</span>
+                    <span class="info-box-number">{{ bank_sampah_format_rupiah($setoranBulan) }}</span>
                 </div>
             </div>
         </div>
@@ -58,9 +58,9 @@
             </div>
             <div class="box-footer no-padding">
                 <ul class="nav nav-stacked">
-                    <li><a href="#">Total Setoran <span class="pull-right badge bg-green">{{ format_rupiah($setoranBulan) }}</span></a></li>
-                    <li><a href="#">Total Tarikan <span class="pull-right badge bg-red">{{ format_rupiah($tarikanBulan) }}</span></a></li>
-                    <li><a href="#">Saldo Kas <span class="pull-right badge bg-aqua"><b>{{ format_rupiah($saldoKas) }}</b></span></a></li>
+                    <li><a href="#">Total Setoran <span class="pull-right badge bg-green">{{ bank_sampah_format_rupiah($setoranBulan) }}</span></a></li>
+                    <li><a href="#">Total Tarikan <span class="pull-right badge bg-red">{{ bank_sampah_format_rupiah($tarikanBulan) }}</span></a></li>
+                    <li><a href="#">Saldo Kas <span class="pull-right badge bg-aqua"><b>{{ bank_sampah_format_rupiah($saldoKas) }}</b></span></a></li>
                 </ul>
             </div>
         </div>
@@ -124,8 +124,8 @@
                         <tr>
                             <td>{{ $trx->no_transaksi }}</td>
                             <td>{{ $trx->member->nama ?? '-' }}</td>
-                            <td>{!! tipe_transaksi_label($trx->tipe) !!}</td>
-                            <td>{{ format_rupiah($trx->total) }}</td>
+                            <td>{!! bank_sampah_tipe_transaksi_label($trx->tipe) !!}</td>
+                            <td>{{ bank_sampah_format_rupiah($trx->total) }}</td>
                             <td>{{ $trx->created_at->format('d/m/Y H:i') }}</td>
                         </tr>
                         @empty

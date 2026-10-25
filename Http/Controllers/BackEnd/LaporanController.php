@@ -70,7 +70,7 @@ class LaporanController extends AdminModulController
 
             $rekapHarian[] = [
                 'tanggal'       => $date,
-                'nama_hari'     => hari_indonesia($date),
+                'nama_hari'     => bank_sampah_hari_indonesia($date),
                 'setor_jumlah'  => (int) ($setor->jumlah ?? 0),
                 'setor_nominal' => (float) ($setor->nominal ?? 0),
                 'tarik_jumlah'  => (int) ($tarik->jumlah ?? 0),
@@ -186,7 +186,7 @@ class LaporanController extends AdminModulController
         $config['alamat'] = setting('bank_sampah_alamat') ?: (identitas('alamat_kantor') ?: '-');
         $config['no_hp']  = setting('bank_sampah_no_hp')  ?: (identitas('telepon') ?: '-');
 
-        return $config + ['periode_label' => bulan_indonesia($bulan) . ' ' . $tahun];
+        return $config + ['periode_label' => bank_sampah_bulan_indonesia($bulan) . ' ' . $tahun];
     }
 
     /**
@@ -219,10 +219,10 @@ class LaporanController extends AdminModulController
                     $trx->no_transaksi,
                     $trx->created_at->format('d/m/Y H:i'),
                     $trx->member->no_member ?? '',
-                    sanitize_csv_field($trx->member->nama ?? ''),
+                    bank_sampah_sanitize_csv_field($trx->member->nama ?? ''),
                     ucfirst($trx->tipe),
                     $trx->total,
-                    sanitize_csv_field($trx->keterangan ?? ''),
+                    bank_sampah_sanitize_csv_field($trx->keterangan ?? ''),
                 ]);
             }
 

@@ -1,4 +1,4 @@
-@extends('admin::layouts.index')
+@extends('admin.layouts.index')
 
 @section('content')
 <section class="content-header">
@@ -12,7 +12,7 @@
                 <div class="box-header with-border">
                     <h3 class="box-title">
                         Transaksi #{{ $transaksi->no_transaksi }}
-                        {!! tipe_transaksi_label($transaksi->tipe) !!}
+                        {!! bank_sampah_tipe_transaksi_label($transaksi->tipe) !!}
                     </h3>
                     <div class="box-tools pull-right">
                         <a href="{{ url('bank-sampah/transaksi/struk', $transaksi->id) }}" class="btn btn-default btn-sm" target="_blank">
@@ -26,7 +26,7 @@
                             <table class="table table-bordered">
                                 <tr><th width="150">No Transaksi</th><td>{{ $transaksi->no_transaksi }}</td></tr>
                                 <tr><th>Tanggal</th><td>{{ $transaksi->created_at->format('d/m/Y H:i') }}</td></tr>
-                                <tr><th>Tipe</th><td>{!! tipe_transaksi_label($transaksi->tipe) !!}</td></tr>
+                                <tr><th>Tipe</th><td>{!! bank_sampah_tipe_transaksi_label($transaksi->tipe) !!}</td></tr>
                                 @if($transaksi->lokasi)
                                 <tr><th>Lokasi/TPS</th><td>{{ $transaksi->lokasi->nama }}</td></tr>
                                 @endif
@@ -36,7 +36,7 @@
                             <table class="table table-bordered">
                                 <tr><th width="150">Nasabah</th><td>{{ $transaksi->member->nama ?? '-' }}</td></tr>
                                 <tr><th>No Member</th><td>{{ $transaksi->member->no_member ?? '-' }}</td></tr>
-                                <tr><th>Total</th><td class="text-bold text-lg">{{ format_rupiah($transaksi->total) }}</td></tr>
+                                <tr><th>Total</th><td class="text-bold text-lg">{{ bank_sampah_format_rupiah($transaksi->total) }}</td></tr>
                                 @if($transaksi->tipe === 'setor' && $transaksi->poin > 0)
                                 <tr><th>Poin Didapat</th><td class="text-success">+{{ $transaksi->poin }} poin</td></tr>
                                 @endif
@@ -63,9 +63,9 @@
                                 <td>{{ $loop->iteration }}</td>
                                 <td>{{ $d->sampah->nama ?? '-' }}</td>
                                 <td>{{ $d->sampah->kategori->nama ?? '-' }}</td>
-                                <td>{{ format_berat($d->berat) }}</td>
-                                <td>{{ format_rupiah($d->harga) }}</td>
-                                <td class="text-bold">{{ format_rupiah($d->subtotal) }}</td>
+                                <td>{{ bank_sampah_format_berat($d->berat) }}</td>
+                                <td>{{ bank_sampah_format_rupiah($d->harga) }}</td>
+                                <td class="text-bold">{{ bank_sampah_format_rupiah($d->subtotal) }}</td>
                             </tr>
                             @endforeach
                         </tbody>

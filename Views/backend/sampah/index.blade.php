@@ -1,4 +1,4 @@
-@extends('admin::layouts.index')
+@extends('admin.layouts.index')
 
 @section('content')
 <section class="content-header">
@@ -89,10 +89,10 @@
                                     </td>
                                     <td><span class="label label-info">{{ $item->kategori->nama ?? '-' }}</span></td>
                                     <td>{{ $item->satuan }}</td>
-                                    <td class="text-right text-success">{{ format_rupiah($item->harga_beli) }}/{{ $item->satuan }}</td>
-                                    <td class="text-right">{{ format_rupiah($item->harga_jual) }}/{{ $item->satuan }}</td>
+                                    <td class="text-right text-success">{{ bank_sampah_format_rupiah($item->harga_beli) }}/{{ $item->satuan }}</td>
+                                    <td class="text-right">{{ bank_sampah_format_rupiah($item->harga_jual) }}/{{ $item->satuan }}</td>
                                     <td class="text-right">{{ number_format($item->stok, 2, ',', '.') }} {{ $item->satuan }}</td>
-                                    <td class="text-center">{!! status_aktif_label($item->aktif) !!}</td>
+                                    <td class="text-center">{!! bank_sampah_status_aktif_label($item->aktif) !!}</td>
                                     <td>
                                         <a href="{{ url('bank-sampah/jenis-sampah/ubah', $item->id) }}" class="btn btn-warning btn-xs" title="Edit">
                                             <i class="fa fa-edit"></i>

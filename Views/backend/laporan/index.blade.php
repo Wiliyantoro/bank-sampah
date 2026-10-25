@@ -1,4 +1,4 @@
-@extends('admin::layouts.index')
+@extends('admin.layouts.index')
 
 @section('content')
 <section class="content-header">
@@ -57,7 +57,7 @@
                 <div class="info-box-content">
                     <span class="info-box-text">TOTAL SETOR</span>
                     <span class="info-box-number">{{ $totalSetor->jumlah }} transaksi</span>
-                    <span>{{ format_rupiah($totalSetor->nominal) }}</span>
+                    <span>{{ bank_sampah_format_rupiah($totalSetor->nominal) }}</span>
                 </div>
             </div>
         </div>
@@ -67,7 +67,7 @@
                 <div class="info-box-content">
                     <span class="info-box-text">TOTAL TARIK</span>
                     <span class="info-box-number">{{ $totalTarik->jumlah }} transaksi</span>
-                    <span>{{ format_rupiah($totalTarik->nominal) }}</span>
+                    <span>{{ bank_sampah_format_rupiah($totalTarik->nominal) }}</span>
                 </div>
             </div>
         </div>
@@ -98,9 +98,9 @@
                                 <td>{{ date('d/m/Y', strtotime($h['tanggal'])) }}</td>
                                 <td>{{ $h['nama_hari'] }}</td>
                                 <td class="text-center">{{ $h['setor_jumlah'] }}</td>
-                                <td class="text-right text-success">{{ format_rupiah($h['setor_nominal']) }}</td>
+                                <td class="text-right text-success">{{ bank_sampah_format_rupiah($h['setor_nominal']) }}</td>
                                 <td class="text-center">{{ $h['tarik_jumlah'] }}</td>
-                                <td class="text-right text-danger">{{ format_rupiah($h['tarik_nominal']) }}</td>
+                                <td class="text-right text-danger">{{ bank_sampah_format_rupiah($h['tarik_nominal']) }}</td>
                             </tr>
                             @endforeach
                         </tbody>
@@ -132,8 +132,8 @@
                             <tr>
                                 <td>{{ $rs->sampah->nama ?? '-' }}</td>
                                 <td>{{ $rs->sampah->kategori->nama ?? '-' }}</td>
-                                <td class="text-right">{{ format_berat($rs->total_berat) }}</td>
-                                <td class="text-right">{{ format_rupiah($rs->total_nilai) }}</td>
+                                <td class="text-right">{{ bank_sampah_format_berat($rs->total_berat) }}</td>
+                                <td class="text-right">{{ bank_sampah_format_rupiah($rs->total_nilai) }}</td>
                             </tr>
                             @empty
                             <tr>

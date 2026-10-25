@@ -1,4 +1,4 @@
-@extends('admin::layouts.index')
+@extends('admin.layouts.index')
 
 @section('content')
 <section class="content-header">
@@ -78,7 +78,7 @@
                                     <td>{{ $item->no_hp ?? '-' }}</td>
                                     <td class="text-center">{{ $item->member_count ?? $item->member()->count() }}</td>
                                     <td class="text-center">{{ $item->transaksi_count ?? $item->transaksi()->count() }}</td>
-                                    <td class="text-center">{!! status_aktif_label($item->aktif) !!}</td>
+                                    <td class="text-center">{!! bank_sampah_status_aktif_label($item->aktif) !!}</td>
                                     <td>
                                         <a href="{{ url('bank-sampah/lokasi/ubah', $item->id) }}" class="btn btn-warning btn-xs" title="Edit">
                                             <i class="fa fa-edit"></i>

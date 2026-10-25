@@ -294,7 +294,7 @@ class MemberController extends AdminModulController
             ->orderBy('nama');
 
         if ($cari !== '') {
-            $safeCari = safe_like($cari);
+            $safeCari = bank_sampah_safe_like($cari);
             $query->where(function ($q) use ($safeCari) {
                 $q->where('nama', 'LIKE', "%{$safeCari}%")
                   ->orWhere('nik', 'LIKE', "%{$safeCari}%");

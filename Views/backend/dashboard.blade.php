@@ -72,9 +72,9 @@
                                 <tr>
                                     <td>{{ $trx->created_at->format('d/m/Y H:i') }}</td>
                                     <td>{{ $trx->member->nama ?? '-' }}</td>
-                                    <td>{!! tipe_transaksi_label($trx->tipe) !!}</td>
-                                    <td>{{ format_berat($trx->total_berat) }}</td>
-                                    <td>{{ format_rupiah($trx->total_harga) }}</td>
+                                    <td>{!! bank_sampah_tipe_transaksi_label($trx->tipe) !!}</td>
+                                    <td>{{ bank_sampah_format_berat($trx->total_berat) }}</td>
+                                    <td>{{ bank_sampah_format_rupiah($trx->total_harga) }}</td>
                                 </tr>
                                 @endforeach
                             @else

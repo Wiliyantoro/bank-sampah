@@ -1,4 +1,4 @@
-@extends('admin::layouts.index')
+@extends('admin.layouts.index')
 
 @section('content')
 <section class="content-header">
@@ -143,7 +143,7 @@
                                 <div class="form-group">
                                     <label>Saldo Saat Ini</label>
                                     <p class="form-control-static text-bold text-success" style="font-size: 18px;">
-                                        {{ format_rupiah($member->saldo) }}
+                                        {{ bank_sampah_format_rupiah($member->saldo) }}
                                     </p>
                                 </div>
                             </div>

@@ -1,4 +1,4 @@
-@extends('admin::layouts.index')
+@extends('admin.layouts.index')
 
 @section('content')
 <section class="content-header">
@@ -44,7 +44,7 @@
                         </tr>
                         <tr>
                             <th>Status</th>
-                            <td>{!! status_aktif_label($member->aktif) !!}</td>
+                            <td>{!! bank_sampah_status_aktif_label($member->aktif) !!}</td>
                         </tr>
                         <tr>
                             <th>Terdaftar</th>
@@ -67,7 +67,7 @@
                                 <span class="info-box-icon"><i class="fa fa-money"></i></span>
                                 <div class="info-box-content">
                                     <span class="info-box-text">SALDO</span>
-                                    <span class="info-box-number" style="font-size: 20px;">{{ format_rupiah($member->saldo) }}</span>
+                                    <span class="info-box-number" style="font-size: 20px;">{{ bank_sampah_format_rupiah($member->saldo) }}</span>
                                 </div>
                             </div>
                         </div>
@@ -122,7 +122,7 @@
                             <tr>
                                 <td><strong>{{ $trx->no_transaksi }}</strong></td>
                                 <td>{{ $trx->created_at->format('d/m/Y H:i') }}</td>
-                                <td>{!! tipe_transaksi_label($trx->tipe) !!}</td>
+                                <td>{!! bank_sampah_tipe_transaksi_label($trx->tipe) !!}</td>
                                 <td>
                                     @if($trx->tipe === 'setor' && $trx->detail->count() > 0)
                                         @foreach($trx->detail as $d)
@@ -133,7 +133,7 @@
                                     @endif
                                 </td>
                                 <td class="text-right text-bold">
-                                    {{ $trx->tipe === 'setor' ? '+' : '-' }}{{ format_rupiah($trx->total) }}
+                                    {{ $trx->tipe === 'setor' ? '+' : '-' }}{{ bank_sampah_format_rupiah($trx->total) }}
                                 </td>
                                 <td class="text-center">
                                     <a href="{{ url('bank-sampah/transaksi/detail', $trx->id) }}" class="btn btn-info btn-xs">

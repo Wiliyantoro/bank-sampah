@@ -1,4 +1,4 @@
-@extends('admin::layouts.index')
+@extends('admin.layouts.index')
 
 @section('content')
 <section class="content-header">
@@ -82,9 +82,9 @@
                                         @endif
                                     </td>
                                     <td>{{ $trx->lokasi->nama ?? '-' }}</td>
-                                    <td>{!! tipe_transaksi_label($trx->tipe) !!}</td>
+                                    <td>{!! bank_sampah_tipe_transaksi_label($trx->tipe) !!}</td>
                                     <td class="text-right text-bold">
-                                        {{ $trx->tipe === 'setor' ? '+' : '-' }}{{ format_rupiah($trx->total) }}
+                                        {{ $trx->tipe === 'setor' ? '+' : '-' }}{{ bank_sampah_format_rupiah($trx->total) }}
                                     </td>
                                     <td>
                                         @if($trx->poin > 0)
