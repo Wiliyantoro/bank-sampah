@@ -34,20 +34,20 @@ Route::group('bank-sampah', ['namespace' => 'BankSampah/BackEnd'], static functi
     Route::get('dashboard', 'DashboardController@index')->name('bank-sampah.dashboard');
 
     // Kategori Sampah
-    Route::get('kategori-sampah', 'KategoriController@index')->name('bank-sampah.kategori.index');
-    Route::post('kategori-sampah', 'KategoriController@index')->name('bank-sampah.kategori.datatables');
-    Route::get('kategori-sampah/form/{id?}', 'KategoriController@form')->name('bank-sampah.kategori.form');
-    Route::post('kategori-sampah/insert', 'KategoriController@insert')->name('bank-sampah.kategori.insert');
-    Route::post('kategori-sampah/update/{id?}', 'KategoriController@update')->name('bank-sampah.kategori.update');
-    Route::post('kategori-sampah/delete/{id?}', 'KategoriController@delete')->name('bank-sampah.kategori.delete');
+    Route::get('kategori-sampah', 'KategoriController@index')->name('bank-sampah.kategori-sampah.index');
+    Route::post('kategori-sampah', 'KategoriController@index')->name('bank-sampah.kategori-sampah.datatables');
+    Route::get('kategori-sampah/form/{id?}', 'KategoriController@form')->name('bank-sampah.kategori-sampah.form');
+    Route::post('kategori-sampah/insert', 'KategoriController@insert')->name('bank-sampah.kategori-sampah.insert');
+    Route::post('kategori-sampah/update/{id?}', 'KategoriController@update')->name('bank-sampah.kategori-sampah.update');
+    Route::post('kategori-sampah/delete/{id?}', 'KategoriController@delete')->name('bank-sampah.kategori-sampah.delete');
 
     // Jenis Sampah
-    Route::get('jenis-sampah', 'SampahController@index')->name('bank-sampah.sampah.index');
-    Route::post('jenis-sampah', 'SampahController@index')->name('bank-sampah.sampah.datatables');
-    Route::get('jenis-sampah/form/{id?}', 'SampahController@form')->name('bank-sampah.sampah.form');
-    Route::post('jenis-sampah/insert', 'SampahController@insert')->name('bank-sampah.sampah.insert');
-    Route::post('jenis-sampah/update/{id?}', 'SampahController@update')->name('bank-sampah.sampah.update');
-    Route::post('jenis-sampah/delete/{id?}', 'SampahController@delete')->name('bank-sampah.sampah.delete');
+    Route::get('jenis-sampah', 'SampahController@index')->name('bank-sampah.jenis-sampah.index');
+    Route::post('jenis-sampah', 'SampahController@index')->name('bank-sampah.jenis-sampah.datatables');
+    Route::get('jenis-sampah/form/{id?}', 'SampahController@form')->name('bank-sampah.jenis-sampah.form');
+    Route::post('jenis-sampah/insert', 'SampahController@insert')->name('bank-sampah.jenis-sampah.insert');
+    Route::post('jenis-sampah/update/{id?}', 'SampahController@update')->name('bank-sampah.jenis-sampah.update');
+    Route::post('jenis-sampah/delete/{id?}', 'SampahController@delete')->name('bank-sampah.jenis-sampah.delete');
 
     // Nasabah (Member)
     Route::get('member', 'MemberController@index')->name('bank-sampah.member.index');

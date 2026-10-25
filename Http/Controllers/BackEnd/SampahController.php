@@ -36,10 +36,10 @@ class SampahController extends AdminModulController
                 ->addColumn('aksi', static function ($row): string {
                     $aksi = '';
                     if (can('u')) {
-                        $aksi .= '<a href="' . ci_route('bank-sampah.sampah.form', $row->id) . '" class="btn btn-warning btn-sm" title="Ubah"><i class="fa fa-edit"></i></a> ';
+                        $aksi .= '<a href="' . ci_route('bank-sampah.jenis-sampah.form', $row->id) . '" class="btn btn-warning btn-sm" title="Ubah"><i class="fa fa-edit"></i></a> ';
                     }
                     if (can('h') && ! $row->isDefault()) {
-                        $aksi .= '<a href="#" data-href="' . ci_route('bank-sampah.sampah.delete', $row->id) . '" class="btn btn-danger btn-sm btn-hapus" title="Hapus"><i class="fa fa-trash"></i></a>';
+                        $aksi .= '<a href="#" data-href="' . ci_route('bank-sampah.jenis-sampah.delete', $row->id) . '" class="btn btn-danger btn-sm btn-hapus" title="Hapus"><i class="fa fa-trash"></i></a>';
                     }
                     return $aksi;
                 })
@@ -69,8 +69,8 @@ class SampahController extends AdminModulController
             'sampah'       => $sampah,
             'kategoriList' => $kategoriList,
             'form_action'  => $id
-                ? ci_route('bank-sampah.sampah.update', $id)
-                : ci_route('bank-sampah.sampah.insert'),
+                ? ci_route('bank-sampah.jenis-sampah.update', $id)
+                : ci_route('bank-sampah.jenis-sampah.insert'),
         ]);
     }
 
