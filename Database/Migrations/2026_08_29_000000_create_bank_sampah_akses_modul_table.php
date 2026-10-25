@@ -34,15 +34,8 @@ return new class () extends Migration {
     public function down(): void
     {
         $id = identitas('id');
+        // Hapus modul induk (submenu ikut terhapus oleh inti)
         $this->deleteModul(['config_id' => $id, 'slug' => 'bank-sampah']);
-        $this->deleteModul(['config_id' => $id, 'slug' => 'bank-sampah-dashboard']);
-        $this->deleteModul(['config_id' => $id, 'slug' => 'bank-sampah-member']);
-        $this->deleteModul(['config_id' => $id, 'slug' => 'bank-sampah-transaksi']);
-        $this->deleteModul(['config_id' => $id, 'slug' => 'bank-sampah-sampah']);
-        $this->deleteModul(['config_id' => $id, 'slug' => 'bank-sampah-kategori']);
-        $this->deleteModul(['config_id' => $id, 'slug' => 'bank-sampah-lokasi']);
-        $this->deleteModul(['config_id' => $id, 'slug' => 'bank-sampah-reward']);
-        $this->deleteModul(['config_id' => $id, 'slug' => 'bank-sampah-laporan']);
 
         // Hapus pengaturan milik modul (key berawalan bank_sampah_)
         DB::table('setting_aplikasi')
