@@ -1,0 +1,340 @@
+<?php
+
+/*
+ * File ini bagian dari OpenSID - Modul Bank Sampah
+ *
+ * @package   OpenSID
+ * @author    Tim Pengembang OpenDesa
+ * @copyright Hak Cipta 2016 - 2026 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
+ * @license   http://www.gnu.org/licenses/gpl.html GPL V3
+ */
+
+defined('BASEPATH') || exit('No direct script access allowed');
+
+use Illuminate\Support\Facades\DB;
+use Modules\BankSampah\Libraries\SecurityManager;
+use Modules\BankSampah\Models\LokasiModel;
+use Modules\BankSampah\Models\MemberModel;
+use Modules\BankSampah\Models\TransaksiModel;
+
+class MemberController extends AdminModulController
+{
+    public $moduleName    = 'BankSampah';
+    public $modul_ini     = 'bank-sampah';
+    public $sub_modul_ini = 'bank-sampah-member';
+
+    public function __construct()
+    {
+        parent::__construct();
+        isCan('b');
+    }
+
+    /**
+     * Daftar nasabah (filtered per desa)
+     */
+    public function index()
+    {
+        if (request()->ajax()) {
+            return datatables()->of(MemberModel::desa()->with('lokasi'))
+                ->addIndexColumn()
+                ->addColumn('aksi', static function ($row): string {
+                    $aksi = '<a href="' . ci_route('bank-sampah.member.detail', $row->id) . '" class="btn btn-default btn-sm" title="Detail"><i class="fa fa-eye"></i></a> ';
+                    if (can('u')) {
+                        $aksi .= '<a href="' . ci_route('bank-sampah.member.form', $row->id) . '" class="btn btn-warning btn-sm" title="Ubah"><i class="fa fa-edit"></i></a> ';
+                    }
+                    if (can('h')) {
+                        $aksi .= '<a href="' . ci_route('bank-sampah.member.kartu', $row->id) . '" class="btn btn-default btn-sm" title="Cetak Kartu"><i class="fa fa-id-card"></i></a> ';
+                        if (! $row->transaksi()->exists()) {
+                            $aksi .= '<a href="#" data-href="' . ci_route('bank-sampah.member.delete', $row->id) . '" class="btn btn-danger btn-sm btn-hapus" title="Hapus"><i class="fa fa-trash"></i></a>';
+                        }
+                    }
+                    return $aksi;
+                })
+                ->rawColumns(['aksi'])
+                ->make();
+        }
+
+        $lokasiList = LokasiModel::desa()->aktif()->orderBy('nama')->get();
+
+        return view('banksampah::backend.member.index', compact('lokasiList'));
+    }
+
+    /**
+     * Form tambah/ubah nasabah ($id null = tambah)
+     */
+    public function form($id = null)
+    {
+        $member    = $id ? MemberModel::desa()->findOrFail($id) : null;
+        $config    = config('banksampah');
+        $noMember  = $member ? $member->no_member : MemberModel::generateNoMember($config['prefix_no_member']);
+        $lokasiList = LokasiModel::desa()->aktif()->orderBy('nama')->get();
+
+        return view('banksampah::backend.member.form', [
+            'member'      => $member,
+            'noMember'    => $noMember,
+            'lokasiList'  => $lokasiList,
+            'form_action' => $id
+                ? ci_route('bank-sampah.member.update', $id)
+                : ci_route('bank-sampah.member.insert'),
+        ]);
+    }
+
+    public function insert()
+    {
+        $configId = identitas('id');
+
+        request()->validate([
+            'no_member'   => "required|string|max:20|unique:bank_sampah_member,no_member,NULL,id,config_id,{$configId}",
+            'nama'        => 'required|string|max:150',
+            'no_hp'       => 'nullable|string|max:20',
+            'alamat'      => 'nullable|string',
+            // BS-015: ID eksternal wajib ter-scope desa agar tidak bisa
+            // dilink ke data penduduk/lokasi desa lain
+            'penduduk_id' => "nullable|integer|exists:tweb_penduduk,id,config_id,{$configId}",
+            'lokasi_id'   => "nullable|integer|exists:bank_sampah_lokasi,id,config_id,{$configId}",
+        ]);
+
+        MemberModel::create([
+            'no_member'   => request('no_member'),
+            'nama'        => request('nama'),
+            'no_hp'       => request('no_hp'),
+            'alamat'      => request('alamat'),
+            'penduduk_id' => request('penduduk_id'),
+            'lokasi_id'   => request('lokasi_id'),
+            'aktif'       => request('aktif', 1),
+        ]);
+
+        return redirect_with('success', 'Nasabah berhasil ditambahkan');
+    }
+
+    public function update($id = null)
+    {
+        $configId = identitas('id');
+        $member   = MemberModel::desa()->findOrFail($id);
+
+        request()->validate([
+            'nama'        => 'required|string|max:150',
+            'no_hp'       => 'nullable|string|max:20',
+            'alamat'      => 'nullable|string',
+            // BS-015: ID eksternal wajib ter-scope desa
+            'penduduk_id' => 'nullable|integer|exists:tweb_penduduk,id,config_id,' . $configId,
+            'lokasi_id'   => 'nullable|integer|exists:bank_sampah_lokasi,id,config_id,' . $configId,
+        ]);
+
+        $member->update([
+            'nama'        => request('nama'),
+            'no_hp'       => request('no_hp'),
+            'alamat'      => request('alamat'),
+            'penduduk_id' => request('penduduk_id'),
+            'lokasi_id'   => request('lokasi_id'),
+            'aktif'       => request('aktif', 1),
+        ]);
+
+        return redirect_with('success', 'Nasabah berhasil diubah');
+    }
+
+    public function delete($id = null): void
+    {
+        $member = MemberModel::desa()->findOrFail($id);
+
+        if ($member->transaksi()->exists()) {
+            redirect_with('error', 'Tidak bisa hapus, nasabah masih memiliki transaksi');
+            return;
+        }
+
+        $member->delete();
+
+        redirect_with('success', 'Nasabah berhasil dihapus');
+    }
+
+    /**
+     * Detail nasabah + riwayat transaksi
+     */
+    public function detail($id)
+    {
+        $member = MemberModel::desa()->with(['lokasi', 'transaksi.detail.sampah'])
+            ->findOrFail($id);
+
+        $riwayatTransaksi = TransaksiModel::desa()
+            ->where('member_id', $id)
+            ->with('detail.sampah')
+            ->orderBy('created_at', 'desc')
+            ->paginate(20);
+
+        return view('banksampah::backend.member.detail', compact('member', 'riwayatTransaksi'));
+    }
+
+    /**
+     * Cetak kartu nasabah (QR Code)
+     */
+    public function cetakKartu($id)
+    {
+        $member = MemberModel::desa()->with('lokasi')->findOrFail($id);
+        $config = config('banksampah');
+
+        // BS-023: QR memuat URL dashboard (halaman login) — bukan data member.
+        // no_member = separuh kredensial login warga; tidak boleh dikodekan di QR.
+        $shareUrl = url('bank-sampah/warga');
+
+        return view('banksampah::backend.member.kartu', compact('member', 'config', 'shareUrl'));
+    }
+
+    // ==================== Aksi admin atas akun warga (D-001) ====================
+
+    /**
+     * Reset UUID — link share lama tidak berlaku lagi
+     */
+    public function resetUuid($id)
+    {
+        isCan('u');
+
+        $member = MemberModel::desa()->findOrFail($id);
+        $oldUuid = $member->uuid;
+        $member->resetUuid();
+
+        $security = app(SecurityManager::class);
+        $security->logEvent('uuid_reset', [
+            'member_id' => $id,
+            'old_uuid'  => substr($oldUuid, 0, 8) . '...',
+            'admin_id'  => auth()->id(),
+        ]);
+
+        return redirect_with('success', 'UUID berhasil di-reset. Link lama tidak berlaku lagi.');
+    }
+
+    /**
+     * Set PIN Layanan Mandiri warga (D-001: PIN milik sesi inti, disimpan
+     * pada tweb_penduduk.pin — bukan kolom pin tabel member).
+     */
+    public function setPin($id)
+    {
+        isCan('u');
+
+        request()->validate([
+            'pin' => ['required', 'string', 'regex:/^[0-9]{4,6}$/'],
+        ]);
+
+        $member = MemberModel::desa()->findOrFail($id);
+
+        if (empty($member->penduduk_id)) {
+            return redirect_with('error', 'Nasabah belum terhubung dengan data penduduk. Hubungkan dulu untuk mengatur PIN Layanan Mandiri.');
+        }
+
+        $pin = request('pin');
+        $security = app(SecurityManager::class);
+
+        if ($security->isCommonPin($pin)) {
+            return redirect_with('error', 'PIN terlalu umum. Gunakan kombinasi angka yang lebih unik.');
+        }
+
+        DB::table('tweb_penduduk')
+            // BS-015/BS-036: hanya penduduk desa aktif
+            ->where('config_id', identitas('id'))
+            ->where('id', $member->penduduk_id)
+            ->update(['pin' => $pin]);
+
+        $security->logEvent('pin_changed', [
+            'member_id' => $id,
+            'admin_id'  => auth()->id(),
+        ]);
+
+        return redirect_with('success', 'PIN berhasil diatur.');
+    }
+
+    /**
+     * Generate link share untuk nasabah
+     */
+    public function shareLink($id)
+    {
+        isCan('u');
+
+        $member = MemberModel::desa()->findOrFail($id);
+
+        if (empty($member->uuid)) {
+            $member->uuid = app(SecurityManager::class)->generateToken();
+            $member->save();
+        }
+
+        $security  = app(SecurityManager::class);
+        $shareToken = $security->createExpiringToken($member->id, 60);
+        $shareUrl   = url('bank-sampah/warga/share/' . $shareToken);
+
+        $security->logEvent('share_link_generated', ['member_id' => $id]);
+
+        return response()->json([
+            'success' => true,
+            'data'    => [
+                'uuid'       => $member->uuid,
+                'share_url'  => $shareUrl,
+                'expires_in' => '1 jam',
+            ],
+        ]);
+    }
+
+    // ==================== AJAX ====================
+
+    /**
+     * AJAX: Cari data penduduk untuk autocomplete
+     */
+    public function ajaxPenduduk()
+    {
+        $cari  = request('q', '');
+        $limit = min((int) request('limit', 20), 50);
+
+        $query = DB::table('tweb_penduduk')
+            ->select('id', 'nama', 'nik', 'alamat_sekarang', 'telepon', 'sex')
+            // BS-036: penduduk hanya milik desa aktif (kolom config_id ada,
+            // dipakai validasi BS-015) — tanpa ini autocomplete bocor PII
+            // penduduk desa lain pada instalasi multi-desa
+            ->where('config_id', identitas('id'))
+            ->where('status_dasar', 1)
+            ->orderBy('nama');
+
+        if ($cari !== '') {
+            $safeCari = safe_like($cari);
+            $query->where(function ($q) use ($safeCari) {
+                $q->where('nama', 'LIKE', "%{$safeCari}%")
+                  ->orWhere('nik', 'LIKE', "%{$safeCari}%");
+            });
+        }
+
+        $results = $query->limit($limit)->get()->map(function ($item) {
+            $jk = $item->sex == 1 ? 'Laki-laki' : ($item->sex == 2 ? 'Perempuan' : '-');
+            return [
+                'id'      => $item->id,
+                'nama'    => $item->nama,
+                'nik'     => $item->nik,
+                'alamat'  => $item->alamat_sekarang ?? '',
+                'telepon' => $item->telepon ?? '',
+                'jk'      => $jk,
+                'text'    => $item->nik . ' - ' . $item->nama,
+            ];
+        });
+
+        return response()->json(['results' => $results, 'count' => $results->count()]);
+    }
+
+    /**
+     * AJAX: Detail penduduk by ID
+     */
+    public function ajaxPendudukDetail($id)
+    {
+        $p = DB::table('tweb_penduduk')
+            ->select('id', 'nama', 'nik', 'alamat_sekarang', 'telepon', 'sex')
+            // BS-036: id wajib penduduk desa aktif
+            ->where('config_id', identitas('id'))
+            ->where('id', $id)
+            ->where('status_dasar', 1)
+            ->first();
+
+        if (! $p) {
+            return response()->json(['error' => 'Tidak ditemukan'], 404);
+        }
+
+        $jk = $p->sex == 1 ? 'Laki-laki' : ($p->sex == 2 ? 'Perempuan' : '-');
+        return response()->json([
+            'id' => $p->id, 'nama' => $p->nama, 'nik' => $p->nik,
+            'alamat' => $p->alamat_sekarang ?? '', 'telepon' => $p->telepon ?? '', 'jk' => $jk,
+        ]);
+    }
+}

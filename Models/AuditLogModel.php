@@ -11,31 +11,22 @@
 
 namespace Modules\BankSampah\Models;
 
-class BankSampahAuditLog extends BaseModel
+use App\Models\BaseModel;
+use App\Traits\ConfigId;
+
+class AuditLogModel extends BaseModel
 {
+    use ConfigId;
+
     protected $table = 'bank_sampah_audit_log';
 
-    protected $fillable = [
-        'config_id',
-        'event',
-        'user_id',
-        'ip_address',
-        'user_agent',
-        'data',
-    ];
+    protected $guarded = [];
 
     protected $casts = [
-        'data' => 'array',
+        'data'       => 'array',
+        'created_at' => 'date:Y-m-d H:i:s',
+        'updated_at' => 'date:Y-m-d H:i:s',
     ];
-
-    protected static function booted(): void
-    {
-        static::creating(function (BankSampahAuditLog $log) {
-            if (empty($log->config_id)) {
-                $log->config_id = identitas('id');
-            }
-        });
-    }
 
     /**
      * Scope: filter by event type
