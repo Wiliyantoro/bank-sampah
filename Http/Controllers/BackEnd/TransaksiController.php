@@ -119,7 +119,7 @@ class TransaksiController extends AdminModulController
             $transaksi = TransaksiModel::create([
                 'no_transaksi' => TransaksiModel::generateNoTransaksi(),
                 'member_id'    => $member->id,
-                'lokasi_id'    => request('lokasi_id'),
+                'lokasi_id'    => request('lokasi_id') ?: null,
                 'tipe'         => 'setor',
                 'total'        => $total,
                 'bayar'        => $total,
