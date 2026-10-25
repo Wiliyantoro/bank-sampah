@@ -11,119 +11,101 @@
  *
  */
 
-use Illuminate\Support\Facades\Route;
-use Modules\BankSampah\Http\Controllers\BackEnd\BankSampahDashboardController;
-use Modules\BankSampah\Http\Controllers\BackEnd\BankSampahKategoriController;
-use Modules\BankSampah\Http\Controllers\BackEnd\BankSampahSampahController;
-use Modules\BankSampah\Http\Controllers\BackEnd\BankSampahMemberController;
-use Modules\BankSampah\Http\Controllers\BackEnd\BankSampahTransaksiController;
-use Modules\BankSampah\Http\Controllers\BackEnd\BankSampahLokasiController;
-use Modules\BankSampah\Http\Controllers\BackEnd\BankSampahRewardController;
-use Modules\BankSampah\Http\Controllers\BackEnd\BankSampahLaporanController;
-use Modules\BankSampah\Http\Controllers\BackEnd\BankSampahWargaController;
-use Modules\BankSampah\Http\Controllers\BackEnd\BankSampahPengaturanController;
-
 /*
 |--------------------------------------------------------------------------
-| Web Routes - Bank Sampah Module
+| Web Routes - Bank Sampah Module (format Luthier CI3)
 |--------------------------------------------------------------------------
-| Route mengikuti konvensi OpenSID:
-| - Prefix: bank-sampah
-| - Auth middleware otomatis dari CI3
-| - Route name pakai slash: bank-sampah/nama_rute
-| - {id} HARUS di belakang (action/{id}) supaya match url()/route()
-|   url('bank-sampah/member/detail', 1) → bank-sampah/member/detail/1
-|
-| PENTING: JANGAN definisikan ulang helper global ci_route() OpenSID di modul ini.
-| Helper modul dimuat lebih awal dari helper inti sehingga menimpa ci_route() dan
-| memutus URL dot-notation inti (mis. surat_master.datatables) -> 404 di semua
-| halaman DataTables OpenSID. Selalu pakai url()/route() Laravel di view modul.
+| Aturan format (mengikuti modul resmi OpenSID):
+| - TANPA `use Illuminate\Support\Facades\Route` — router modul adalah
+|   Luthier CI (dimuat RouterHook inti), bukan router Laravel.
+| - Group: Route::group('prefix', ['namespace' => 'BankSampah/BackEnd'], fn).
+| - Controller sebagai string 'Controller@method' (KELAS GLOBAL, tanpa namespace).
+| - Nama route pakai TITIK; route frontend warga berprefix `fweb.`.
+| - {id} di belakang path (action/{id}) agar cocok dengan url()/route().
+| - Semua aksi yang MENGUBAH data memakai POST.
 |--------------------------------------------------------------------------
 */
 
-// ==================== Admin Routes ====================
-Route::group(['prefix' => 'bank-sampah', 'as' => 'bank-sampah/', 'middleware' => ['web', 'banksampah.auth', 'banksampah.headers']], function () {
+// ==================== BACKEND (Admin) ====================
+Route::group('bank-sampah', ['namespace' => 'BankSampah/BackEnd'], static function (): void {
 
     // Dashboard
-    Route::get('/', [BankSampahDashboardController::class, 'index'])->name('dashboard');
-    Route::get('dashboard', [BankSampahDashboardController::class, 'index'])->name('dashboard2');
+    Route::get('/', 'DashboardController@index')->name('bank-sampah.index');
+    Route::get('dashboard', 'DashboardController@index')->name('bank-sampah.dashboard');
 
-    // ==================== Kategori ====================
-    Route::get('kategori-sampah', [BankSampahKategoriController::class, 'index'])->name('kategori');
-    Route::get('kategori-sampah/tambah', [BankSampahKategoriController::class, 'create'])->name('kategori/tambah');
-    Route::post('kategori-sampah/simpan', [BankSampahKategoriController::class, 'store'])->name('kategori/simpan');
-    Route::get('kategori-sampah/ubah/{id}', [BankSampahKategoriController::class, 'edit'])->name('kategori/ubah');
-    Route::post('kategori-sampah/update/{id}', [BankSampahKategoriController::class, 'update'])->name('kategori/update');
-    Route::post('kategori-sampah/hapus/{id}', [BankSampahKategoriController::class, 'destroy'])->name('kategori/hapus');
+    // Kategori Sampah
+    Route::get('kategori-sampah', 'KategoriController@index')->name('bank-sampah.kategori.index');
+    Route::post('kategori-sampah', 'KategoriController@index')->name('bank-sampah.kategori.datatables');
+    Route::get('kategori-sampah/form/{id?}', 'KategoriController@form')->name('bank-sampah.kategori.form');
+    Route::post('kategori-sampah/insert', 'KategoriController@insert')->name('bank-sampah.kategori.insert');
+    Route::post('kategori-sampah/update/{id?}', 'KategoriController@update')->name('bank-sampah.kategori.update');
+    Route::post('kategori-sampah/delete/{id?}', 'KategoriController@delete')->name('bank-sampah.kategori.delete');
 
-    // ==================== Jenis Sampah ====================
-    Route::get('jenis-sampah', [BankSampahSampahController::class, 'index'])->name('sampah');
-    Route::get('jenis-sampah/tambah', [BankSampahSampahController::class, 'create'])->name('sampah/tambah');
-    Route::post('jenis-sampah/simpan', [BankSampahSampahController::class, 'store'])->name('sampah/simpan');
-    Route::get('jenis-sampah/ubah/{id}', [BankSampahSampahController::class, 'edit'])->name('sampah/ubah');
-    Route::post('jenis-sampah/update/{id}', [BankSampahSampahController::class, 'update'])->name('sampah/update');
-    Route::post('jenis-sampah/hapus/{id}', [BankSampahSampahController::class, 'destroy'])->name('sampah/hapus');
+    // Jenis Sampah
+    Route::get('jenis-sampah', 'SampahController@index')->name('bank-sampah.sampah.index');
+    Route::post('jenis-sampah', 'SampahController@index')->name('bank-sampah.sampah.datatables');
+    Route::get('jenis-sampah/form/{id?}', 'SampahController@form')->name('bank-sampah.sampah.form');
+    Route::post('jenis-sampah/insert', 'SampahController@insert')->name('bank-sampah.sampah.insert');
+    Route::post('jenis-sampah/update/{id?}', 'SampahController@update')->name('bank-sampah.sampah.update');
+    Route::post('jenis-sampah/delete/{id?}', 'SampahController@delete')->name('bank-sampah.sampah.delete');
 
-    // ==================== Nasabah/Member ====================
-    Route::get('member', [BankSampahMemberController::class, 'index'])->name('member');
-    Route::get('member/tambah', [BankSampahMemberController::class, 'create'])->name('member/tambah');
-    Route::post('member/simpan', [BankSampahMemberController::class, 'store'])->name('member/simpan');
-    Route::get('member/ubah/{id}', [BankSampahMemberController::class, 'edit'])->name('member/ubah');
-    Route::post('member/update/{id}', [BankSampahMemberController::class, 'update'])->name('member/update');
-    Route::post('member/hapus/{id}', [BankSampahMemberController::class, 'destroy'])->name('member/hapus');
-    Route::get('member/detail/{id}', [BankSampahMemberController::class, 'detail'])->name('member/detail');
-    Route::get('member/kartu/{id}', [BankSampahMemberController::class, 'cetakKartu'])->name('member/kartu');
+    // Nasabah (Member)
+    Route::get('member', 'MemberController@index')->name('bank-sampah.member.index');
+    Route::post('member', 'MemberController@index')->name('bank-sampah.member.datatables');
+    Route::get('member/form/{id?}', 'MemberController@form')->name('bank-sampah.member.form');
+    Route::post('member/insert', 'MemberController@insert')->name('bank-sampah.member.insert');
+    Route::post('member/update/{id?}', 'MemberController@update')->name('bank-sampah.member.update');
+    Route::post('member/delete/{id?}', 'MemberController@delete')->name('bank-sampah.member.delete');
+    Route::get('member/detail/{id}', 'MemberController@detail')->name('bank-sampah.member.detail');
+    Route::get('member/kartu/{id}', 'MemberController@cetakKartu')->name('bank-sampah.member.kartu');
 
-    // ==================== Transaksi ====================
-    Route::get('transaksi', [BankSampahTransaksiController::class, 'index'])->name('transaksi');
-    Route::get('transaksi/setor', [BankSampahTransaksiController::class, 'formSetor'])->name('transaksi/setor');
-    Route::post('transaksi/proses-setor', [BankSampahTransaksiController::class, 'prosesSetor'])->name('transaksi/proses-setor');
-    Route::get('transaksi/tarik', [BankSampahTransaksiController::class, 'formTarik'])->name('transaksi/tarik');
-    Route::post('transaksi/proses-tarik', [BankSampahTransaksiController::class, 'prosesTarik'])->name('transaksi/proses-tarik');
-    Route::get('transaksi/detail/{id}', [BankSampahTransaksiController::class, 'detail'])->name('transaksi/detail');
-    Route::get('transaksi/struk/{id}', [BankSampahTransaksiController::class, 'cetakStruk'])->name('transaksi/struk');
+    // Aksi admin atas akun warga (D-001: pindah dari controller publik warga)
+    Route::post('member/reset-uuid/{id}', 'MemberController@resetUuid')->name('bank-sampah.member.reset-uuid');
+    Route::post('member/set-pin/{id}', 'MemberController@setPin')->name('bank-sampah.member.set-pin');
+    Route::post('member/share-link/{id}', 'MemberController@shareLink')->name('bank-sampah.member.share-link');
+
+    // Transaksi Setor / Tarik
+    Route::get('transaksi', 'TransaksiController@index')->name('bank-sampah.transaksi.index');
+    Route::post('transaksi', 'TransaksiController@index')->name('bank-sampah.transaksi.datatables');
+    Route::get('transaksi/setor', 'TransaksiController@formSetor')->name('bank-sampah.transaksi.setor');
+    Route::post('transaksi/proses-setor', 'TransaksiController@prosesSetor')->name('bank-sampah.transaksi.proses-setor');
+    Route::get('transaksi/tarik', 'TransaksiController@formTarik')->name('bank-sampah.transaksi.tarik');
+    Route::post('transaksi/proses-tarik', 'TransaksiController@prosesTarik')->name('bank-sampah.transaksi.proses-tarik');
+    Route::get('transaksi/detail/{id}', 'TransaksiController@detail')->name('bank-sampah.transaksi.detail');
+    Route::get('transaksi/struk/{id}', 'TransaksiController@cetakStruk')->name('bank-sampah.transaksi.struk');
 
     // AJAX endpoints
-    Route::get('ajax/member', [BankSampahTransaksiController::class, 'getMember'])->name('ajax/member');
-    Route::get('ajax/sampah', [BankSampahTransaksiController::class, 'getSampah'])->name('ajax/sampah');
-    Route::get('ajax/penduduk', [BankSampahMemberController::class, 'ajaxPenduduk'])->name('ajax/penduduk');
-    Route::get('ajax/penduduk/{id}', [BankSampahMemberController::class, 'ajaxPendudukDetail'])->name('ajax/penduduk/detail');
+    Route::get('ajax/member', 'TransaksiController@getMember')->name('bank-sampah.ajax.member');
+    Route::get('ajax/sampah', 'TransaksiController@getSampah')->name('bank-sampah.ajax.sampah');
+    Route::get('ajax/penduduk', 'MemberController@ajaxPenduduk')->name('bank-sampah.ajax.penduduk');
+    Route::get('ajax/penduduk/{id}', 'MemberController@ajaxPendudukDetail')->name('bank-sampah.ajax.penduduk.detail');
 
-    // ==================== Lokasi/TPS ====================
-    Route::get('lokasi', [BankSampahLokasiController::class, 'index'])->name('lokasi');
-    Route::get('lokasi/tambah', [BankSampahLokasiController::class, 'create'])->name('lokasi/tambah');
-    Route::post('lokasi/simpan', [BankSampahLokasiController::class, 'store'])->name('lokasi/simpan');
-    Route::get('lokasi/ubah/{id}', [BankSampahLokasiController::class, 'edit'])->name('lokasi/ubah');
-    Route::post('lokasi/update/{id}', [BankSampahLokasiController::class, 'update'])->name('lokasi/update');
-    Route::post('lokasi/hapus/{id}', [BankSampahLokasiController::class, 'destroy'])->name('lokasi/hapus');
+    // Lokasi (TPS)
+    Route::get('lokasi', 'LokasiController@index')->name('bank-sampah.lokasi.index');
+    Route::post('lokasi', 'LokasiController@index')->name('bank-sampah.lokasi.datatables');
+    Route::get('lokasi/form/{id?}', 'LokasiController@form')->name('bank-sampah.lokasi.form');
+    Route::post('lokasi/insert', 'LokasiController@insert')->name('bank-sampah.lokasi.insert');
+    Route::post('lokasi/update/{id?}', 'LokasiController@update')->name('bank-sampah.lokasi.update');
+    Route::post('lokasi/delete/{id?}', 'LokasiController@delete')->name('bank-sampah.lokasi.delete');
 
-    // ==================== Reward & Poin ====================
-    Route::get('reward', [BankSampahRewardController::class, 'index'])->name('reward');
-    Route::get('reward/tukar/{memberId}', [BankSampahRewardController::class, 'formTukar'])->name('reward/tukar');
-    Route::post('reward/proses-tukar/{memberId}', [BankSampahRewardController::class, 'prosesTukar'])->name('reward/proses-tukar');
-    Route::get('reward/riwayat/{memberId}', [BankSampahRewardController::class, 'riwayat'])->name('reward/riwayat');
+    // Reward & Poin
+    Route::get('reward', 'RewardController@index')->name('bank-sampah.reward.index');
+    Route::get('reward/tukar/{memberId}', 'RewardController@formTukar')->name('bank-sampah.reward.tukar');
+    Route::post('reward/proses-tukar/{memberId}', 'RewardController@prosesTukar')->name('bank-sampah.reward.proses-tukar');
+    Route::get('reward/riwayat/{memberId}', 'RewardController@riwayat')->name('bank-sampah.reward.riwayat');
 
-    // ==================== Laporan ====================
-    Route::get('laporan', [BankSampahLaporanController::class, 'index'])->name('laporan');
-    Route::get('laporan/export-pdf', [BankSampahLaporanController::class, 'exportPdf'])->name('laporan/export-pdf');
-    Route::get('laporan/export-csv', [BankSampahLaporanController::class, 'exportCsv'])->name('laporan/export-csv');
-
-    // ==================== Pengaturan ====================
-    Route::get('pengaturan', [BankSampahPengaturanController::class, 'index'])->name('pengaturan');
-    Route::post('pengaturan/update-warga', [BankSampahPengaturanController::class, 'updateWarga'])->name('pengaturan/update-warga');
-
-    // ==================== Member Management (UUID + PIN) ====================
-    Route::post('member/reset-uuid/{id}', [BankSampahWargaController::class, 'resetUuid'])->name('member/reset-uuid');
-    Route::post('member/set-pin/{id}', [BankSampahWargaController::class, 'setPin'])->name('member/set-pin');
-    Route::get('member/share-link/{id}', [BankSampahWargaController::class, 'shareLink'])->name('member/share-link');
+    // Laporan (export = baca data, tetap GET)
+    Route::get('laporan', 'LaporanController@index')->name('bank-sampah.laporan.index');
+    Route::get('laporan/export-pdf', 'LaporanController@exportPdf')->name('bank-sampah.laporan.export-pdf');
+    Route::get('laporan/export-csv', 'LaporanController@exportCsv')->name('bank-sampah.laporan.export-csv');
 });
 
-// ==================== Dashboard Warga (Public - Session Based) ====================
-// Akses via session: login → session stores member_id → no UUID in URL
-Route::group(['prefix' => 'bank-sampah/warga', 'as' => 'bank-sampah/warga/', 'middleware' => ['web', 'banksampah.headers']], function () {
-    Route::get('/', [BankSampahWargaController::class, 'index'])->name('index');
-    Route::post('/', [BankSampahWargaController::class, 'index'])->name('verify');
-    Route::post('login', [BankSampahWargaController::class, 'login'])->name('login');
-    Route::get('logout', [BankSampahWargaController::class, 'logout'])->name('logout');
-    Route::get('share/{token}', [BankSampahWargaController::class, 'shareAccess'])->name('share');
+// ==================== FRONTEND (Dashboard Warga - Publik) ====================
+// D-001: autentikasi warga lewat Layanan Mandiri inti (NIK + PIN).
+// Tidak ada route login/verifikasi PIN buatan modul. Logout = POST,
+// hanya forget key session milik modul (bukan invalidate() sesi inti).
+Route::group('bank-sampah/warga', ['namespace' => 'BankSampah/FrontEnd'], static function (): void {
+    Route::get('/', 'WargaController@index')->name('fweb.bank-sampah.warga.index');
+    Route::post('logout', 'WargaController@logout')->name('fweb.bank-sampah.warga.logout');
+    Route::get('share/{token}', 'WargaController@shareAccess')->name('fweb.bank-sampah.warga.share');
 });
