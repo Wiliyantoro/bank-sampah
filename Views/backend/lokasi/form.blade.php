@@ -4,7 +4,7 @@
 <section class="content-header">
     <h1>
         <i class="fa fa-map-marker"></i>
-        {{ $action === 'tambah' ? 'Tambah Lokasi / TPS' : 'Ubah Lokasi / TPS' }}
+        {{ $lokasi ? 'Ubah Lokasi / TPS' : 'Tambah Lokasi / TPS' }}
     </h1>
 </section>
 
@@ -13,11 +13,10 @@
         <div class="col-md-8">
             <div class="box box-primary">
                 <div class="box-header with-border">
-                    <h3 class="box-title">Form {{ $action === 'tambah' ? 'Tambah' : 'Ubah' }} Lokasi</h3>
+                    <h3 class="box-title">Form {{ $lokasi ? 'Ubah' : 'Tambah' }} Lokasi</h3>
                 </div>
 
-                <form action="{{ $action === 'tambah' ? url('bank-sampah/lokasi/simpan') : url('bank-sampah/lokasi/update', $lokasi->id) }}" method="POST">
-                    @csrf
+                {!! form_open($form_action, '') !!}
 
                     <div class="box-body">
                         <div class="row">

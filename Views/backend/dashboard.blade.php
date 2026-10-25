@@ -123,7 +123,7 @@
                     <a href="{{ url('bank-sampah/transaksi/tarik') }}" class="btn btn-danger btn-block">
                         <i class="fa fa-minus"></i> Tarik Saldo
                     </a>
-                    <a href="{{ url('bank-sampah/member/tambah') }}" class="btn btn-primary btn-block">
+                    <a href="{{ url('bank-sampah/member/form') }}" class="btn btn-primary btn-block">
                         <i class="fa fa-user-plus"></i> Tambah Nasabah
                     </a>
                     <a href="{{ url('bank-sampah/laporan') }}" class="btn btn-default btn-block">

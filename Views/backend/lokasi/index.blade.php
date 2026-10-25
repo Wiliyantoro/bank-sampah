@@ -12,7 +12,7 @@
                 <div class="box-header with-border">
                     <h3 class="box-title">Daftar Lokasi / TPS</h3>
                     <div class="box-tools pull-right">
-                        <a href="{{ url('bank-sampah/lokasi/tambah') }}" class="btn btn-primary btn-sm">
+                        <a href="{{ url('bank-sampah/lokasi/form') }}" class="btn btn-primary btn-sm">
                             <i class="fa fa-plus"></i> Tambah Lokasi
                         </a>
                     </div>
@@ -80,12 +80,11 @@
                                     <td class="text-center">{{ $item->transaksi_count ?? $item->transaksi()->count() }}</td>
                                     <td class="text-center">{!! bank_sampah_status_aktif_label($item->aktif) !!}</td>
                                     <td>
-                                        <a href="{{ url('bank-sampah/lokasi/ubah', $item->id) }}" class="btn btn-warning btn-xs" title="Edit">
+                                        <a href="{{ url('bank-sampah/lokasi/form', $item->id) }}" class="btn btn-warning btn-xs" title="Edit">
                                             <i class="fa fa-edit"></i>
                                         </a>
                                         @if(!$item->is_default)
-                                            <form action="{{ url('bank-sampah/lokasi/hapus', $item->id) }}" method="POST" style="display:inline" onsubmit="return confirm('Yakin hapus lokasi ini?')">
-                                                @csrf
+                                            {!! form_open(url('bank-sampah/lokasi/delete', $item->id), 'style="display:inline" onsubmit="return confirm('Yakin hapus lokasi ini?')"') !!}
                                                 <button type="submit" class="btn btn-danger btn-xs" title="Hapus">
                                                     <i class="fa fa-trash"></i>
                                                 </button>

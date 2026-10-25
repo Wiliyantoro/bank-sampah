@@ -43,8 +43,7 @@
                 </div>
             </div>
 
-            <form action="{{ url('bank-sampah/reward/proses-tukar', $member->id) }}" method="POST">
-                @csrf
+            {!! form_open(url('bank-sampah/reward/proses-tukar', $member->id), '') !!}
 
                 <div class="box box-primary">
                     <div class="box-header with-border">

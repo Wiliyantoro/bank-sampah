@@ -33,9 +33,6 @@
         .login-form { text-align: center; }
         .login-form input { width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; margin-bottom: 10px; }
         .login-form input:focus { border-color: #27ae60; outline: none; }
-        .pin-form { text-align: center; }
-        .pin-form input { width: 200px; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 24px; text-align: center; letter-spacing: 8px; margin-bottom: 10px; }
-        .pin-form input:focus { border-color: #27ae60; outline: none; }
         .alert { padding: 12px; border-radius: 8px; margin-bottom: 15px; }
         .alert-error { background: #f8d7da; color: #721c24; }
         .alert-success { background: #d4edda; color: #155724; }
@@ -59,42 +56,16 @@
         @endif
 
         @if(!$member)
-            {{-- Form Login --}}
+            {{-- D-001: login lewat Layanan Mandiri inti (NIK + PIN tweb_penduduk).
+                 Modul tidak lagi punya login/PIN buatan sendiri. --}}
             <div class="card">
-                <h3><i class="fa fa-sign-in"></i> Login Nasabah</h3>
-                <form action="{{ url('bank-sampah/warga/login') }}" method="POST" class="login-form">
-                    @csrf
-                    <input type="text" name="no_member" placeholder="Nomor Member" required autocomplete="off">
-                    <input type="text" name="no_hp" placeholder="Nomor HP" required autocomplete="off">
-                    <button type="submit" class="btn btn-success">
-                        <i class="fa fa-sign-in"></i> Masuk
-                    </button>
-                </form>
-                <p class="security-note">🔒 Sesi akan disimpan di browser. Tidak ada token di URL.</p>
+                <h3><i class="fa fa-sign-in"></i> Masuk Nasabah</h3>
+                <p>Dashboard nasabah diakses lewat akun <strong>Layanan Mandiri</strong> desa.</p>
+                <a href="{{ $mandiriLogin }}" class="btn btn-success">
+                    <i class="fa fa-sign-in"></i> Masuk lewat Layanan Mandiri
+                </a>
+                <p class="security-note">Belum punya akun Layanan Mandiri? Hubungi petugas desa.</p>
             </div>
-
-            @if(isset($settings) && $settings->pesan_selamat_datang)
-            <div class="card">
-                <p style="text-align: center; color: #666; padding: 15px;">
-                    {{ $settings->pesan_selamat_datang }}
-                </p>
-            </div>
-            @endif
-
-            {{-- Form PIN --}}
-            @if(isset($showPin) && $showPin)
-            <div class="card">
-                <h3><i class="fa fa-lock"></i> Verifikasi PIN</h3>
-                <form action="{{ url('bank-sampah/warga') }}" method="POST" class="pin-form">
-                    @csrf
-                    <input type="password" name="pin" placeholder="····" required maxlength="6" pattern="[0-9]{4,6}" inputmode="numeric" autofocus>
-                    <button type="submit" class="btn btn-success">
-                        <i class="fa fa-check"></i> Verifikasi
-                    </button>
-                </form>
-                <p class="security-note">Masukkan PIN 4-6 digit Anda</p>
-            </div>
-            @endif
         @else
             {{-- Dashboard Nasabah --}}
             <div class="card">
@@ -115,16 +86,16 @@
                 @endif
             </div>
 
-            @if($settings->show_saldo || $settings->show_poin)
+            @if(setting('bank_sampah_show_saldo') == 1 || setting('bank_sampah_show_poin') == 1)
             <div class="card">
                 <h3><i class="fa fa-wallet"></i> Saldo & Poin</h3>
-                @if($settings->show_saldo)
+                @if(setting('bank_sampah_show_saldo') == 1)
                 <div class="info-row">
                     <span class="info-label">💰 Saldo Tabungan</span>
                     <span class="info-value saldo">Rp {{ number_format($member->saldo, 0, ',', '.') }}</span>
                 </div>
                 @endif
-                @if($settings->show_poin)
+                @if(setting('bank_sampah_show_poin') == 1)
                 <div class="info-row">
                     <span class="info-label">⭐ Poin Reward</span>
                     <span class="info-value poin">{{ $member->poin }} poin</span>
@@ -133,7 +104,7 @@
             </div>
             @endif
 
-            @if($settings->show_riwayat && $riwayat->count() > 0)
+            @if(setting('bank_sampah_show_riwayat') == 1 && $riwayat->count() > 0)
             <div class="card">
                 <h3><i class="fa fa-history"></i> Riwayat Transaksi Terakhir</h3>
                 @foreach($riwayat as $trx)
@@ -156,17 +127,12 @@
             </div>
             @endif
 
-            @if(isset($settings) && $settings->pesan_footer)
-            <div class="card">
-                <p style="text-align: center; color: #666; padding: 15px;">
-                    {{ $settings->pesan_footer }}
-                </p>
-            </div>
-            @endif
 
-            <a href="{{ url('bank-sampah/warga/logout') }}" class="btn btn-danger">
-                <i class="fa fa-sign-out"></i> Keluar
-            </a>
+            {!! form_open(url('bank-sampah/warga/logout')) !!}
+                <button type="submit" class="btn btn-danger">
+                    <i class="fa fa-sign-out"></i> Keluar
+                </button>
+            {!! form_close() !!}
             <p class="security-note">🔒 Sesi aktif — tidak ada token di URL</p>
         @endif
     </div>

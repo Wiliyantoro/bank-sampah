@@ -15,8 +15,7 @@
                 </div>
             @endif
 
-            <form action="{{ url('bank-sampah/transaksi/proses-tarik') }}" method="POST">
-                @csrf
+            {!! form_open(url('bank-sampah/transaksi/proses-tarik'), '') !!}
 
                 <div class="box box-primary">
                     <div class="box-header with-border">

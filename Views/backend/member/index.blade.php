@@ -12,7 +12,7 @@
                 <div class="box-header with-border">
                     <h3 class="box-title">Daftar Nasabah</h3>
                     <div class="box-tools pull-right">
-                        <a href="{{ url('bank-sampah/member/tambah') }}" class="btn btn-primary btn-sm">
+                        <a href="{{ url('bank-sampah/member/form') }}" class="btn btn-primary btn-sm">
                             <i class="fa fa-plus"></i> Tambah Nasabah
                         </a>
                     </div>
@@ -88,14 +88,13 @@
                                         <a href="{{ url('bank-sampah/member/detail', $item->id) }}" class="btn btn-info btn-xs" title="Detail">
                                             <i class="fa fa-eye"></i>
                                         </a>
-                                        <a href="{{ url('bank-sampah/member/ubah', $item->id) }}" class="btn btn-warning btn-xs" title="Edit">
+                                        <a href="{{ url('bank-sampah/member/form', $item->id) }}" class="btn btn-warning btn-xs" title="Edit">
                                             <i class="fa fa-edit"></i>
                                         </a>
                                         <a href="{{ url('bank-sampah/member/kartu', $item->id) }}" class="btn btn-success btn-xs" title="Cetak Kartu" target="_blank">
                                             <i class="fa fa-id-card"></i>
                                         </a>
-                                        <form action="{{ url('bank-sampah/member/hapus', $item->id) }}" method="POST" style="display:inline" onsubmit="return confirm('Yakin hapus nasabah ini?')">
-                                            @csrf
+                                        {!! form_open(url('bank-sampah/member/delete', $item->id), 'style="display:inline" onsubmit="return confirm('Yakin hapus nasabah ini?')"') !!}
                                             <button type="submit" class="btn btn-danger btn-xs" title="Hapus">
                                                 <i class="fa fa-trash"></i>
                                             </button>

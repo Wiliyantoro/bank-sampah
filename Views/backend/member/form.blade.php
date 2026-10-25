@@ -4,7 +4,7 @@
 <section class="content-header">
     <h1>
         <i class="fa fa-users"></i>
-        {{ $action === 'tambah' ? 'Tambah Nasabah' : 'Ubah Nasabah' }}
+        {{ $member ? 'Ubah Nasabah' : 'Tambah Nasabah' }}
     </h1>
 </section>
 
@@ -13,11 +13,10 @@
         <div class="col-md-8">
             <div class="box box-primary">
                 <div class="box-header with-border">
-                    <h3 class="box-title">Form {{ $action === 'tambah' ? 'Tambah' : 'Ubah' }} Nasabah</h3>
+                    <h3 class="box-title">Form {{ $member ? 'Ubah' : 'Tambah' }} Nasabah</h3>
                 </div>
 
-                <form action="{{ $action === 'tambah' ? url('bank-sampah/member/simpan') : url('bank-sampah/member/update', $member->id) }}" method="POST" id="formNasabah">
-                    @csrf
+                {!! form_open($form_action, 'id="formNasabah"') !!}
 
                     <div class="box-body">
 

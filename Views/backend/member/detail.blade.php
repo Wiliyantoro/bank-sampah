@@ -12,7 +12,7 @@
                 <div class="box-header with-border">
                     <h3 class="box-title">Data Nasabah</h3>
                     <div class="box-tools pull-right">
-                        <a href="{{ url('bank-sampah/member/ubah', $member->id) }}" class="btn btn-warning btn-xs">
+                        <a href="{{ url('bank-sampah/member/form', $member->id) }}" class="btn btn-warning btn-xs">
                             <i class="fa fa-edit"></i> Edit
                         </a>
                         <a href="{{ url('bank-sampah/member/kartu', $member->id) }}" class="btn btn-success btn-xs" target="_blank">
