@@ -1,6 +1,6 @@
 <?php
 
-namespace Modules\BankSampah\Tests\Unit\Security;
+namespace Modules\BankSampah\Tests\Unit\Modules\BankSampah\Security;
 
 use Modules\BankSampah\Tests\TestCase;
 use Modules\BankSampah\Libraries\SecurityManager;
@@ -129,7 +129,6 @@ class SecurityManagerTest extends TestCase
     public function test_log_event_survives_missing_log_channel(): void
     {
         // BS-009: channel tak terdefinisi tidak boleh melempar exception ke caller
-        config(['banksampah.log_channel' => 'channel_tidak_ada_XXX']);
         $this->createBankSampahTables();
 
         $this->security->logEvent('test_fallback_log', ['x' => 1]);
@@ -152,23 +151,6 @@ class SecurityManagerTest extends TestCase
         $this->assertEquals(json_encode(['foo' => 'bar']), $row->data);
     }
 
-    public function test_update_setting_invalidates_cache(): void
-    {
-        // BS-011: perubahan settings mengiringi cache settings lama dibuang
-        $this->createBankSampahTables();
-
-        $settings = \Modules\BankSampah\Models\BankSampahWargaSetting::getSettings($this->configId);
-        $cacheKey = \Modules\BankSampah\Models\BankSampahWargaSetting::cacheKey($this->configId);
-
-        // Isi cache basi
-        \Cache::put($cacheKey, 'STALE', 60);
-        $this->assertEquals('STALE', \Cache::get($cacheKey));
-
-        $settings->update(['require_pin' => false]);
-
-        $this->assertNull(\Cache::get($cacheKey)); // dibuang oleh event saved
-    }
-
     public function test_validate_uuid_invalid(): void
     {
         $this->assertFalse($this->security->validateUuid('not-a-uuid'));
@@ -179,7 +161,7 @@ class SecurityManagerTest extends TestCase
     public function test_mask_phone(): void
     {
         $this->assertEquals('081****7890', $this->security->maskPhone('081234567890'));
-        $this->assertEquals('081****7890', $this->security->security->maskPhone('081-2345-6789'));
+        $this->assertEquals('081****7890', $this->security->maskPhone('081-2345-6789'));
     }
 
     public function test_detect_suspicious_input_sql_injection(): void

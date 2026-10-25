@@ -198,7 +198,6 @@ abstract class TestCase extends BaseTestCase
             'nama'        => 'Nasabah Test',
             'alamat'      => 'Jl. Test No. 1',
             'no_hp'       => '081234567890',
-            'pin'         => null,
             'penduduk_id' => null,
             'lokasi_id'   => null,
             'saldo'       => 0,
@@ -332,7 +331,6 @@ abstract class TestCase extends BaseTestCase
             nama VARCHAR(150) NOT NULL,
             alamat TEXT,
             no_hp VARCHAR(20),
-            pin VARCHAR(255),
             penduduk_id INTEGER,
             lokasi_id INTEGER,
             saldo DECIMAL(15,2) DEFAULT 0,
@@ -385,22 +383,17 @@ abstract class TestCase extends BaseTestCase
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )');
 
-        // Warga Settings
-        // BS-027: UNIQUE(config_id) — selaras dengan migrasi 2026_1016_000002
-        \DB::statement('CREATE TABLE IF NOT EXISTS bank_sampah_warga_settings (
+        // setting_aplikasi (Pengaturan Aplikasi inti, issue #43 item 5)
+        \DB::statement('CREATE TABLE IF NOT EXISTS setting_aplikasi (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             config_id INTEGER NOT NULL,
-            warga_aktif TINYINT DEFAULT 1,
-            show_saldo TINYINT DEFAULT 1,
-            show_riwayat TINYINT DEFAULT 1,
-            show_poin TINYINT DEFAULT 1,
-            require_pin TINYINT DEFAULT 1,
-            max_riwayat INTEGER DEFAULT 10,
-            pesan_selamat_datang TEXT,
-            pesan_footer TEXT,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            UNIQUE (config_id)
+            key VARCHAR(100) NOT NULL,
+            judul VARCHAR(255),
+            value TEXT,
+            keterangan TEXT,
+            jenis VARCHAR(20),
+            kategori VARCHAR(100),
+            UNIQUE (config_id, key)
         )');
 
         // Audit Log

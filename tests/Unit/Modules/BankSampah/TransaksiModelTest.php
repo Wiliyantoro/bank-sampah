@@ -1,10 +1,10 @@
 <?php
 
-namespace Modules\BankSampah\Tests\Unit\Models;
+namespace Modules\BankSampah\Tests\Unit\Modules\BankSampah;
 
 use Modules\BankSampah\Tests\TestCase;
 
-class BankSampahTransaksiTest extends TestCase
+class TransaksiModelTest extends TestCase
 {
     protected function setUp(): void
     {
@@ -14,13 +14,13 @@ class BankSampahTransaksiTest extends TestCase
 
     public function test_table_name(): void
     {
-        $model = new \Modules\BankSampah\Models\BankSampahTransaksi();
+        $model = new \Modules\BankSampah\Models\TransaksiModel();
         $this->assertEquals('bank_sampah_transaksi', $model->getTable());
     }
 
     public function test_fillable_attributes(): void
     {
-        $model = new \Modules\BankSampah\Models\BankSampahTransaksi();
+        $model = new \Modules\BankSampah\Models\TransaksiModel();
         $fillable = $model->getFillable();
         
         $this->assertContains('config_id', $fillable);
@@ -32,7 +32,7 @@ class BankSampahTransaksiTest extends TestCase
 
     public function test_generate_no_transaksi_format(): void
     {
-        $noTransaksi = \Modules\BankSampah\Models\BankSampahTransaksi::generateNoTransaksi();
+        $noTransaksi = \Modules\BankSampah\Models\TransaksiModel::generateNoTransaksi();
         
         // Format: TRX-YYYYMMDD-XXXX (4+ digit — 5+ digit bila overflow > 9999, BS-022)
         $this->assertMatchesRegularExpression('/^TRX-\d{8}-\d{4,}$/', $noTransaksi);
@@ -46,7 +46,7 @@ class BankSampahTransaksiTest extends TestCase
         ]);
         
         // Generate new number
-        $noTransaksi = \Modules\BankSampah\Models\BankSampahTransaksi::generateNoTransaksi();
+        $noTransaksi = \Modules\BankSampah\Models\TransaksiModel::generateNoTransaksi();
         
         // Should be incremented
         $this->assertStringEndsWith('-0002', $noTransaksi);
@@ -61,7 +61,7 @@ class BankSampahTransaksiTest extends TestCase
         ]);
         
         // Generate new number for today
-        $noTransaksi = \Modules\BankSampah\Models\BankSampahTransaksi::generateNoTransaksi();
+        $noTransaksi = \Modules\BankSampah\Models\TransaksiModel::generateNoTransaksi();
         
         // Should start from 0001 for new day
         $this->assertStringEndsWith('-0001', $noTransaksi);
@@ -74,7 +74,7 @@ class BankSampahTransaksiTest extends TestCase
             'no_transaksi' => 'TRX-' . date('Ymd') . '-9999',
         ]);
 
-        $noTransaksi = \Modules\BankSampah\Models\BankSampahTransaksi::generateNoTransaksi();
+        $noTransaksi = \Modules\BankSampah\Models\TransaksiModel::generateNoTransaksi();
 
         $this->assertStringEndsWith('-10000', $noTransaksi);
     }
@@ -86,14 +86,14 @@ class BankSampahTransaksiTest extends TestCase
             'no_transaksi' => 'TRX-' . date('Ymd') . '-10000',
         ]);
 
-        $noTransaksi = \Modules\BankSampah\Models\BankSampahTransaksi::generateNoTransaksi();
+        $noTransaksi = \Modules\BankSampah\Models\TransaksiModel::generateNoTransaksi();
 
         $this->assertStringEndsWith('-10001', $noTransaksi);
     }
 
     public function test_member_relationship(): void
     {
-        $transaksi = new \Modules\BankSampah\Models\BankSampahTransaksi();
+        $transaksi = new \Modules\BankSampah\Models\TransaksiModel();
         $relation = $transaksi->member();
         
         $this->assertInstanceOf(\Illuminate\Database\Eloquent\Relations\BelongsTo::class, $relation);
@@ -101,7 +101,7 @@ class BankSampahTransaksiTest extends TestCase
 
     public function test_lokasi_relationship(): void
     {
-        $transaksi = new \Modules\BankSampah\Models\BankSampahTransaksi();
+        $transaksi = new \Modules\BankSampah\Models\TransaksiModel();
         $relation = $transaksi->lokasi();
         
         $this->assertInstanceOf(\Illuminate\Database\Eloquent\Relations\BelongsTo::class, $relation);
@@ -109,7 +109,7 @@ class BankSampahTransaksiTest extends TestCase
 
     public function test_detail_relationship(): void
     {
-        $transaksi = new \Modules\BankSampah\Models\BankSampahTransaksi();
+        $transaksi = new \Modules\BankSampah\Models\TransaksiModel();
         $relation = $transaksi->detail();
         
         $this->assertInstanceOf(\Illuminate\Database\Eloquent\Relations\HasMany::class, $relation);

@@ -1,10 +1,10 @@
 <?php
 
-namespace Modules\BankSampah\Tests\Unit\Models;
+namespace Modules\BankSampah\Tests\Unit\Modules\BankSampah;
 
 use Modules\BankSampah\Tests\TestCase;
 
-class BankSampahSampahTest extends TestCase
+class SampahModelTest extends TestCase
 {
     protected function setUp(): void
     {
@@ -14,13 +14,13 @@ class BankSampahSampahTest extends TestCase
 
     public function test_table_name(): void
     {
-        $model = new \Modules\BankSampah\Models\BankSampahSampah();
+        $model = new \Modules\BankSampah\Models\SampahModel();
         $this->assertEquals('bank_sampah_sampah', $model->getTable());
     }
 
     public function test_fillable_attributes(): void
     {
-        $model = new \Modules\BankSampah\Models\BankSampahSampah();
+        $model = new \Modules\BankSampah\Models\SampahModel();
         $fillable = $model->getFillable();
         
         $this->assertContains('config_id', $fillable);
@@ -39,7 +39,7 @@ class BankSampahSampahTest extends TestCase
     {
         $sampah = $this->createSampah(['stok' => 10]);
         
-        $model = new \Modules\BankSampah\Models\BankSampahSampah();
+        $model = new \Modules\BankSampah\Models\SampahModel();
         $model->id = $sampah->id;
         $model->stok = 10;
         
@@ -58,7 +58,7 @@ class BankSampahSampahTest extends TestCase
     {
         $sampah = $this->createSampah(['stok' => 10]);
         
-        $model = new \Modules\BankSampah\Models\BankSampahSampah();
+        $model = new \Modules\BankSampah\Models\SampahModel();
         $model->id = $sampah->id;
         $model->stok = 10;
         
@@ -77,7 +77,7 @@ class BankSampahSampahTest extends TestCase
     {
         $sampah = $this->createSampah(['stok' => 3]);
         
-        $model = new \Modules\BankSampah\Models\BankSampahSampah();
+        $model = new \Modules\BankSampah\Models\SampahModel();
         $model->id = $sampah->id;
         $model->stok = 3;
         
@@ -99,7 +99,7 @@ class BankSampahSampahTest extends TestCase
         // bukan terhadap nilai in-memory yang bisa basi (stale)
         $sampah = $this->createSampah(['stok' => 7]);
 
-        $model = new \Modules\BankSampah\Models\BankSampahSampah();
+        $model = new \Modules\BankSampah\Models\SampahModel();
         $model->id = $sampah->id;
         $model->stok = 10; // nilai in-memory basi, tidak boleh dijadikan dasar
 
@@ -117,7 +117,7 @@ class BankSampahSampahTest extends TestCase
         // Nilai in-memory basi tidak boleh loloskan stok minus.
         $sampah = $this->createSampah(['stok' => 3]);
 
-        $model = new \Modules\BankSampah\Models\BankSampahSampah();
+        $model = new \Modules\BankSampah\Models\SampahModel();
         $model->id = $sampah->id;
         $model->stok = 999; // basi
 
@@ -129,7 +129,7 @@ class BankSampahSampahTest extends TestCase
 
     public function test_kategori_relationship(): void
     {
-        $sampah = new \Modules\BankSampah\Models\BankSampahSampah();
+        $sampah = new \Modules\BankSampah\Models\SampahModel();
         $relation = $sampah->kategori();
         
         $this->assertInstanceOf(\Illuminate\Database\Eloquent\Relations\BelongsTo::class, $relation);
@@ -137,7 +137,7 @@ class BankSampahSampahTest extends TestCase
 
     public function test_transaksi_detail_relationship(): void
     {
-        $sampah = new \Modules\BankSampah\Models\BankSampahSampah();
+        $sampah = new \Modules\BankSampah\Models\SampahModel();
         $relation = $sampah->transaksiDetail();
         
         $this->assertInstanceOf(\Illuminate\Database\Eloquent\Relations\HasMany::class, $relation);
