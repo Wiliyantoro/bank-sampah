@@ -5,7 +5,7 @@
     "keywords": ["bank sampah", "sampah", "nasabah", "setor", "tabsampah"],
     "priority": 0,
     "providers": ["Modules\\BankSampah\\Providers\\BankSampahServiceProvider"],
-    "files": [],
+    "files": ["Helpers/banksampah_helper.php"],
     "version": "2611.0.0",
     "package": "opensid-bank-sampah",
     "require": {
