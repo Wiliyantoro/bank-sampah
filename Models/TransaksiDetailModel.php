@@ -11,11 +11,14 @@
 
 namespace Modules\BankSampah\Models;
 
+use Modules\BankSampah\Traits\HasUserstamp;
 use App\Models\BaseModel;
 use App\Traits\ConfigId;
 
 class TransaksiDetailModel extends BaseModel
 {
+    use HasUserstamp;
+
     use ConfigId;
     protected $table = 'bank_sampah_transaksi_detail';
 

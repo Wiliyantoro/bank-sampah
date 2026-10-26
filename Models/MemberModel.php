@@ -11,6 +11,7 @@
 
 namespace Modules\BankSampah\Models;
 
+use Modules\BankSampah\Traits\HasUserstamp;
 use App\Models\BaseModel;
 use App\Traits\ConfigId;
 use App\Models\Penduduk;
@@ -19,6 +20,8 @@ use Illuminate\Support\Str;
 
 class MemberModel extends BaseModel
 {
+    use HasUserstamp;
+
     use ConfigId;
 
     protected $table = 'bank_sampah_member';
@@ -33,6 +36,7 @@ class MemberModel extends BaseModel
     ];
 
     protected $casts = [
+        'aktif' => 'boolean',
         'saldo'      => 'decimal:2',
         'poin'       => 'integer',
         'created_at' => 'date:Y-m-d H:i:s',

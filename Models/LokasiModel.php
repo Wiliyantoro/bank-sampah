@@ -11,11 +11,14 @@
 
 namespace Modules\BankSampah\Models;
 
+use Modules\BankSampah\Traits\HasUserstamp;
 use App\Models\BaseModel;
 use App\Traits\ConfigId;
 
 class LokasiModel extends BaseModel
 {
+    use HasUserstamp;
+
     use ConfigId;
 
     protected $table = 'bank_sampah_lokasi';
@@ -29,6 +32,7 @@ class LokasiModel extends BaseModel
     ];
 
     protected $casts = [
+        'aktif' => 'boolean',
         'is_default' => 'boolean',
         'created_at' => 'date:Y-m-d H:i:s',
         'updated_at' => 'date:Y-m-d H:i:s',

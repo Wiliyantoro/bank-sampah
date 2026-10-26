@@ -11,12 +11,15 @@
 
 namespace Modules\BankSampah\Models;
 
+use Modules\BankSampah\Traits\HasUserstamp;
 use App\Models\BaseModel;
 use App\Traits\ConfigId;
 use Illuminate\Support\Facades\DB;
 
 class TransaksiModel extends BaseModel
 {
+    use HasUserstamp;
+
     use ConfigId;
 
     protected $table = 'bank_sampah_transaksi';
@@ -30,6 +33,7 @@ class TransaksiModel extends BaseModel
     ];
 
     protected $casts = [
+        'tipe' => 'string',
         'total'      => 'decimal:2',
         'bayar'      => 'decimal:2',
         'potongan'   => 'decimal:2',
@@ -41,6 +45,7 @@ class TransaksiModel extends BaseModel
     /**
      * Relasi ke member
      */
+
     public function member()
     {
         return $this->belongsTo(MemberModel::class, 'member_id');

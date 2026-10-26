@@ -11,11 +11,14 @@
 
 namespace Modules\BankSampah\Models;
 
+use Modules\BankSampah\Traits\HasUserstamp;
 use App\Models\BaseModel;
 use App\Traits\ConfigId;
 
 class AuditLogModel extends BaseModel
 {
+    use HasUserstamp;
+
     use ConfigId;
 
     protected $table = 'bank_sampah_audit_log';
@@ -37,6 +40,7 @@ class AuditLogModel extends BaseModel
     /**
      * Scope: filter by event type
      */
+
     public function scopeEvent($query, string $event)
     {
         return $query->where('event', $event);

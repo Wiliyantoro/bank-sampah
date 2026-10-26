@@ -11,6 +11,7 @@
 
 defined('BASEPATH') || exit('No direct script access allowed');
 
+use Modules\BankSampah\Enums\TipeTransaksiEnum;
 use Modules\BankSampah\Models\TransaksiDetailModel;
 use Modules\BankSampah\Models\TransaksiModel;
 
@@ -106,12 +107,12 @@ class LaporanController extends AdminModulController
             ->get();
 
         // Total
-        $totalSetor = TransaksiModel::query()->where('tipe', 'setor')
+        $totalSetor = TransaksiModel::query()->where('tipe', TipeTransaksiEnum::SETOR->value)
             ->whereBetween('created_at', $rentang)
             ->selectRaw('COUNT(*) as jumlah, COALESCE(SUM(total), 0) as nominal')
             ->first();
 
-        $totalTarik = TransaksiModel::query()->where('tipe', 'tarik')
+        $totalTarik = TransaksiModel::query()->where('tipe', TipeTransaksiEnum::TARIK->value)
             ->whereBetween('created_at', $rentang)
             ->selectRaw('COUNT(*) as jumlah, COALESCE(SUM(total), 0) as nominal')
             ->first();

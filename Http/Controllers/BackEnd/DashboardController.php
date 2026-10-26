@@ -11,6 +11,7 @@
 
 defined('BASEPATH') || exit('No direct script access allowed');
 
+use Modules\BankSampah\Enums\TipeTransaksiEnum;
 use Illuminate\Support\Facades\Cache;
 use Carbon\Carbon;
 use Modules\BankSampah\Models\LokasiModel;
@@ -47,24 +48,24 @@ class DashboardController extends AdminModulController
                 ->whereDate('created_at', today())->count();
 
             $setoranBulan = TransaksiModel::query()
-                ->where('tipe', 'setor')
+                ->where('tipe', TipeTransaksiEnum::SETOR->value)
                 ->whereBetween('created_at', $this->rentangBulan($bulan, $tahun))
                 ->sum('total');
 
             $tarikanBulan = TransaksiModel::query()
-                ->where('tipe', 'tarik')
+                ->where('tipe', TipeTransaksiEnum::TARIK->value)
                 ->whereBetween('created_at', $this->rentangBulan($bulan, $tahun))
                 ->sum('total');
 
             // issue #77: view membaca totalSetor/totalTarik/totalBerat/totalSampahJenis
             // (bukan setoranBulan/tarikanBulan/totalStok) — kartu statistik selalu 0
             $totalSetor = TransaksiModel::query()
-                ->where('tipe', 'setor')
+                ->where('tipe', TipeTransaksiEnum::SETOR->value)
                 ->whereBetween('created_at', $this->rentangBulan($bulan, $tahun))
                 ->count();
 
             $totalTarik = TransaksiModel::query()
-                ->where('tipe', 'tarik')
+                ->where('tipe', TipeTransaksiEnum::TARIK->value)
                 ->whereBetween('created_at', $this->rentangBulan($bulan, $tahun))
                 ->count();
 

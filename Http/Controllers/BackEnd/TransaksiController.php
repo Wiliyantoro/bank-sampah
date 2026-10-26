@@ -11,6 +11,7 @@
 
 defined('BASEPATH') || exit('No direct script access allowed');
 
+use Modules\BankSampah\Enums\TipeTransaksiEnum;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -131,7 +132,7 @@ class TransaksiController extends AdminModulController
                     'no_transaksi' => TransaksiModel::generateNoTransaksi(),
                     'member_id'    => $member->id,
                     'lokasi_id'    => request('lokasi_id') ?: null,
-                    'tipe'         => 'setor',
+                    'tipe'         => TipeTransaksiEnum::SETOR->value,
                     'total'        => $total,
                     'bayar'        => $total,
                     'poin'         => $poinDidapat,
@@ -229,7 +230,7 @@ class TransaksiController extends AdminModulController
                 $transaksi = TransaksiModel::create([
                     'no_transaksi' => TransaksiModel::generateNoTransaksi(),
                     'member_id'    => $member->id,
-                    'tipe'         => 'tarik',
+                    'tipe'         => TipeTransaksiEnum::TARIK->value,
                     'total'        => request('nominal'),
                     'bayar'        => request('nominal'),
                     'keterangan'   => request('keterangan'),
@@ -358,17 +359,17 @@ class TransaksiController extends AdminModulController
      */
     public function cariMember()
     {
-        $cari = trim((string) request('q', ''));
-
         $query = MemberModel::desa()->aktif()->orderBy('nama')->limit(20);
 
-        if ($cari !== '') {
-            $safeCari = bank_sampah_safe_like($cari);
-            $query->where(function ($q) use ($safeCari) {
-                $q->where('nama', 'LIKE', "%{$safeCari}%")
+        // issue #66: when() menggantikan if manual agar query builder tetap
+        // satu rantai; filled() dipakai sebagai semantik "param dikirim isi"
+        $query->when(request()->filled('q'), function ($q) {
+            $safeCari = bank_sampah_safe_like(trim((string) request('q')));
+            $q->where(function ($w) use ($safeCari) {
+                $w->where('nama', 'LIKE', "%{$safeCari}%")
                   ->orWhere('no_member', 'LIKE', "%{$safeCari}%");
             });
-        }
+        });
 
         return response()->json([
             'results' => $query->get()

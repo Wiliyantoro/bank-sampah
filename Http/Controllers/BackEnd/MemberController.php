@@ -284,7 +284,6 @@ class MemberController extends AdminModulController
      */
     public function ajaxPenduduk()
     {
-        $cari  = request('q', '');
         $limit = min((int) request('limit', 20), 50);
 
         $query = DB::table('tweb_penduduk')
@@ -296,13 +295,14 @@ class MemberController extends AdminModulController
             ->where('status_dasar', 1)
             ->orderBy('nama');
 
-        if ($cari !== '') {
-            $safeCari = bank_sampah_safe_like($cari);
-            $query->where(function ($q) use ($safeCari) {
-                $q->where('nama', 'LIKE', "%{$safeCari}%")
+        // issue #66: when() menggantikan if manual
+        $query->when(request()->filled('q'), function ($q) {
+            $safeCari = bank_sampah_safe_like(trim((string) request('q')));
+            $q->where(function ($w) use ($safeCari) {
+                $w->where('nama', 'LIKE', "%{$safeCari}%")
                   ->orWhere('nik', 'LIKE', "%{$safeCari}%");
             });
-        }
+        });
 
         $results = $query->limit($limit)->get()->map(function ($item) {
             $jk = $item->sex == 1 ? 'Laki-laki' : ($item->sex == 2 ? 'Perempuan' : '-');

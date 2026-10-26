@@ -11,11 +11,14 @@
 
 namespace Modules\BankSampah\Models;
 
+use Modules\BankSampah\Traits\HasUserstamp;
 use App\Models\BaseModel;
 use App\Traits\ConfigId;
 
 class RewardModel extends BaseModel
 {
+    use HasUserstamp;
+
     use ConfigId;
 
     protected $table = 'bank_sampah_reward';
@@ -37,6 +40,7 @@ class RewardModel extends BaseModel
     /**
      * Relasi ke member
      */
+
     public function member()
     {
         return $this->belongsTo(MemberModel::class, 'member_id');

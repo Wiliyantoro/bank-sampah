@@ -11,11 +11,14 @@
 
 namespace Modules\BankSampah\Models;
 
+use Modules\BankSampah\Traits\HasUserstamp;
 use App\Models\BaseModel;
 use App\Traits\ConfigId;
 
 class SampahModel extends BaseModel
 {
+    use HasUserstamp;
+
     use ConfigId;
 
     protected $table = 'bank_sampah_sampah';
@@ -29,6 +32,7 @@ class SampahModel extends BaseModel
     ];
 
     protected $casts = [
+        'aktif' => 'boolean',
         'is_default' => 'boolean',
         'harga_beli' => 'decimal:2',
         'harga_jual' => 'decimal:2',
