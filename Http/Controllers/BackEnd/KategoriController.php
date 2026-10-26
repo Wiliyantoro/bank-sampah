@@ -31,7 +31,7 @@ class KategoriController extends AdminModulController
     public function index()
     {
         if (request()->ajax()) {
-            return datatables()->of(KategoriModel::desa())
+            return datatables()->of(KategoriModel::query())
                 ->addIndexColumn()
                 ->addColumn('aksi', static function ($row): string {
                     $aksi = '';
@@ -60,7 +60,7 @@ class KategoriController extends AdminModulController
      */
     public function form($id = null)
     {
-        $kategori = $id ? KategoriModel::desa()->findOrFail($id) : null;
+        $kategori = $id ? KategoriModel::query()->findOrFail($id) : null;
 
         return view('banksampah::backend.kategori.form', [
             'kategori'    => $kategori,
@@ -90,7 +90,7 @@ class KategoriController extends AdminModulController
 
     public function update($id = null)
     {
-        $kategori = KategoriModel::desa()->findOrFail($id);
+        $kategori = KategoriModel::query()->findOrFail($id);
 
         request()->validate([
             'nama'       => 'required|string|max:150',
@@ -109,7 +109,7 @@ class KategoriController extends AdminModulController
 
     public function delete($id = null): void
     {
-        $kategori = KategoriModel::desa()->findOrFail($id);
+        $kategori = KategoriModel::query()->findOrFail($id);
 
         // Data bawaan sistem tidak boleh dihapus
         if ($kategori->isDefault()) {

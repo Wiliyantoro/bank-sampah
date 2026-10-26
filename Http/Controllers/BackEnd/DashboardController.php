@@ -39,28 +39,28 @@ class DashboardController extends AdminModulController
         $cacheKey = "banksampah_dash_{$configId}_{$tahun}{$bulan}";
 
         $data = Cache::remember($cacheKey, 300, function () use ($configId, $bulan, $tahun) {
-            $totalMember = MemberModel::desa()->aktif()->count();
+            $totalMember = MemberModel::query()->aktif()->count();
 
-            $transaksiHariIni = TransaksiModel::desa()
+            $transaksiHariIni = TransaksiModel::query()
                 ->whereDate('created_at', today())->count();
 
-            $setoranBulan = TransaksiModel::desa()
+            $setoranBulan = TransaksiModel::query()
                 ->where('tipe', 'setor')
                 ->whereMonth('created_at', $bulan)
                 ->whereYear('created_at', $tahun)
                 ->sum('total');
 
-            $tarikanBulan = TransaksiModel::desa()
+            $tarikanBulan = TransaksiModel::query()
                 ->where('tipe', 'tarik')
                 ->whereMonth('created_at', $bulan)
                 ->whereYear('created_at', $tahun)
                 ->sum('total');
 
             $saldoKas = $setoranBulan - $tarikanBulan;
-            $totalStok = SampahModel::desa()->sum('stok');
-            $totalLokasi = LokasiModel::desa()->aktif()->count();
+            $totalStok = SampahModel::query()->sum('stok');
+            $totalLokasi = LokasiModel::query()->aktif()->count();
 
-            $transaksiTerakhir = TransaksiModel::desa()
+            $transaksiTerakhir = TransaksiModel::query()
                 ->with('member')
                 ->orderBy('created_at', 'desc')
                 ->limit(10)
@@ -78,7 +78,7 @@ class DashboardController extends AdminModulController
         $grafikData = Cache::remember("banksampah_dash_grafik_{$configId}", 300, function () {
             $mulai = now()->subMonths(11)->startOfMonth();
 
-            $rows = TransaksiModel::desa()
+            $rows = TransaksiModel::query()
                 ->select('created_at', 'tipe', 'total')
                 ->where('created_at', '>=', $mulai)
                 ->get();

@@ -51,7 +51,7 @@ class WargaController extends WebModulController
         $member = $this->memberSaatIni();
 
         if ($member && setting('bank_sampah_show_riwayat') == 1) {
-            $riwayat = TransaksiModel::desa()
+            $riwayat = TransaksiModel::query()
                 ->where('member_id', $member->id)
                 ->orderBy('created_at', 'desc')
                 ->limit((int) (setting('bank_sampah_max_riwayat') ?: 20))
@@ -75,7 +75,7 @@ class WargaController extends WebModulController
         $memberId = session('bank_sampah_member_id');
 
         if ($memberId) {
-            $member = MemberModel::desa()->where('id', $memberId)->where('aktif', 1)->first();
+            $member = MemberModel::query()->where('id', $memberId)->where('aktif', 1)->first();
 
             if (! $member) {
                 session()->forget('bank_sampah_member_id');
@@ -89,7 +89,7 @@ class WargaController extends WebModulController
         $pendudukId = session('mandiri');
 
         if ($pendudukId) {
-            return MemberModel::desa()
+            return MemberModel::query()
                 ->where('penduduk_id', $pendudukId)
                 ->where('aktif', 1)
                 ->first();
@@ -124,7 +124,7 @@ class WargaController extends WebModulController
             ]);
         }
 
-        $member = MemberModel::desa()->where('id', $memberId)->where('aktif', 1)->first();
+        $member = MemberModel::query()->where('id', $memberId)->where('aktif', 1)->first();
 
         if (! $member) {
             return view('banksampah::backend.warga.index', [

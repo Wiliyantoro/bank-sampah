@@ -44,13 +44,6 @@ class LokasiModel extends BaseModel
         return $this->hasMany(TransaksiModel::class, 'lokasi_id');
     }
 
-    /**
-     * Scope: hanya data desa yang sedang login
-     */
-    public function scopeDesa($query)
-    {
-        return $query->where('config_id', identitas('id'));
-    }
 
     /**
      * Scope: hanya yang aktif
