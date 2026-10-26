@@ -11,7 +11,7 @@
 
 defined('BASEPATH') || exit('No direct script access allowed');
 
-use Modules\BankSampah\Libraries\SecurityManager;
+use Modules\BankSampah\Services\SecurityManager;
 use Modules\BankSampah\Models\MemberModel;
 use Modules\BankSampah\Models\TransaksiModel;
 

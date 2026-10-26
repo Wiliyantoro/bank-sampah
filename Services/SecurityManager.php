@@ -12,7 +12,7 @@
  *
  */
 
-namespace Modules\BankSampah\Libraries;
+namespace Modules\BankSampah\Services;
 
 use Illuminate\Cache\RateLimiter;
 use Illuminate\Support\Facades\Cache;

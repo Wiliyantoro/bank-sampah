@@ -12,7 +12,7 @@
 defined('BASEPATH') || exit('No direct script access allowed');
 
 use Illuminate\Support\Facades\DB;
-use Modules\BankSampah\Libraries\SecurityManager;
+use Modules\BankSampah\Services\SecurityManager;
 use Modules\BankSampah\Models\LokasiModel;
 use Modules\BankSampah\Models\MemberModel;
 use Modules\BankSampah\Models\TransaksiModel;

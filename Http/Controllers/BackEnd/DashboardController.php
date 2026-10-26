@@ -11,6 +11,7 @@
 
 defined('BASEPATH') || exit('No direct script access allowed');
 
+use Modules\BankSampah\Services\LaporanBankSampah;
 use Modules\BankSampah\Enums\TipeTransaksiEnum;
 use Illuminate\Support\Facades\Cache;
 use Carbon\Carbon;
@@ -140,12 +141,7 @@ class DashboardController extends AdminModulController
      */
     protected function periodeQuery(): array
     {
-        $data = request()->validate([
-            'bulan' => 'nullable|integer|between:1,12',
-            'tahun' => 'nullable|integer|between:2000,2100',
-        ]);
-
-        return [(int) ($data['bulan'] ?? date('m')), (int) ($data['tahun'] ?? date('Y'))];
+        return LaporanBankSampah::periodeQuery();
     }
 
     /**

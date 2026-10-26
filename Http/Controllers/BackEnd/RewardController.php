@@ -11,6 +11,8 @@
 
 defined('BASEPATH') || exit('No direct script access allowed');
 
+use Modules\BankSampah\Http\Requests\TukarPoinRequest;
+use Modules\BankSampah\Services\TukarPoinAction;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -81,42 +83,29 @@ class RewardController extends AdminModulController
      */
     public function prosesTukar($memberId)
     {
-        request()->validate([
-            'poin'       => 'required|integer|min:1',
-            'keterangan' => 'required|string|max:255',
-        ]);
+        // issue #65: validasi via FormRequest; logic bisnis via Service/Action
+        $req = TukarPoinRequest::createFrom(request());
+        $req->validate($req->rules(), $req->messages());
 
         $member  = MemberModel::query()->findOrFail($memberId);
         $minimal = (int) (setting('bank_sampah_minimal_poin_tukar') ?: 100);
 
-        if ($member->poin < request('poin')) {
+        if ($member->poin < $req->input('poin')) {
             return redirect_with('error', 'Poin tidak mencukupi. Poin saat ini: ' . $member->poin);
         }
 
-        if (request('poin') < $minimal) {
+        if ((int) $req->input('poin') < $minimal) {
             return redirect_with('error', "Minimal poin untuk tukar adalah {$minimal}", ci_route('bank-sampah.reward'));
         }
 
         try {
-            // issue #61: DB::transaction(fn) — rollback otomatis.
-            DB::transaction(function () use ($member) {
-                if (! $member->tukarPoin(request('poin'))) {
-                    throw new Exception('poin_tidak_cukup');
-                }
-
-                RewardModel::create([
-                    'member_id'   => $member->id,
-                    'tipe'        => 'tukar',
-                    'poin'        => request('poin'),
-                    'keterangan'  => request('keterangan'),
-                ]);
-            });
+            app(TukarPoinAction::class)->handle($member, (int) $req->input('poin'), (string) $req->input('keterangan'));
 
             $configId = identitas('id');
             Cache::forget("banksampah_dash_{$configId}_" . date('Ym'));
             Cache::forget("banksampah_dash_grafik_{$configId}");
 
-            return redirect_with('success', 'Berhasil menukar ' . request('poin') . ' poin untuk ' . $member->nama);
+            return redirect_with('success', 'Berhasil menukar ' . $req->input('poin') . ' poin untuk ' . $member->nama);
         } catch (Exception $e) {
             // BS-014: pesan exception bisa bocorkan SQL/tabel/path — log penuh, UI generik
             Log::error('[BankSampah] prosesTukar gagal', ['exception' => $e]);

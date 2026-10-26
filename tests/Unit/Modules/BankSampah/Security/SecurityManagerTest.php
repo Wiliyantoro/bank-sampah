@@ -11,7 +11,7 @@
 namespace Modules\BankSampah\Tests\Unit\Modules\BankSampah\Security;
 
 use Modules\BankSampah\Tests\TestCase;
-use Modules\BankSampah\Libraries\SecurityManager;
+use Modules\BankSampah\Services\SecurityManager;
 
 class SecurityManagerTest extends TestCase
 {

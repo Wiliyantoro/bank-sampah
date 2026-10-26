@@ -12,6 +12,10 @@
 defined('BASEPATH') || exit('No direct script access allowed');
 
 use Modules\BankSampah\Enums\TipeTransaksiEnum;
+use Modules\BankSampah\Http\Requests\SetorRequest;
+use Modules\BankSampah\Http\Requests\TarikRequest;
+use Modules\BankSampah\Services\ProsesSetorAction;
+use Modules\BankSampah\Services\ProsesTarikAction;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -82,100 +86,18 @@ class TransaksiController extends AdminModulController
      */
     public function prosesSetor()
     {
-        request()->validate([
-            'member_id'        => 'required|integer',
-            // BS-016: lokasi/TPS wajib milik desa yang sedang login
-            'lokasi_id'        => ['nullable', 'integer', Rule::exists('bank_sampah_lokasi', 'id')
-                ->where('config_id', identitas('id'))],
-            'item'             => 'required|array|min:1',
-            'item.*.sampah_id' => 'required|integer',
-            'item.*.berat'     => 'required|numeric|min:0.01',
-        ]);
+        // issue #65: validasi via FormRequest; logic bisnis via Service/Action
+        $req = SetorRequest::createFrom(request());
+        $req->validate($req->rules(), $req->messages());
 
         try {
-            // issue #61: DB::transaction(fn) — rollback otomatis, tidak ada
-            // jalur return yang bisa lupa rollBack.
-            [$member, $total, $totalBerat, $poinDidapat, $transaksi] = DB::transaction(function () {
-                $member = MemberModel::desa()->findOrFail(request('member_id'));
-
-                $total = 0;
-                $details = [];
-
-                // issue #63: prefetch semua sampah sekali (keyBy), bukan
-                // findOrFail per item — N+1 hilang.
-                $ids = array_unique(array_column(request('item'), 'sampah_id'));
-                $sampahMap = SampahModel::desa()
-                    ->whereIn('id', $ids)
-                    ->get()
-                    ->keyBy('id');
-
-                foreach (request('item') as $item) {
-                    $sampah = $sampahMap->get($item['sampah_id'])
-                        ?? throw new Exception('jenis sampah tidak ditemukan');
-
-                    $subtotal = $item['berat'] * $sampah->harga_beli;
-                    $total += $subtotal;
-
-                    $details[] = [
-                        'sampah_id' => $item['sampah_id'],
-                        'berat'     => $item['berat'],
-                        'harga'     => $sampah->harga_beli,
-                        'subtotal'  => $subtotal,
-                    ];
-                }
-
-                $totalBerat = array_sum(array_column(request('item'), 'berat'));
-                $poinPerKg = (int) (setting('bank_sampah_poin_per_kg') ?: 10);
-                $poinDidapat = (int) ($totalBerat * $poinPerKg);
-
-                $transaksi = TransaksiModel::create([
-                    'no_transaksi' => TransaksiModel::generateNoTransaksi(),
-                    'member_id'    => $member->id,
-                    'lokasi_id'    => request('lokasi_id') ?: null,
-                    'tipe'         => TipeTransaksiEnum::SETOR->value,
-                    'total'        => $total,
-                    'bayar'        => $total,
-                    'poin'         => $poinDidapat,
-                    'keterangan'   => request('keterangan'),
-                    'user_id'      => auth()->id(),
-                ]);
-
-                // issue #63: batch insert detail + update stok dari map
-                // yang sudah di-prefetch (tanpa query tambahan per item).
-                $now = now();
-                DB::table('bank_sampah_transaksi_detail')->insert(array_map(
-                    static function (array $detail) use ($transaksi, $now): array {
-                        return $detail + [
-                            'transaksi_id' => $transaksi->id,
-                            'config_id'    => identitas('id'),
-                            'created_at'   => $now,
-                            'updated_at'   => $now,
-                        ];
-                    },
-                    $details
-                ));
-
-                foreach ($details as $detail) {
-                    $sampahMap->get($detail['sampah_id'])->tambahStok($detail['berat']);
-                }
-
-                $member->tambahSaldo($total);
-
-                if (setting('bank_sampah_reward_aktif') == 1 && $poinDidapat > 0) {
-                    $member->tambahPoin($poinDidapat);
-
-                    RewardModel::create([
-                        'member_id'    => $member->id,
-                        'transaksi_id' => $transaksi->id,
-                        'tipe'         => 'add',
-                        'poin'         => $poinDidapat,
-                        'keterangan'   => 'Poin dari transaksi setor #' . $transaksi->no_transaksi,
-                    ]);
-                }
-
-
-                return [$member, $total, $totalBerat, $poinDidapat, $transaksi];
-            });
+            [$member, $total, $totalBerat, $poinDidapat, $transaksi] = app(ProsesSetorAction::class)
+                ->handle(
+                    (int) $req->input('member_id'),
+                    $req->input('lokasi_id') ? (int) $req->input('lokasi_id') : null,
+                    $req->items(),
+                    $req->input('keterangan')
+                );
         } catch (Exception $e) {
             // BS-014: pesan exception bisa bocorkan SQL/tabel/path — log penuh, UI generik
             Log::error('[BankSampah] prosesSetor gagal', ['exception' => $e]);
@@ -213,37 +135,13 @@ class TransaksiController extends AdminModulController
      */
     public function prosesTarik()
     {
-        request()->validate([
-            'member_id' => 'required|integer',
-            'nominal'   => 'required|numeric|min:1',
-        ]);
+        // issue #65: validasi via FormRequest; logic bisnis via Service/Action
+        $req = TarikRequest::createFrom(request());
+        $req->validate($req->rules(), $req->messages());
 
         try {
-            // issue #61: DB::transaction(fn) — rollback otomatis.
-            [$member, $transaksi] = DB::transaction(function () {
-                $member = MemberModel::desa()->findOrFail(request('member_id'));
-
-                if ($member->saldo < request('nominal')) {
-                    throw new Exception('saldo_tidak_cukup');
-                }
-
-                $transaksi = TransaksiModel::create([
-                    'no_transaksi' => TransaksiModel::generateNoTransaksi(),
-                    'member_id'    => $member->id,
-                    'tipe'         => TipeTransaksiEnum::TARIK->value,
-                    'total'        => request('nominal'),
-                    'bayar'        => request('nominal'),
-                    'keterangan'   => request('keterangan'),
-                    'user_id'      => auth()->id(),
-                ]);
-
-                if (! $member->kurangiSaldo(request('nominal'))) {
-                    throw new Exception('saldo_tidak_cukup');
-                }
-
-
-                return [$member, $transaksi];
-            });
+            [$member, $transaksi] = app(ProsesTarikAction::class)
+                ->handle((int) $req->input('member_id'), (float) $req->input('nominal'), $req->input('keterangan'));
         } catch (Exception $e) {
             // BS-014: pesan exception bisa bocorkan SQL/tabel/path — log penuh, UI generik
             Log::error('[BankSampah] prosesTarik gagal', ['exception' => $e]);
@@ -259,10 +157,10 @@ class TransaksiController extends AdminModulController
 
         // issue #56: notifikasi in-app Layanan Mandiri, luar transaksi utama.
         $this->notifWarga($member, 'Tarik tunai berhasil', 'Tarik Rp '
-            . number_format(request('nominal'), 0, ',', '.') . ' diproses. Saldo tersisa: Rp '
+            . number_format($req->input('nominal'), 0, ',', '.') . ' diproses. Saldo tersisa: Rp '
             . number_format($member->fresh()->saldo, 0, ',', '.') . '.');
 
-        return redirect_with('success', 'Transaksi tarik berhasil! Nominal: Rp ' . number_format(request('nominal'), 0, ',', '.'), ci_route('bank-sampah.transaksi'));
+        return redirect_with('success', 'Transaksi tarik berhasil! Nominal: Rp ' . number_format($req->input('nominal'), 0, ',', '.'), ci_route('bank-sampah.transaksi'));
     }
 
     /**
