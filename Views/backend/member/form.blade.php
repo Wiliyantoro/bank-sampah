@@ -120,11 +120,11 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label for="no_hp">No HP / WhatsApp</label>
+                                    <label for="no_hp">No HP</label>
                                     <input type="text" class="form-control" id="no_hp" name="no_hp"
                                         value="{{ old('no_hp', $member->no_hp ?? '') }}"
                                         placeholder="08xxxxxxxxxx">
-                                    <small class="text-muted">Untuk notifikasi WhatsApp</small>
+                                    <small class="text-muted">Kontak nasabah</small>
                                 </div>
                             </div>
                             <div class="col-md-6">
