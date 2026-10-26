@@ -91,69 +91,71 @@ class TransaksiController extends AdminModulController
             'item.*.berat'     => 'required|numeric|min:0.01',
         ]);
 
-        DB::beginTransaction();
-
         try {
-            $member = MemberModel::desa()->findOrFail(request('member_id'));
+            // issue #61: DB::transaction(fn) — rollback otomatis, tidak ada
+            // jalur return yang bisa lupa rollBack.
+            [$member, $total, $totalBerat, $poinDidapat, $transaksi] = DB::transaction(function () {
+                $member = MemberModel::desa()->findOrFail(request('member_id'));
 
-            $total = 0;
-            $details = [];
+                $total = 0;
+                $details = [];
 
-            foreach (request('item') as $item) {
-                $sampah = SampahModel::desa()->findOrFail($item['sampah_id']);
-                $subtotal = $item['berat'] * $sampah->harga_beli;
-                $total += $subtotal;
+                foreach (request('item') as $item) {
+                    $sampah = SampahModel::desa()->findOrFail($item['sampah_id']);
+                    $subtotal = $item['berat'] * $sampah->harga_beli;
+                    $total += $subtotal;
 
-                $details[] = [
-                    'sampah_id' => $item['sampah_id'],
-                    'berat'     => $item['berat'],
-                    'harga'     => $sampah->harga_beli,
-                    'subtotal'  => $subtotal,
-                ];
-            }
+                    $details[] = [
+                        'sampah_id' => $item['sampah_id'],
+                        'berat'     => $item['berat'],
+                        'harga'     => $sampah->harga_beli,
+                        'subtotal'  => $subtotal,
+                    ];
+                }
 
-            $totalBerat = array_sum(array_column(request('item'), 'berat'));
-            $poinPerKg = (int) (setting('bank_sampah_poin_per_kg') ?: 10);
-            $poinDidapat = (int) ($totalBerat * $poinPerKg);
+                $totalBerat = array_sum(array_column(request('item'), 'berat'));
+                $poinPerKg = (int) (setting('bank_sampah_poin_per_kg') ?: 10);
+                $poinDidapat = (int) ($totalBerat * $poinPerKg);
 
-            $transaksi = TransaksiModel::create([
-                'no_transaksi' => TransaksiModel::generateNoTransaksi(),
-                'member_id'    => $member->id,
-                'lokasi_id'    => request('lokasi_id'),
-                'tipe'         => 'setor',
-                'total'        => $total,
-                'bayar'        => $total,
-                'poin'         => $poinDidapat,
-                'keterangan'   => request('keterangan'),
-                'user_id'      => auth()->id(),
-            ]);
-
-            foreach ($details as $detail) {
-                TransaksiDetailModel::create(array_merge($detail, [
-                    'transaksi_id' => $transaksi->id,
-                ]));
-
-                $sampah = SampahModel::desa()->find($detail['sampah_id']); // BS-040: konsisten scope desa
-                $sampah->tambahStok($detail['berat']);
-            }
-
-            $member->tambahSaldo($total);
-
-            if (setting('bank_sampah_reward_aktif') == 1 && $poinDidapat > 0) {
-                $member->tambahPoin($poinDidapat);
-
-                RewardModel::create([
+                $transaksi = TransaksiModel::create([
+                    'no_transaksi' => TransaksiModel::generateNoTransaksi(),
                     'member_id'    => $member->id,
-                    'transaksi_id' => $transaksi->id,
-                    'tipe'         => 'add',
+                    'lokasi_id'    => request('lokasi_id') ?: null,
+                    'tipe'         => 'setor',
+                    'total'        => $total,
+                    'bayar'        => $total,
                     'poin'         => $poinDidapat,
-                    'keterangan'   => 'Poin dari transaksi setor #' . $transaksi->no_transaksi,
+                    'keterangan'   => request('keterangan'),
+                    'user_id'      => auth()->id(),
                 ]);
-            }
 
-            DB::commit();
+                foreach ($details as $detail) {
+                    TransaksiDetailModel::create(array_merge($detail, [
+                        'transaksi_id' => $transaksi->id,
+                    ]));
+
+                    $sampah = SampahModel::desa()->find($detail['sampah_id']); // BS-040: konsisten scope desa
+                    $sampah->tambahStok($detail['berat']);
+                }
+
+                $member->tambahSaldo($total);
+
+                if (setting('bank_sampah_reward_aktif') == 1 && $poinDidapat > 0) {
+                    $member->tambahPoin($poinDidapat);
+
+                    RewardModel::create([
+                        'member_id'    => $member->id,
+                        'transaksi_id' => $transaksi->id,
+                        'tipe'         => 'add',
+                        'poin'         => $poinDidapat,
+                        'keterangan'   => 'Poin dari transaksi setor #' . $transaksi->no_transaksi,
+                    ]);
+                }
+
+
+                return [$member, $total, $totalBerat, $poinDidapat, $transaksi];
+            });
         } catch (Exception $e) {
-            DB::rollBack();
             // BS-014: pesan exception bisa bocorkan SQL/tabel/path — log penuh, UI generik
             Log::error('[BankSampah] prosesSetor gagal', ['exception' => $e]);
             return redirect_with('error', 'Gagal memproses transaksi. Silakan coba lagi.', ci_route('bank-sampah.transaksi'));
@@ -204,36 +206,40 @@ class TransaksiController extends AdminModulController
             'nominal'   => 'required|numeric|min:1',
         ]);
 
-        DB::beginTransaction();
-
         try {
-            $member = MemberModel::desa()->findOrFail(request('member_id'));
+            // issue #61: DB::transaction(fn) — rollback otomatis.
+            [$member, $transaksi] = DB::transaction(function () {
+                $member = MemberModel::desa()->findOrFail(request('member_id'));
 
-            if ($member->saldo < request('nominal')) {
-                DB::rollBack();
-                return redirect_with('error', 'Saldo tidak mencukupi. Saldo saat ini: Rp ' . number_format($member->saldo, 0, ',', '.'), ci_route('bank-sampah.transaksi'));
-            }
+                if ($member->saldo < request('nominal')) {
+                    throw new Exception('saldo_tidak_cukup');
+                }
 
-            $transaksi = TransaksiModel::create([
-                'no_transaksi' => TransaksiModel::generateNoTransaksi(),
-                'member_id'    => $member->id,
-                'tipe'         => 'tarik',
-                'total'        => request('nominal'),
-                'bayar'        => request('nominal'),
-                'keterangan'   => request('keterangan'),
-                'user_id'      => auth()->id(),
-            ]);
+                $transaksi = TransaksiModel::create([
+                    'no_transaksi' => TransaksiModel::generateNoTransaksi(),
+                    'member_id'    => $member->id,
+                    'tipe'         => 'tarik',
+                    'total'        => request('nominal'),
+                    'bayar'        => request('nominal'),
+                    'keterangan'   => request('keterangan'),
+                    'user_id'      => auth()->id(),
+                ]);
 
-            if (! $member->kurangiSaldo(request('nominal'))) {
-                DB::rollBack();
-                return redirect_with('error', 'Saldo tidak mencukupi. Silakan coba lagi.', ci_route('bank-sampah.transaksi'));
-            }
+                if (! $member->kurangiSaldo(request('nominal'))) {
+                    throw new Exception('saldo_tidak_cukup');
+                }
 
-            DB::commit();
+
+                return [$member, $transaksi];
+            });
         } catch (Exception $e) {
-            DB::rollBack();
             // BS-014: pesan exception bisa bocorkan SQL/tabel/path — log penuh, UI generik
             Log::error('[BankSampah] prosesTarik gagal', ['exception' => $e]);
+
+            if ($e->getMessage() === 'saldo_tidak_cukup') {
+                return redirect_with('error', 'Saldo tidak mencukupi.', ci_route('bank-sampah.transaksi'));
+            }
+
             return redirect_with('error', 'Gagal memproses transaksi. Silakan coba lagi.', ci_route('bank-sampah.transaksi'));
         }
 

@@ -22,7 +22,14 @@ class MemberModel extends BaseModel
 
     protected $table = 'bank_sampah_member';
 
-    protected $guarded = [];
+    /**
+     * issue #61: whitelist $fillable — bukan $guarded kosong.
+     * userstamps (created_by/updated_by) dikelola trait inti.
+     */
+    protected $fillable = [
+        'config_id', 'penduduk_id', 'no_member', 'nama', 'alamat', 'no_hp', 'lokasi_id', 'aktif'
+    // issue #61: saldo & poin diubah via method khusus (tambahSaldo/kurangiSaldo), bukan mass-assignment,
+    ];
 
     protected $casts = [
         'saldo'      => 'decimal:2',

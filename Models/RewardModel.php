@@ -20,7 +20,13 @@ class RewardModel extends BaseModel
 
     protected $table = 'bank_sampah_reward';
 
-    protected $guarded = [];
+    /**
+     * issue #61: whitelist $fillable — bukan $guarded kosong.
+     * userstamps (created_by/updated_by) dikelola trait inti.
+     */
+    protected $fillable = [
+        'config_id', 'member_id', 'transaksi_id', 'tipe', 'poin', 'keterangan',
+    ];
 
     protected $casts = [
         'poin'       => 'integer',

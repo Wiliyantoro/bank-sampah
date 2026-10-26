@@ -20,7 +20,13 @@ class SampahModel extends BaseModel
 
     protected $table = 'bank_sampah_sampah';
 
-    protected $guarded = [];
+    /**
+     * issue #61: whitelist $fillable — bukan $guarded kosong.
+     * userstamps (created_by/updated_by) dikelola trait inti.
+     */
+    protected $fillable = [
+        'config_id', 'kategori_id', 'nama', 'satuan', 'harga_beli', 'harga_jual', 'stok', 'is_default', 'sumber', 'aktif',
+    ];
 
     protected $casts = [
         'is_default' => 'boolean',

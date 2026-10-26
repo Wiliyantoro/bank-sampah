@@ -20,7 +20,13 @@ class LokasiModel extends BaseModel
 
     protected $table = 'bank_sampah_lokasi';
 
-    protected $guarded = [];
+    /**
+     * issue #61: whitelist $fillable — bukan $guarded kosong.
+     * userstamps (created_by/updated_by) dikelola trait inti.
+     */
+    protected $fillable = [
+        'config_id', 'nama', 'kode', 'alamat', 'penanggung_jawab', 'no_hp', 'is_default', 'sumber', 'aktif',
+    ];
 
     protected $casts = [
         'is_default' => 'boolean',

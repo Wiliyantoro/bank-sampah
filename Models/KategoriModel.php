@@ -20,7 +20,13 @@ class KategoriModel extends BaseModel
 
     protected $table = 'bank_sampah_kategori';
 
-    protected $guarded = [];
+    /**
+     * issue #61: whitelist $fillable — bukan $guarded kosong.
+     * userstamps (created_by/updated_by) dikelola trait inti.
+     */
+    protected $fillable = [
+        'config_id', 'nama', 'keterangan', 'is_default', 'sumber', 'aktif',
+    ];
 
     protected $casts = [
         'is_default' => 'boolean',

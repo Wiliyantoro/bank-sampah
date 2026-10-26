@@ -21,7 +21,13 @@ class TransaksiModel extends BaseModel
 
     protected $table = 'bank_sampah_transaksi';
 
-    protected $guarded = [];
+    /**
+     * issue #61: whitelist $fillable — bukan $guarded kosong.
+     * userstamps (created_by/updated_by) dikelola trait inti.
+     */
+    protected $fillable = [
+        'config_id', 'no_transaksi', 'member_id', 'lokasi_id', 'tipe', 'total', 'bayar', 'potongan', 'poin', 'keterangan', 'user_id',
+    ];
 
     protected $casts = [
         'total'      => 'decimal:2',

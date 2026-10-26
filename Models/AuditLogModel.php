@@ -20,7 +20,13 @@ class AuditLogModel extends BaseModel
 
     protected $table = 'bank_sampah_audit_log';
 
-    protected $guarded = [];
+    /**
+     * issue #61: whitelist $fillable — bukan $guarded kosong.
+     * userstamps (created_by/updated_by) dikelola trait inti.
+     */
+    protected $fillable = [
+        'config_id', 'event', 'user_id', 'ip_address', 'user_agent', 'data',
+    ];
 
     protected $casts = [
         'data'       => 'array',

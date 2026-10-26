@@ -96,28 +96,29 @@ class RewardController extends AdminModulController
             return redirect_with('error', "Minimal poin untuk tukar adalah {$minimal}", ci_route('bank-sampah.reward'));
         }
 
-        DB::beginTransaction();
-
         try {
-            if (! $member->tukarPoin(request('poin'))) {
-                DB::rollBack();
-                return redirect_with('error', 'Poin tidak mencukupi. Silakan coba lagi.', ci_route('bank-sampah.reward'));
-            }
+            // issue #61: DB::transaction(fn) — rollback otomatis.
+            DB::transaction(function () use ($member) {
+                if (! $member->tukarPoin(request('poin'))) {
+                    throw new Exception('poin_tidak_cukup');
+                }
 
-            RewardModel::create([
-                'member_id'   => $member->id,
-                'tipe'        => 'tukar',
-                'poin'        => request('poin'),
-                'keterangan'  => request('keterangan'),
-            ]);
-
-            DB::commit();
+                RewardModel::create([
+                    'member_id'   => $member->id,
+                    'tipe'        => 'tukar',
+                    'poin'        => request('poin'),
+                    'keterangan'  => request('keterangan'),
+                ]);
+            });
 
             return redirect_with('success', 'Berhasil menukar ' . request('poin') . ' poin untuk ' . $member->nama);
         } catch (Exception $e) {
-            DB::rollBack();
             // BS-014: pesan exception bisa bocorkan SQL/tabel/path — log penuh, UI generik
             Log::error('[BankSampah] prosesTukar gagal', ['exception' => $e]);
+
+            if ($e->getMessage() === 'poin_tidak_cukup') {
+                return redirect_with('error', 'Poin tidak mencukupi. Silakan coba lagi.', ci_route('bank-sampah.reward'));
+            }
             return redirect_with('error', 'Gagal menukar poin. Silakan coba lagi.', ci_route('bank-sampah.reward'));
         }
     }

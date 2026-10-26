@@ -12,12 +12,20 @@
 namespace Modules\BankSampah\Models;
 
 use App\Models\BaseModel;
+use App\Traits\ConfigId;
 
 class TransaksiDetailModel extends BaseModel
 {
+    use ConfigId;
     protected $table = 'bank_sampah_transaksi_detail';
 
-    protected $guarded = [];
+    /**
+     * issue #61: whitelist $fillable — bukan $guarded kosong.
+     * userstamps (created_by/updated_by) dikelola trait inti.
+     */
+    protected $fillable = [
+        'config_id', 'transaksi_id', 'sampah_id', 'berat', 'harga', 'subtotal',
+    ];
 
     protected $casts = [
         'berat'    => 'decimal:2',
