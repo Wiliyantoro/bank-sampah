@@ -873,16 +873,23 @@ tests/
 
 ### Cara Menjalankan
 
+Test modul mengikuti pola modul resmi: **dijalankan di dalam inti**.
+
 ```bash
-# Syntax check semua
-php Modules/BankSampah/tests/run_tests.php
+# 1. Salin test modul ke struktur test inti
+cp -r Modules/BankSampah/tests/Feature/Modules/BankSampah tests/Feature/Modules/BankSampah
+cp -r Modules/BankSampah/tests/Unit/Modules/BankSampah tests/Unit/Modules/BankSampah
 
-# Dengan PHPUnit
-./vendor/bin/phpunit Modules/BankSampah/tests/
+# 2. Jalankan dari repo inti
+./vendor/bin/phpunit tests/Feature/Modules/BankSampah
+./vendor/bin/phpunit tests/Unit/Modules/BankSampah
 
-# Specific test file
-./vendor/bin/phpunit Modules/BankSampah/tests/Unit/Models/BankSampahMemberTest.php
+# Satu file
+./vendor/bin/phpunit tests/Feature/Modules/BankSampah/KategoriHttpTest.php
 ```
+
+`tests/TestCase.php` modul menyediakan base class (`Modules\BankSampah\Tests\TestCase`)
+dengan SQLite in-memory + mock `identitas()` + sesi admin.
 
 ---
 
