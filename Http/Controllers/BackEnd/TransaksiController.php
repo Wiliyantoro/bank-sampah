@@ -42,7 +42,7 @@ class TransaksiController extends AdminModulController
     public function index()
     {
         if (request()->ajax()) {
-            return datatables()->of(TransaksiModel::desa()->with('member'))
+            return datatables()->of(TransaksiModel::desa()->with(['member', 'lokasi']))
                 ->addIndexColumn()
                 ->addColumn('aksi', static function ($row): string {
                     $aksi = '';
@@ -100,8 +100,18 @@ class TransaksiController extends AdminModulController
                 $total = 0;
                 $details = [];
 
+                // issue #63: prefetch semua sampah sekali (keyBy), bukan
+                // findOrFail per item — N+1 hilang.
+                $ids = array_unique(array_column(request('item'), 'sampah_id'));
+                $sampahMap = SampahModel::desa()
+                    ->whereIn('id', $ids)
+                    ->get()
+                    ->keyBy('id');
+
                 foreach (request('item') as $item) {
-                    $sampah = SampahModel::desa()->findOrFail($item['sampah_id']);
+                    $sampah = $sampahMap->get($item['sampah_id'])
+                        ?? throw new Exception('jenis sampah tidak ditemukan');
+
                     $subtotal = $item['berat'] * $sampah->harga_beli;
                     $total += $subtotal;
 
@@ -129,13 +139,23 @@ class TransaksiController extends AdminModulController
                     'user_id'      => auth()->id(),
                 ]);
 
-                foreach ($details as $detail) {
-                    TransaksiDetailModel::create(array_merge($detail, [
-                        'transaksi_id' => $transaksi->id,
-                    ]));
+                // issue #63: batch insert detail + update stok dari map
+                // yang sudah di-prefetch (tanpa query tambahan per item).
+                $now = now();
+                DB::table('bank_sampah_transaksi_detail')->insert(array_map(
+                    static function (array $detail) use ($transaksi, $now): array {
+                        return $detail + [
+                            'transaksi_id' => $transaksi->id,
+                            'config_id'    => identitas('id'),
+                            'created_at'   => $now,
+                            'updated_at'   => $now,
+                        ];
+                    },
+                    $details
+                ));
 
-                    $sampah = SampahModel::desa()->find($detail['sampah_id']); // BS-040: konsisten scope desa
-                    $sampah->tambahStok($detail['berat']);
+                foreach ($details as $detail) {
+                    $sampahMap->get($detail['sampah_id'])->tambahStok($detail['berat']);
                 }
 
                 $member->tambahSaldo($total);

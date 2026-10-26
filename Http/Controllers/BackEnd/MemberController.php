@@ -154,7 +154,9 @@ class MemberController extends AdminModulController
      */
     public function detail($id)
     {
-        $member = MemberModel::desa()->with(['lokasi', 'transaksi.detail.sampah'])
+        // issue #63: eager load transaksi.detail.sampah tanpa batas dihapus —
+        // riwayat sudah disajikan via $riwayatTransaksi yang di-paginate.
+        $member = MemberModel::desa()->with('lokasi')
             ->findOrFail($id);
 
         $riwayatTransaksi = TransaksiModel::desa()

@@ -13,6 +13,8 @@
 
 namespace Modules\BankSampah\Providers;
 
+use Illuminate\Database\Eloquent\Model;
+
 use Illuminate\Support\ServiceProvider;
 
 class BankSampahServiceProvider extends ServiceProvider
@@ -40,6 +42,12 @@ class BankSampahServiceProvider extends ServiceProvider
     {
         $this->registerConfig();
         $this->registerViews();
+
+        // issue #63: deteksi N+1 saat pengembangan — lazy loading tanpa
+        // eager load dilempar warning supaya ketahuan, bukan senyap.
+        if (config('app.debug')) {
+            Model::preventLazyLoading(! app()->isProduction());
+        }
     }
 
     /**
