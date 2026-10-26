@@ -312,10 +312,11 @@ class TransaksiController extends AdminModulController
     private function notifWarga(MemberModel $member, string $judul, string $isi): void
     {
         try {
+            // FK log_notifikasi_mandiri.id_user_mandiri -> tweb_penduduk_mandiri.id_pend
             $mandiri = DB::table('tweb_penduduk_mandiri')
                 ->where('id_pend', $member->penduduk_id)
                 ->where('config_id', identitas('id'))
-                ->value('id');
+                ->value('id_pend');
 
             if (empty($mandiri)) {
                 return;
