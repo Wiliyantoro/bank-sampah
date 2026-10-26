@@ -30,7 +30,7 @@ class LokasiController extends AdminModulController
     public function index()
     {
         if (request()->ajax()) {
-            return datatables()->of(LokasiModel::desa()->withCount(['member', 'transaksi']))
+            return datatables()->of(LokasiModel::query()->withCount(['member', 'transaksi']))
                 ->addIndexColumn()
                 ->addColumn('aksi', static function ($row): string {
                     $aksi = '';
@@ -59,7 +59,7 @@ class LokasiController extends AdminModulController
      */
     public function form($id = null)
     {
-        $lokasi = $id ? LokasiModel::desa()->findOrFail($id) : null;
+        $lokasi = $id ? LokasiModel::query()->findOrFail($id) : null;
 
         return view('banksampah::backend.lokasi.form', [
             'lokasi'      => $lokasi,
@@ -99,7 +99,7 @@ class LokasiController extends AdminModulController
 
     public function update($id = null)
     {
-        $lokasi   = LokasiModel::desa()->findOrFail($id);
+        $lokasi   = LokasiModel::query()->findOrFail($id);
         $configId = identitas('id');
 
         request()->validate([
@@ -125,7 +125,7 @@ class LokasiController extends AdminModulController
 
     public function delete($id = null): void
     {
-        $lokasi = LokasiModel::desa()->findOrFail($id);
+        $lokasi = LokasiModel::query()->findOrFail($id);
 
         if ($lokasi->isDefault()) {
             redirect_with('error', 'Data bawaan sistem tidak bisa dihapus', ci_route('bank-sampah.lokasi'));

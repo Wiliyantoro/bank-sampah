@@ -13,6 +13,7 @@ namespace Modules\BankSampah\Models;
 
 use App\Models\BaseModel;
 use App\Traits\ConfigId;
+use App\Models\Penduduk;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
@@ -82,13 +83,6 @@ class MemberModel extends BaseModel
         return $this->hasMany(RewardModel::class, 'member_id');
     }
 
-    /**
-     * Scope: hanya data desa yang sedang login
-     */
-    public function scopeDesa($query)
-    {
-        return $query->where('config_id', identitas('id'));
-    }
 
     /**
      * Scope: hanya yang aktif

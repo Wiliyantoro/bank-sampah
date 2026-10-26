@@ -53,13 +53,6 @@ class SampahModel extends BaseModel
         return $this->hasMany(TransaksiDetailModel::class, 'sampah_id');
     }
 
-    /**
-     * Scope: hanya data desa yang sedang login
-     */
-    public function scopeDesa($query)
-    {
-        return $query->where('config_id', identitas('id'));
-    }
 
     /**
      * Scope: hanya yang aktif

@@ -37,7 +37,7 @@ class MemberController extends AdminModulController
     public function index()
     {
         if (request()->ajax()) {
-            return datatables()->of(MemberModel::desa()->with('lokasi'))
+            return datatables()->of(MemberModel::query()->with('lokasi'))
                 ->addIndexColumn()
                 ->addColumn('aksi', static function ($row): string {
                     $aksi = '<a href="' . ci_route('bank-sampah.member.detail', $row->id) . '" class="btn btn-default btn-sm" title="Detail"><i class="fa fa-eye"></i></a> ';
@@ -56,7 +56,7 @@ class MemberController extends AdminModulController
                 ->make();
         }
 
-        $lokasiList = LokasiModel::desa()->aktif()->orderBy('nama')->get();
+        $lokasiList = LokasiModel::query()->aktif()->orderBy('nama')->get();
 
         return view('banksampah::backend.member.index', compact('lokasiList'));
     }
@@ -66,10 +66,10 @@ class MemberController extends AdminModulController
      */
     public function form($id = null)
     {
-        $member    = $id ? MemberModel::desa()->findOrFail($id) : null;
+        $member    = $id ? MemberModel::query()->findOrFail($id) : null;
         $prefix    = setting('bank_sampah_prefix_no_member') ?: 'BS';
         $noMember  = $member ? $member->no_member : MemberModel::generateNoMember($prefix);
-        $lokasiList = LokasiModel::desa()->aktif()->orderBy('nama')->get();
+        $lokasiList = LokasiModel::query()->aktif()->orderBy('nama')->get();
 
         return view('banksampah::backend.member.form', [
             'member'      => $member,
@@ -112,7 +112,7 @@ class MemberController extends AdminModulController
     public function update($id = null)
     {
         $configId = identitas('id');
-        $member   = MemberModel::desa()->findOrFail($id);
+        $member   = MemberModel::query()->findOrFail($id);
 
         request()->validate([
             'nama'        => 'required|string|max:150',
@@ -137,7 +137,7 @@ class MemberController extends AdminModulController
 
     public function delete($id = null): void
     {
-        $member = MemberModel::desa()->findOrFail($id);
+        $member = MemberModel::query()->findOrFail($id);
 
         if ($member->transaksi()->exists()) {
             redirect_with('error', 'Tidak bisa hapus, nasabah masih memiliki transaksi', ci_route('bank-sampah.member'));
@@ -159,7 +159,7 @@ class MemberController extends AdminModulController
         $member = MemberModel::desa()->with('lokasi')
             ->findOrFail($id);
 
-        $riwayatTransaksi = TransaksiModel::desa()
+        $riwayatTransaksi = TransaksiModel::query()
             ->where('member_id', $id)
             ->with('detail.sampah')
             ->orderBy('created_at', 'desc')
@@ -173,7 +173,7 @@ class MemberController extends AdminModulController
      */
     public function cetakKartu($id)
     {
-        $member = MemberModel::desa()->with('lokasi')->findOrFail($id);
+        $member = MemberModel::query()->with('lokasi')->findOrFail($id);
 
         // Identitas bank sampah dari Pengaturan Aplikasi (item 5)
         $config = $this->identitasBankSampah();
@@ -194,7 +194,7 @@ class MemberController extends AdminModulController
     {
         isCan('u');
 
-        $member = MemberModel::desa()->findOrFail($id);
+        $member = MemberModel::query()->findOrFail($id);
         $oldUuid = $member->uuid;
         $member->resetUuid();
 
@@ -220,7 +220,7 @@ class MemberController extends AdminModulController
             'pin' => ['required', 'string', 'regex:/^[0-9]{4,6}$/'],
         ]);
 
-        $member = MemberModel::desa()->findOrFail($id);
+        $member = MemberModel::query()->findOrFail($id);
 
         if (empty($member->penduduk_id)) {
             return redirect_with('error', 'Nasabah belum terhubung dengan data penduduk. Hubungkan dulu untuk mengatur PIN Layanan Mandiri.', ci_route('bank-sampah.member'));
@@ -254,7 +254,7 @@ class MemberController extends AdminModulController
     {
         isCan('u');
 
-        $member = MemberModel::desa()->findOrFail($id);
+        $member = MemberModel::query()->findOrFail($id);
 
         if (empty($member->uuid)) {
             $member->uuid = app(SecurityManager::class)->generateToken();

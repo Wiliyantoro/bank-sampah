@@ -36,7 +36,7 @@ class RewardController extends AdminModulController
     public function index()
     {
         if (request()->ajax()) {
-            return datatables()->of(MemberModel::desa()->aktif()->orderBy('poin', 'desc'))
+            return datatables()->of(MemberModel::query()->aktif()->orderBy('poin', 'desc'))
                 ->addIndexColumn()
                 ->addColumn('aksi', static function ($row): string {
                     $aksi = '<a href="' . ci_route('bank-sampah.reward.riwayat', $row->id) . '" class="btn btn-default btn-sm" title="Riwayat Poin"><i class="fa fa-history"></i></a> ';
@@ -49,9 +49,9 @@ class RewardController extends AdminModulController
                 ->make();
         }
 
-        $totalPoin = MemberModel::desa()->aktif()->sum('poin');
+        $totalPoin = MemberModel::query()->aktif()->sum('poin');
 
-        $riwayatReward = RewardModel::desa()->with('member')
+        $riwayatReward = RewardModel::query()->with('member')
             ->orderBy('created_at', 'desc')
             ->limit(20)
             ->get();
@@ -64,7 +64,7 @@ class RewardController extends AdminModulController
      */
     public function formTukar($memberId)
     {
-        $member = MemberModel::desa()->findOrFail($memberId);
+        $member = MemberModel::query()->findOrFail($memberId);
         $config = [
             'reward' => [
                 'enabled'            => setting('bank_sampah_reward_aktif') == 1,
@@ -85,7 +85,7 @@ class RewardController extends AdminModulController
             'keterangan' => 'required|string|max:255',
         ]);
 
-        $member  = MemberModel::desa()->findOrFail($memberId);
+        $member  = MemberModel::query()->findOrFail($memberId);
         $minimal = (int) (setting('bank_sampah_minimal_poin_tukar') ?: 100);
 
         if ($member->poin < request('poin')) {
@@ -129,12 +129,12 @@ class RewardController extends AdminModulController
     public function riwayat($memberId)
     {
         if (request()->ajax()) {
-            return datatables()->of(RewardModel::desa()->where('member_id', $memberId))
+            return datatables()->of(RewardModel::query()->where('member_id', $memberId))
                 ->addIndexColumn()
                 ->make();
         }
 
-        $member = MemberModel::desa()->findOrFail($memberId);
+        $member = MemberModel::query()->findOrFail($memberId);
 
         return view('banksampah::backend.reward.riwayat', compact('member'));
     }

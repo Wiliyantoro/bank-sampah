@@ -58,11 +58,4 @@ class AuditLogModel extends BaseModel
         return $query->where('created_at', '>=', now()->subHours($hours));
     }
 
-    /**
-     * Scope: hanya data desa yang sedang login
-     */
-    public function scopeDesa($query)
-    {
-        return $query->where('config_id', identitas('id'));
-    }
 }

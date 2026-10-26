@@ -11,10 +11,10 @@
 
 defined('BASEPATH') || exit('No direct script access allowed');
 
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
-use Modules\BankSampah\Libraries\WhatsAppNotification;
 use Modules\BankSampah\Models\LokasiModel;
 use Modules\BankSampah\Models\MemberModel;
 use Modules\BankSampah\Models\RewardModel;
@@ -181,22 +181,13 @@ class TransaksiController extends AdminModulController
             return redirect_with('error', 'Gagal memproses transaksi. Silakan coba lagi.', ci_route('bank-sampah.transaksi'));
         }
 
-        // BS-032: notifikasi WA SETELAH commit dan LUAR try transaksi.
-        // Kegagalan WA tidak boleh menyulap transaksi yang sudah sukses
-        // jadi kelihatan gagal (dulu: Error uncaught setelah commit menimbulkan
-        // halaman 500 dan bisa memancing retry -> double-entry).
-        // 1.4: tanpa constructor injection — resolve lewat app()
-        $whatsapp = app(WhatsAppNotification::class);
-        if (setting('bank_sampah_whatsapp_aktif') == 1 && $member->no_hp) {
-            try {
-                $whatsapp->kirimNotifikasiSetor($member, $transaksi);
-            } catch (Throwable $e) {
-                Log::warning('[BankSampah] Gagal kirim notifikasi WA setor', [
-                    'transaksi_id' => $transaksi->id,
-                    'exception'    => $e,
-                ]);
-            }
-        }
+        $this->flushCacheDashboard();
+
+        // issue #56: notifikasi via mekanisme inti (in-app Layanan Mandiri),
+        // SETELAH commit dan LUAR try transaksi.
+        $this->notifWarga($member, 'Setor tunai berhasil', 'Setor '
+            . number_format($totalBerat, 2, ',', '.') . ' kg diterima. Saldo: Rp '
+            . number_format($total, 0, ',', '.') . ', poin +' . $poinDidapat . '.');
 
         return redirect_with('success', 'Transaksi setor berhasil! Total: Rp ' . number_format($total, 0, ',', '.'), ci_route('bank-sampah.transaksi'));
     }
@@ -263,19 +254,12 @@ class TransaksiController extends AdminModulController
             return redirect_with('error', 'Gagal memproses transaksi. Silakan coba lagi.', ci_route('bank-sampah.transaksi'));
         }
 
-        // BS-032: lihat komentar prosesSetor — WA di luar transaksi utama.
-        // 1.4: tanpa constructor injection — resolve lewat app()
-        $whatsapp = app(WhatsAppNotification::class);
-        if (setting('bank_sampah_whatsapp_aktif') == 1 && $member->no_hp) {
-            try {
-                $whatsapp->kirimNotifikasiTarik($member, $transaksi);
-            } catch (Throwable $e) {
-                Log::warning('[BankSampah] Gagal kirim notifikasi WA tarik', [
-                    'transaksi_id' => $transaksi->id,
-                    'exception'    => $e,
-                ]);
-            }
-        }
+        $this->flushCacheDashboard();
+
+        // issue #56: notifikasi in-app Layanan Mandiri, luar transaksi utama.
+        $this->notifWarga($member, 'Tarik tunai berhasil', 'Tarik Rp '
+            . number_format(request('nominal'), 0, ',', '.') . ' diproses. Saldo tersisa: Rp '
+            . number_format($member->fresh()->saldo, 0, ',', '.') . '.');
 
         return redirect_with('success', 'Transaksi tarik berhasil! Nominal: Rp ' . number_format(request('nominal'), 0, ',', '.'), ci_route('bank-sampah.transaksi'));
     }
@@ -321,6 +305,80 @@ class TransaksiController extends AdminModulController
     /**
      * Get data member via AJAX
      */
+    /**
+     * issue #56: notifikasi in-app ke nasabah lewat log_notifikasi_mandiri
+     * (dashboard Layanan Mandiri inti). Gagal tidak mengganggu transaksi.
+     * Kontrak FK inti: id_user_mandiri = tweb_penduduk_mandiri.id_pend.
+     */
+    private function notifWarga(MemberModel $member, string $judul, string $isi): void
+    {
+        try {
+            $mandiri = DB::table('tweb_penduduk_mandiri')
+                ->where('id_pend', $member->penduduk_id)
+                ->where('config_id', identitas('id'))
+                ->value('id_pend');
+
+            if (empty($mandiri)) {
+                return;
+            }
+
+            DB::table('log_notifikasi_mandiri')->insert([
+                'id_user_mandiri' => $mandiri,
+                'config_id'       => identitas('id'),
+                'judul'           => $judul,
+                'isi'             => $isi,
+                'payload'         => 'bank-sampah',
+                'read'            => 0,
+                'created_at'      => now(),
+                'updated_at'      => now(),
+            ]);
+        } catch (Throwable $e) {
+            Log::warning('[BankSampah] Gagal kirim notifikasi in-app warga', [
+                'member_id' => $member->id,
+                'exception' => $e,
+            ]);
+        }
+    }
+
+    /**
+     * issue #64: cache dashboard/grafik basi setelah transaksi — dibuang
+     * langsung setelah commit (dulu: 0 Cache::forget, angka basi).
+     */
+    private function flushCacheDashboard(): void
+    {
+        $configId = identitas('id');
+
+        Cache::forget("banksampah_dash_{$configId}_" . date('Ym'));
+        Cache::forget("banksampah_dash_grafik_{$configId}");
+    }
+
+    /**
+     * issue #64: AJAX cari nasabah untuk select2 (dropdown transaksi
+     * tidak lagi menarik semua member aktif saat render form).
+     */
+    public function cariMember()
+    {
+        $cari = trim((string) request('q', ''));
+
+        $query = MemberModel::desa()->aktif()->orderBy('nama')->limit(20);
+
+        if ($cari !== '') {
+            $safeCari = bank_sampah_safe_like($cari);
+            $query->where(function ($q) use ($safeCari) {
+                $q->where('nama', 'LIKE', "%{$safeCari}%")
+                  ->orWhere('no_member', 'LIKE', "%{$safeCari}%");
+            });
+        }
+
+        return response()->json([
+            'results' => $query->get()
+                ->map(static fn ($m) => [
+                    'id'   => $m->id,
+                    'text' => $m->no_member . ' - ' . $m->nama . ' (Rp ' . number_format($m->saldo, 0, ',', '.') . ')',
+                ]),
+        ]);
+    }
+
     public function getMember()
     {
         $member = MemberModel::desa()->findOrFail(request('id'));
