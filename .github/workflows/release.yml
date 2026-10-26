@@ -1,0 +1,26 @@
+name: Rilis Modul Bank Sampah
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Versi rilis, misal 2611.0.0 (format YYMM.minor.patch)'
+        required: true
+        type: string
+      prerelease:
+        description: 'Rilis sebagai pra-rilis'
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  release:
+    uses: OpenSID/.github/.github/workflows/release-modul-action.yml@main
+    with:
+      version: ${{ inputs.version }}
+      prerelease: ${{ inputs.prerelease }}
+      php_target: '84'
+      arch: 'x86-64'
+      encode_dirs: 'Config Helpers Http Libraries Models Providers Routes Services'
+    secrets:
+      IONCUBE_DOWNLOAD_URL: ${{ secrets.IONCUBE_DOWNLOAD_URL }}

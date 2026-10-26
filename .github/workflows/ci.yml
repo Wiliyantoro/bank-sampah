@@ -1,0 +1,25 @@
+name: CI (php -l)
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+
+      - name: php -l semua file PHP modul
+        run: |
+          fail=0
+          for f in $(git ls-files '*.php'); do
+            php -l "$f" > /dev/null 2>&1 || { echo "LINT-FAIL: $f"; fail=1; }
+          done
+          exit $fail

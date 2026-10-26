@@ -11,20 +11,32 @@
 
 namespace Modules\BankSampah\Models;
 
+use Modules\BankSampah\Traits\HasUserstamp;
 use App\Models\BaseModel;
 use App\Traits\ConfigId;
+use App\Models\Penduduk;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 class MemberModel extends BaseModel
 {
+    use HasUserstamp;
+
     use ConfigId;
 
     protected $table = 'bank_sampah_member';
 
-    protected $guarded = [];
+    /**
+     * issue #61: whitelist $fillable — bukan $guarded kosong.
+     * userstamps (created_by/updated_by) dikelola trait inti.
+     */
+    protected $fillable = [
+        'config_id', 'penduduk_id', 'no_member', 'nama', 'alamat', 'no_hp', 'lokasi_id', 'aktif'
+    // issue #61: saldo & poin diubah via method khusus (tambahSaldo/kurangiSaldo), bukan mass-assignment,
+    ];
 
     protected $casts = [
+        'aktif' => 'boolean',
         'saldo'      => 'decimal:2',
         'poin'       => 'integer',
         'created_at' => 'date:Y-m-d H:i:s',
@@ -75,8 +87,9 @@ class MemberModel extends BaseModel
         return $this->hasMany(RewardModel::class, 'member_id');
     }
 
+
     /**
-     * Scope: hanya data desa yang sedang login
+     * Scope: hanya data desa yang sedang login (restore issue #81)
      */
     public function scopeDesa($query)
     {

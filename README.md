@@ -465,7 +465,7 @@ Prefix: `bank-sampah/warga/` | Middleware: `web`
 ### DashboardController
 - **Index:** Statistik nasabah aktif, transaksi hari ini, setoran/tarikan bulanan, saldo kas, stok, lokasi, 10 transaksi terakhir, grafik 12 bulan
 - **Cache:** 5 menit per config_id + bulan/tahun
-- **Query:** Semua pakai `->desa()`
+- **Query:** Scoping desa otomatis via global scope trait `App\Traits\ConfigId` (dipakai semua model)
 
 ### KategoriController
 - **CRUD:** Kategori sampah dengan badge "Bawaan"/"Desa"
@@ -517,7 +517,7 @@ Prefix: `bank-sampah/warga/` | Middleware: `web`
 ### Scopes yang tersedia:
 
 ```php
-->desa()    // WHERE config_id = identitas('id')
+global scope ConfigId  // WHERE config_id = identitas('id') otomatis
 ->aktif()   // WHERE aktif = 1
 ->default() // WHERE is_default = 1
 ->custom()  // WHERE is_default = 0
@@ -526,10 +526,10 @@ Prefix: `bank-sampah/warga/` | Middleware: `web`
 ### Contoh penggunaan:
 
 ```php
-// Semua query WAJIB pakai ->desa()
-$kategori = BankSampahKategori::desa()->get();
-$member = BankSampahMember::desa()->aktif()->get();
-$transaksi = BankSampahTransaksi::desa()->where('tipe', 'setor')->get();
+// Scoping desa otomatis (global scope ConfigId)
+$kategori = KategoriModel::query()->get();
+$member = MemberModel::query()->aktif()->get();
+$transaksi = TransaksiModel::query()->where('tipe', 'setor')->get();
 
 // Auto-fill config_id saat create (di booted())
 $kategori = BankSampahKategori::create(['nama' => 'Baru']);
@@ -793,13 +793,13 @@ protected static function booted(): void
 }
 
 // 3. Model: Scope
-public function scopeDesa($query)
+public function scopeAktif($query)  // scoping desa otomatis via ConfigId
 {
     return $query->where('config_id', identitas('id'));
 }
 
 // 4. Controller: Filter
-$data = BankSampahKategori::desa()->get();
+$data = KategoriModel::query()->get();
 
 // 5. Seeder: Per-des check
 $exists = DB::table('bank_sampah_kategori')
@@ -936,10 +936,10 @@ php artisan view:clear
 
 ### Conventions
 
-1. **Semua query WAJIB pakai `->desa()`**
+1. **Scoping desa otomatis** via trait `App\Traits\ConfigId` (jangan tulis where config_id manual)
    ```php
    // ✅ BENAR
-   $data = BankSampahKategori::desa()->get();
+   $data = KategoriModel::query()->get();
    
    // ❌ SALAH
    $data = BankSampahKategori::all();
@@ -994,7 +994,7 @@ php artisan view:clear
 
 1. Buat migration dengan `config_id`
 2. Buat Model dengan `scope desa()` + `booted()` auto-fill
-3. Buat Controller dengan `->desa()` di semua query
+3. Buat Controller tanpa scoping manual (global scope ConfigId yang menangani)
 4. Buat Tests untuk model baru
 5. Update README.md
 

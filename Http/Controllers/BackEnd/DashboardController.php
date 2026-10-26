@@ -11,10 +11,14 @@
 
 defined('BASEPATH') || exit('No direct script access allowed');
 
+use Modules\BankSampah\Services\LaporanBankSampah;
+use Modules\BankSampah\Enums\TipeTransaksiEnum;
 use Illuminate\Support\Facades\Cache;
+use Carbon\Carbon;
 use Modules\BankSampah\Models\LokasiModel;
 use Modules\BankSampah\Models\MemberModel;
 use Modules\BankSampah\Models\SampahModel;
+use Modules\BankSampah\Models\TransaksiDetailModel;
 use Modules\BankSampah\Models\TransaksiModel;
 
 class DashboardController extends AdminModulController
@@ -39,28 +43,46 @@ class DashboardController extends AdminModulController
         $cacheKey = "banksampah_dash_{$configId}_{$tahun}{$bulan}";
 
         $data = Cache::remember($cacheKey, 300, function () use ($configId, $bulan, $tahun) {
-            $totalMember = MemberModel::desa()->aktif()->count();
+            $totalMember = MemberModel::query()->aktif()->count();
 
-            $transaksiHariIni = TransaksiModel::desa()
+            $transaksiHariIni = TransaksiModel::query()
                 ->whereDate('created_at', today())->count();
 
-            $setoranBulan = TransaksiModel::desa()
-                ->where('tipe', 'setor')
-                ->whereMonth('created_at', $bulan)
-                ->whereYear('created_at', $tahun)
+            $setoranBulan = TransaksiModel::query()
+                ->where('tipe', TipeTransaksiEnum::SETOR->value)
+                ->whereBetween('created_at', $this->rentangBulan($bulan, $tahun))
                 ->sum('total');
 
-            $tarikanBulan = TransaksiModel::desa()
-                ->where('tipe', 'tarik')
-                ->whereMonth('created_at', $bulan)
-                ->whereYear('created_at', $tahun)
+            $tarikanBulan = TransaksiModel::query()
+                ->where('tipe', TipeTransaksiEnum::TARIK->value)
+                ->whereBetween('created_at', $this->rentangBulan($bulan, $tahun))
                 ->sum('total');
+
+            // issue #77: view membaca totalSetor/totalTarik/totalBerat/totalSampahJenis
+            // (bukan setoranBulan/tarikanBulan/totalStok) — kartu statistik selalu 0
+            $totalSetor = TransaksiModel::query()
+                ->where('tipe', TipeTransaksiEnum::SETOR->value)
+                ->whereBetween('created_at', $this->rentangBulan($bulan, $tahun))
+                ->count();
+
+            $totalTarik = TransaksiModel::query()
+                ->where('tipe', TipeTransaksiEnum::TARIK->value)
+                ->whereBetween('created_at', $this->rentangBulan($bulan, $tahun))
+                ->count();
+
+            $totalBerat = (float) TransaksiDetailModel::query()
+                ->whereHas('transaksi', function ($q) use ($bulan, $tahun) {
+                    $q->whereBetween('created_at', $this->rentangBulan($bulan, $tahun));
+                })
+                ->sum('berat');
+
+            $totalSampahJenis = SampahModel::query()->aktif()->count();
 
             $saldoKas = $setoranBulan - $tarikanBulan;
-            $totalStok = SampahModel::desa()->sum('stok');
-            $totalLokasi = LokasiModel::desa()->aktif()->count();
+            $totalStok = SampahModel::query()->sum('stok');
+            $totalLokasi = LokasiModel::query()->aktif()->count();
 
-            $transaksiTerakhir = TransaksiModel::desa()
+            $transaksiTerakhir = TransaksiModel::query()
                 ->with('member')
                 ->orderBy('created_at', 'desc')
                 ->limit(10)
@@ -68,7 +90,8 @@ class DashboardController extends AdminModulController
 
             return compact(
                 'totalMember', 'transaksiHariIni', 'setoranBulan',
-                'tarikanBulan', 'saldoKas', 'totalStok', 'totalLokasi',
+                'tarikanBulan', 'totalSetor', 'totalTarik', 'totalBerat',
+                'totalSampahJenis', 'saldoKas', 'totalStok', 'totalLokasi',
                 'transaksiTerakhir'
             );
         });
@@ -78,7 +101,7 @@ class DashboardController extends AdminModulController
         $grafikData = Cache::remember("banksampah_dash_grafik_{$configId}", 300, function () {
             $mulai = now()->subMonths(11)->startOfMonth();
 
-            $rows = TransaksiModel::desa()
+            $rows = TransaksiModel::query()
                 ->select('created_at', 'tipe', 'total')
                 ->where('created_at', '>=', $mulai)
                 ->get();
@@ -118,11 +141,19 @@ class DashboardController extends AdminModulController
      */
     protected function periodeQuery(): array
     {
-        $data = request()->validate([
-            'bulan' => 'nullable|integer|between:1,12',
-            'tahun' => 'nullable|integer|between:2000,2100',
-        ]);
+        return LaporanBankSampah::periodeQuery();
+    }
 
-        return [(int) ($data['bulan'] ?? date('m')), (int) ($data['tahun'] ?? date('Y'))];
+    /**
+     * Batas [mulai, akhir] bulan tertentu (issue #64).
+     * whereBetween sargable — memakai index (config_id, created_at),
+     * pengganti whereMonth/whereYear yang tidak bisa pakai index.
+     */
+    protected function rentangBulan(int $bulan, int $tahun): array
+    {
+        $mulai  = Carbon::create($tahun, $bulan, 1, 0, 0, 0)->startOfDay();
+        $akhir  = (clone $mulai)->endOfMonth();
+
+        return [$mulai, $akhir];
     }
 }

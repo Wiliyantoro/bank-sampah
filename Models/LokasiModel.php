@@ -11,18 +11,28 @@
 
 namespace Modules\BankSampah\Models;
 
+use Modules\BankSampah\Traits\HasUserstamp;
 use App\Models\BaseModel;
 use App\Traits\ConfigId;
 
 class LokasiModel extends BaseModel
 {
+    use HasUserstamp;
+
     use ConfigId;
 
     protected $table = 'bank_sampah_lokasi';
 
-    protected $guarded = [];
+    /**
+     * issue #61: whitelist $fillable — bukan $guarded kosong.
+     * userstamps (created_by/updated_by) dikelola trait inti.
+     */
+    protected $fillable = [
+        'config_id', 'nama', 'kode', 'alamat', 'penanggung_jawab', 'no_hp', 'is_default', 'sumber', 'aktif',
+    ];
 
     protected $casts = [
+        'aktif' => 'boolean',
         'is_default' => 'boolean',
         'created_at' => 'date:Y-m-d H:i:s',
         'updated_at' => 'date:Y-m-d H:i:s',
@@ -44,8 +54,9 @@ class LokasiModel extends BaseModel
         return $this->hasMany(TransaksiModel::class, 'lokasi_id');
     }
 
+
     /**
-     * Scope: hanya data desa yang sedang login
+     * Scope: hanya data desa yang sedang login (restore issue #81)
      */
     public function scopeDesa($query)
     {

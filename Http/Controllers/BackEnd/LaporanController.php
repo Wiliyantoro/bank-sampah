@@ -11,6 +11,8 @@
 
 defined('BASEPATH') || exit('No direct script access allowed');
 
+use Modules\BankSampah\Services\LaporanBankSampah;
+use Modules\BankSampah\Enums\TipeTransaksiEnum;
 use Modules\BankSampah\Models\TransaksiDetailModel;
 use Modules\BankSampah\Models\TransaksiModel;
 
@@ -42,85 +44,12 @@ class LaporanController extends AdminModulController
     }
 
     /**
-     * Rekap bulanan bersama untuk index() dan exportPdf() — BS-038:
-     * satu query agregasi per bulan (dulu: 2 query/hari = max 62 query)
+     * Rekap bulanan bersama untuk index() dan exportPdf() — logic ada di
+     * Services/LaporanBankSampah (issue #65).
      */
     protected function dataRekap(int $bulan, int $tahun): array
     {
-        $daysInMonth = cal_days_in_month(CAL_GREGORIAN, $bulan, $tahun);
-
-        // Rekap harian — BS-024: satu query agregasi, dimap ke kalender di PHP
-        $rekapRows = TransaksiModel::desa()
-            ->selectRaw('DATE(created_at) as tgl, tipe, COUNT(*) as jumlah, COALESCE(SUM(total), 0) as nominal')
-            ->whereMonth('created_at', $bulan)
-            ->whereYear('created_at', $tahun)
-            ->groupBy('tgl', 'tipe')
-            ->get();
-
-        $rekapIndex = [];
-        foreach ($rekapRows as $row) {
-            $rekapIndex[$row->tgl . '_' . $row->tipe] = $row;
-        }
-
-        $rekapHarian = [];
-        for ($day = 1; $day <= $daysInMonth; $day++) {
-            $date = sprintf('%s-%s-%02d', $tahun, $bulan, $day);
-
-            $setor = $rekapIndex[$date . '_setor'] ?? null;
-            $tarik = $rekapIndex[$date . '_tarik'] ?? null;
-
-            $rekapHarian[] = [
-                'tanggal'       => $date,
-                'nama_hari'     => bank_sampah_hari_indonesia($date),
-                'setor_jumlah'  => (int) ($setor->jumlah ?? 0),
-                'setor_nominal' => (float) ($setor->nominal ?? 0),
-                'tarik_jumlah'  => (int) ($tarik->jumlah ?? 0),
-                'tarik_nominal' => (float) ($tarik->nominal ?? 0),
-            ];
-        }
-
-        // Rekap jenis sampah
-        $rekapSampah = TransaksiDetailModel::selectRaw('
-                sampah_id,
-                SUM(berat) as total_berat,
-                SUM(subtotal) as total_nilai
-            ')
-            ->whereHas('transaksi', function ($q) use ($bulan, $tahun) {
-                $q->desa()
-                  ->whereMonth('created_at', $bulan)
-                  ->whereYear('created_at', $tahun);
-            })
-            ->with('sampah.kategori')
-            ->groupBy('sampah_id')
-            ->get();
-
-        // Rekap per lokasi
-        $rekapLokasi = TransaksiModel::desa()->selectRaw('
-                lokasi_id,
-                tipe,
-                COUNT(*) as jumlah,
-                COALESCE(SUM(total), 0) as nominal
-            ')
-            ->whereMonth('created_at', $bulan)
-            ->whereYear('created_at', $tahun)
-            ->groupBy('lokasi_id', 'tipe')
-            ->with('lokasi')
-            ->get();
-
-        // Total
-        $totalSetor = TransaksiModel::desa()->where('tipe', 'setor')
-            ->whereMonth('created_at', $bulan)
-            ->whereYear('created_at', $tahun)
-            ->selectRaw('COUNT(*) as jumlah, COALESCE(SUM(total), 0) as nominal')
-            ->first();
-
-        $totalTarik = TransaksiModel::desa()->where('tipe', 'tarik')
-            ->whereMonth('created_at', $bulan)
-            ->whereYear('created_at', $tahun)
-            ->selectRaw('COUNT(*) as jumlah, COALESCE(SUM(total), 0) as nominal')
-            ->first();
-
-        return compact('rekapHarian', 'rekapSampah', 'rekapLokasi', 'totalSetor', 'totalTarik');
+        return app(LaporanBankSampah::class)->dataRekap($bulan, $tahun);
     }
 
     /**
@@ -197,7 +126,7 @@ class LaporanController extends AdminModulController
     {
         [$bulan, $tahun] = $this->periodeQuery();
 
-        $transaksi = TransaksiModel::desa()->with('member')
+        $transaksi = TransaksiModel::query()->with('member')
             ->whereMonth('created_at', $bulan)
             ->whereYear('created_at', $tahun)
             ->orderBy('created_at', 'asc')
@@ -239,11 +168,7 @@ class LaporanController extends AdminModulController
      */
     protected function periodeQuery(): array
     {
-        $data = request()->validate([
-            'bulan' => 'nullable|integer|between:1,12',
-            'tahun' => 'nullable|integer|between:2000,2100',
-        ]);
-
-        return [(int) ($data['bulan'] ?? date('m')), (int) ($data['tahun'] ?? date('Y'))];
+        return LaporanBankSampah::periodeQuery();
     }
+
 }

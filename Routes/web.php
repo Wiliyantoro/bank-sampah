@@ -76,6 +76,7 @@ Route::group('bank-sampah', ['namespace' => 'BankSampah/BackEnd'], static functi
 
     // AJAX endpoints
     Route::get('ajax/member', 'TransaksiController@getMember')->name('bank-sampah.ajax.member');
+    Route::get('ajax/member-cari', 'TransaksiController@cariMember')->name('bank-sampah.ajax.member-cari');
     Route::get('ajax/sampah', 'TransaksiController@getSampah')->name('bank-sampah.ajax.sampah');
     Route::get('ajax/penduduk', 'MemberController@ajaxPenduduk')->name('bank-sampah.ajax.penduduk');
     Route::get('ajax/penduduk/{id}', 'MemberController@ajaxPendudukDetail')->name('bank-sampah.ajax.penduduk.detail');

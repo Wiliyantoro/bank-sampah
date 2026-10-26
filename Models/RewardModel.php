@@ -11,16 +11,25 @@
 
 namespace Modules\BankSampah\Models;
 
+use Modules\BankSampah\Traits\HasUserstamp;
 use App\Models\BaseModel;
 use App\Traits\ConfigId;
 
 class RewardModel extends BaseModel
 {
+    use HasUserstamp;
+
     use ConfigId;
 
     protected $table = 'bank_sampah_reward';
 
-    protected $guarded = [];
+    /**
+     * issue #61: whitelist $fillable — bukan $guarded kosong.
+     * userstamps (created_by/updated_by) dikelola trait inti.
+     */
+    protected $fillable = [
+        'config_id', 'member_id', 'transaksi_id', 'tipe', 'poin', 'keterangan',
+    ];
 
     protected $casts = [
         'poin'       => 'integer',
@@ -31,6 +40,15 @@ class RewardModel extends BaseModel
     /**
      * Relasi ke member
      */
+    /**
+     * Scope: hanya data desa yang sedang login (restore issue #81)
+     */
+    public function scopeDesa($query)
+    {
+        return $query->where('config_id', identitas('id'));
+    }
+
+
     public function member()
     {
         return $this->belongsTo(MemberModel::class, 'member_id');
@@ -44,11 +62,4 @@ class RewardModel extends BaseModel
         return $this->belongsTo(TransaksiModel::class, 'transaksi_id');
     }
 
-    /**
-     * Scope: hanya data desa yang sedang login
-     */
-    public function scopeDesa($query)
-    {
-        return $query->where('config_id', identitas('id'));
-    }
 }

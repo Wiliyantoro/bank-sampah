@@ -11,6 +11,9 @@
 
 defined('BASEPATH') || exit('No direct script access allowed');
 
+use Modules\BankSampah\Http\Requests\TukarPoinRequest;
+use Modules\BankSampah\Services\TukarPoinAction;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Modules\BankSampah\Models\MemberModel;
@@ -36,7 +39,7 @@ class RewardController extends AdminModulController
     public function index()
     {
         if (request()->ajax()) {
-            return datatables()->of(MemberModel::desa()->aktif()->orderBy('poin', 'desc'))
+            return datatables()->of(MemberModel::query()->aktif()->orderBy('poin', 'desc'))
                 ->addIndexColumn()
                 ->addColumn('aksi', static function ($row): string {
                     $aksi = '<a href="' . ci_route('bank-sampah.reward.riwayat', $row->id) . '" class="btn btn-default btn-sm" title="Riwayat Poin"><i class="fa fa-history"></i></a> ';
@@ -49,9 +52,9 @@ class RewardController extends AdminModulController
                 ->make();
         }
 
-        $totalPoin = MemberModel::desa()->aktif()->sum('poin');
+        $totalPoin = MemberModel::query()->aktif()->sum('poin');
 
-        $riwayatReward = RewardModel::desa()->with('member')
+        $riwayatReward = RewardModel::query()->with('member')
             ->orderBy('created_at', 'desc')
             ->limit(20)
             ->get();
@@ -64,7 +67,7 @@ class RewardController extends AdminModulController
      */
     public function formTukar($memberId)
     {
-        $member = MemberModel::desa()->findOrFail($memberId);
+        $member = MemberModel::query()->findOrFail($memberId);
         $config = [
             'reward' => [
                 'enabled'            => setting('bank_sampah_reward_aktif') == 1,
@@ -80,44 +83,36 @@ class RewardController extends AdminModulController
      */
     public function prosesTukar($memberId)
     {
-        request()->validate([
-            'poin'       => 'required|integer|min:1',
-            'keterangan' => 'required|string|max:255',
-        ]);
+        // issue #65: validasi via FormRequest; logic bisnis via Service/Action
+        $req = TukarPoinRequest::createFrom(request());
+        $req->validate($req->rules(), $req->messages());
 
-        $member  = MemberModel::desa()->findOrFail($memberId);
+        $member  = MemberModel::query()->findOrFail($memberId);
         $minimal = (int) (setting('bank_sampah_minimal_poin_tukar') ?: 100);
 
-        if ($member->poin < request('poin')) {
+        if ($member->poin < $req->input('poin')) {
             return redirect_with('error', 'Poin tidak mencukupi. Poin saat ini: ' . $member->poin);
         }
 
-        if (request('poin') < $minimal) {
+        if ((int) $req->input('poin') < $minimal) {
             return redirect_with('error', "Minimal poin untuk tukar adalah {$minimal}", ci_route('bank-sampah.reward'));
         }
 
-        DB::beginTransaction();
-
         try {
-            if (! $member->tukarPoin(request('poin'))) {
-                DB::rollBack();
-                return redirect_with('error', 'Poin tidak mencukupi. Silakan coba lagi.', ci_route('bank-sampah.reward'));
-            }
+            app(TukarPoinAction::class)->handle($member, (int) $req->input('poin'), (string) $req->input('keterangan'));
 
-            RewardModel::create([
-                'member_id'   => $member->id,
-                'tipe'        => 'tukar',
-                'poin'        => request('poin'),
-                'keterangan'  => request('keterangan'),
-            ]);
+            $configId = identitas('id');
+            Cache::forget("banksampah_dash_{$configId}_" . date('Ym'));
+            Cache::forget("banksampah_dash_grafik_{$configId}");
 
-            DB::commit();
-
-            return redirect_with('success', 'Berhasil menukar ' . request('poin') . ' poin untuk ' . $member->nama);
+            return redirect_with('success', 'Berhasil menukar ' . $req->input('poin') . ' poin untuk ' . $member->nama);
         } catch (Exception $e) {
-            DB::rollBack();
             // BS-014: pesan exception bisa bocorkan SQL/tabel/path — log penuh, UI generik
             Log::error('[BankSampah] prosesTukar gagal', ['exception' => $e]);
+
+            if ($e->getMessage() === 'poin_tidak_cukup') {
+                return redirect_with('error', 'Poin tidak mencukupi. Silakan coba lagi.', ci_route('bank-sampah.reward'));
+            }
             return redirect_with('error', 'Gagal menukar poin. Silakan coba lagi.', ci_route('bank-sampah.reward'));
         }
     }
@@ -128,12 +123,12 @@ class RewardController extends AdminModulController
     public function riwayat($memberId)
     {
         if (request()->ajax()) {
-            return datatables()->of(RewardModel::desa()->where('member_id', $memberId))
+            return datatables()->of(RewardModel::query()->where('member_id', $memberId))
                 ->addIndexColumn()
                 ->make();
         }
 
-        $member = MemberModel::desa()->findOrFail($memberId);
+        $member = MemberModel::query()->findOrFail($memberId);
 
         return view('banksampah::backend.reward.riwayat', compact('member'));
     }

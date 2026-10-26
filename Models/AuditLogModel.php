@@ -11,16 +11,25 @@
 
 namespace Modules\BankSampah\Models;
 
+use Modules\BankSampah\Traits\HasUserstamp;
 use App\Models\BaseModel;
 use App\Traits\ConfigId;
 
 class AuditLogModel extends BaseModel
 {
+    use HasUserstamp;
+
     use ConfigId;
 
     protected $table = 'bank_sampah_audit_log';
 
-    protected $guarded = [];
+    /**
+     * issue #61: whitelist $fillable — bukan $guarded kosong.
+     * userstamps (created_by/updated_by) dikelola trait inti.
+     */
+    protected $fillable = [
+        'config_id', 'event', 'user_id', 'ip_address', 'user_agent', 'data',
+    ];
 
     protected $casts = [
         'data'       => 'array',
@@ -31,6 +40,15 @@ class AuditLogModel extends BaseModel
     /**
      * Scope: filter by event type
      */
+    /**
+     * Scope: hanya data desa yang sedang login (restore issue #81)
+     */
+    public function scopeDesa($query)
+    {
+        return $query->where('config_id', identitas('id'));
+    }
+
+
     public function scopeEvent($query, string $event)
     {
         return $query->where('event', $event);
@@ -52,11 +70,4 @@ class AuditLogModel extends BaseModel
         return $query->where('created_at', '>=', now()->subHours($hours));
     }
 
-    /**
-     * Scope: hanya data desa yang sedang login
-     */
-    public function scopeDesa($query)
-    {
-        return $query->where('config_id', identitas('id'));
-    }
 }

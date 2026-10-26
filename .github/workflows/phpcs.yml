@@ -1,0 +1,26 @@
+name: PHP_CodeSniffer (PSR12, report-only)
+
+# Sniff report-only: hasil ditampilkan sebagai anotasi PR,
+# tidak gagalkan build. Official gate tetap php -l di ci.yml.
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  phpcs:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          tools: phpcs
+
+      - name: phpcs PSR12
+        run: phpcs --standard=PSR12 --extensions=php \
+              --exclude=Generic.Files.LineLength,Squiz.Classes.ValidClassName \
+              --report=full Config Helpers Http Models Providers Routes tests
