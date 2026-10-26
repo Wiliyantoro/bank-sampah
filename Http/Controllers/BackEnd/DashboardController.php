@@ -16,6 +16,7 @@ use Carbon\Carbon;
 use Modules\BankSampah\Models\LokasiModel;
 use Modules\BankSampah\Models\MemberModel;
 use Modules\BankSampah\Models\SampahModel;
+use Modules\BankSampah\Models\TransaksiDetailModel;
 use Modules\BankSampah\Models\TransaksiModel;
 
 class DashboardController extends AdminModulController
@@ -55,6 +56,25 @@ class DashboardController extends AdminModulController
                 ->whereBetween('created_at', $this->rentangBulan($bulan, $tahun))
                 ->sum('total');
 
+            // issue #77: view membaca totalSetor/totalTarik/totalBerat/totalSampahJenis
+            // (bukan setoranBulan/tarikanBulan/totalStok) — kartu statistik selalu 0
+            $totalSetor = TransaksiModel::query()
+                ->where('tipe', 'setor')
+                ->whereBetween('created_at', $this->rentangBulan($bulan, $tahun))
+                ->count();
+
+            $totalTarik = TransaksiModel::query()
+                ->where('tipe', 'tarik')
+                ->whereBetween('created_at', $this->rentangBulan($bulan, $tahun))
+                ->count();
+
+            $totalBerat = (float) TransaksiDetailModel::query()
+                ->whereHas('transaksi', function ($q) use ($bulan, $tahun) {
+                    $q->whereBetween('created_at', $this->rentangBulan($bulan, $tahun));
+                })
+                ->sum('berat');
+
+            $totalSampahJenis = SampahModel::query()->aktif()->count();
 
             $saldoKas = $setoranBulan - $tarikanBulan;
             $totalStok = SampahModel::query()->sum('stok');
@@ -68,7 +88,8 @@ class DashboardController extends AdminModulController
 
             return compact(
                 'totalMember', 'transaksiHariIni', 'setoranBulan',
-                'tarikanBulan', 'saldoKas', 'totalStok', 'totalLokasi',
+                'tarikanBulan', 'totalSetor', 'totalTarik', 'totalBerat',
+                'totalSampahJenis', 'saldoKas', 'totalStok', 'totalLokasi',
                 'transaksiTerakhir'
             );
         });
