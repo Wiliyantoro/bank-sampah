@@ -12,9 +12,11 @@
 namespace Modules\BankSampah\Models;
 
 use App\Models\BaseModel;
+use App\Traits\ConfigId;
 
 class TransaksiDetailModel extends BaseModel
 {
+    use ConfigId;
     protected $table = 'bank_sampah_transaksi_detail';
 
     protected $guarded = [];
