@@ -40,6 +40,14 @@ class RewardModel extends BaseModel
     /**
      * Relasi ke member
      */
+    /**
+     * Scope: hanya data desa yang sedang login (restore issue #81)
+     */
+    public function scopeDesa($query)
+    {
+        return $query->where('config_id', identitas('id'));
+    }
+
 
     public function member()
     {

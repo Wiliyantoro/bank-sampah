@@ -40,6 +40,14 @@ class AuditLogModel extends BaseModel
     /**
      * Scope: filter by event type
      */
+    /**
+     * Scope: hanya data desa yang sedang login (restore issue #81)
+     */
+    public function scopeDesa($query)
+    {
+        return $query->where('config_id', identitas('id'));
+    }
+
 
     public function scopeEvent($query, string $event)
     {
