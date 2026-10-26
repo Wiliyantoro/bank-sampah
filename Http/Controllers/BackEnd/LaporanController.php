@@ -48,12 +48,13 @@ class LaporanController extends AdminModulController
     protected function dataRekap(int $bulan, int $tahun): array
     {
         $daysInMonth = cal_days_in_month(CAL_GREGORIAN, $bulan, $tahun);
+        $rentang     = $this->rentangBulan($bulan, $tahun);
 
         // Rekap harian — BS-024: satu query agregasi, dimap ke kalender di PHP
+        // issue #64: whereBetween sargable (pakai idx_transaksi_config_tanggal)
         $rekapRows = TransaksiModel::query()
             ->selectRaw('DATE(created_at) as tgl, tipe, COUNT(*) as jumlah, COALESCE(SUM(total), 0) as nominal')
-            ->whereMonth('created_at', $bulan)
-            ->whereYear('created_at', $tahun)
+            ->whereBetween('created_at', $rentang)
             ->groupBy('tgl', 'tipe')
             ->get();
 
@@ -85,9 +86,8 @@ class LaporanController extends AdminModulController
                 SUM(berat) as total_berat,
                 SUM(subtotal) as total_nilai
             ')
-            ->whereHas('transaksi', function ($q) use ($bulan, $tahun) {
-                $q->whereMonth('created_at', $bulan)
-                  ->whereYear('created_at', $tahun);
+            ->whereHas('transaksi', function ($q) use ($rentang) {
+                $q->whereBetween('created_at', $rentang);
             })
             ->with('sampah.kategori')
             ->groupBy('sampah_id')
@@ -100,22 +100,19 @@ class LaporanController extends AdminModulController
                 COUNT(*) as jumlah,
                 COALESCE(SUM(total), 0) as nominal
             ')
-            ->whereMonth('created_at', $bulan)
-            ->whereYear('created_at', $tahun)
+            ->whereBetween('created_at', $rentang)
             ->groupBy('lokasi_id', 'tipe')
             ->with('lokasi')
             ->get();
 
         // Total
         $totalSetor = TransaksiModel::query()->where('tipe', 'setor')
-            ->whereMonth('created_at', $bulan)
-            ->whereYear('created_at', $tahun)
+            ->whereBetween('created_at', $rentang)
             ->selectRaw('COUNT(*) as jumlah, COALESCE(SUM(total), 0) as nominal')
             ->first();
 
         $totalTarik = TransaksiModel::query()->where('tipe', 'tarik')
-            ->whereMonth('created_at', $bulan)
-            ->whereYear('created_at', $tahun)
+            ->whereBetween('created_at', $rentang)
             ->selectRaw('COUNT(*) as jumlah, COALESCE(SUM(total), 0) as nominal')
             ->first();
 
@@ -244,5 +241,18 @@ class LaporanController extends AdminModulController
         ]);
 
         return [(int) ($data['bulan'] ?? date('m')), (int) ($data['tahun'] ?? date('Y'))];
+    }
+
+    /**
+     * Batas [mulai, akhir] bulan tertentu (issue #64).
+     * whereBetween sargable — pengganti whereMonth/whereYear
+     * yang tidak bisa memakai index.
+     */
+    protected function rentangBulan(int $bulan, int $tahun): array
+    {
+        $mulai = Carbon\Carbon::create($tahun, $bulan, 1, 0, 0, 0)->startOfDay();
+        $akhir = (clone $mulai)->endOfMonth();
+
+        return [$mulai, $akhir];
     }
 }

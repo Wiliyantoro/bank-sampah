@@ -11,6 +11,7 @@
 
 defined('BASEPATH') || exit('No direct script access allowed');
 
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Modules\BankSampah\Models\MemberModel;
@@ -110,6 +111,10 @@ class RewardController extends AdminModulController
                     'keterangan'  => request('keterangan'),
                 ]);
             });
+
+            $configId = identitas('id');
+            Cache::forget("banksampah_dash_{$configId}_" . date('Ym'));
+            Cache::forget("banksampah_dash_grafik_{$configId}");
 
             return redirect_with('success', 'Berhasil menukar ' . request('poin') . ' poin untuk ' . $member->nama);
         } catch (Exception $e) {

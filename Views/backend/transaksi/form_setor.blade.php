@@ -140,17 +140,19 @@
 @push('scripts')
 <script>
 $(document).ready(function() {
-    // Info member
-    $('#member_id').on('change', function() {
-        var option = $(this).find(':selected');
-        if (option.val()) {
-            $('#infoSaldo').text('Rp ' + parseInt(option.data('saldo')).toLocaleString('id-ID'));
-            $('#infoPoin').text(option.data('poin') + ' poin');
-        } else {
+    // Info member — via AJAX getMember (data-saldo tak ada di mode AJAX)
+    $('#member_id').on('select2:select change', function() {
+        var id = $(this).val();
+        if (! id) {
             $('#infoSaldo').text('-');
             $('#infoPoin').text('-');
+            return;
         }
-    }).trigger('change');
+        $.getJSON('{!! ci_route('bank-sampah.ajax.member') !!}', { id: id }, function(m) {
+            $('#infoSaldo').text('Rp ' + parseInt(m.saldo).toLocaleString('id-ID'));
+            $('#infoPoin').text(m.poin + ' poin');
+        });
+    });
 
     // Tambah item
     var itemCount = 1;
@@ -220,6 +222,21 @@ $(document).ready(function() {
 
     function initSelect2() {
         $('.select2').select2({ theme: 'bootstrap' });
+
+        // issue #64: cari nasabah via AJAX (endpoint member-cari) —
+        // form tidak lagi merender dropdown semua member aktif.
+        $('#member_id').select2({
+            theme: 'bootstrap',
+            ajax: {
+                url: '{!! ci_route('bank-sampah.ajax.member-cari') !!}',
+                dataType: 'json',
+                delay: 250,
+                data: (params) => ({ q: params.term || '' }),
+                processResults: (data) => ({ results: data.results }),
+                cache: true,
+            },
+            placeholder: 'Ketik nama / no. member',
+        });
     }
     initSelect2();
 });

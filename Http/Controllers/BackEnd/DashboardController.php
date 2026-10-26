@@ -12,6 +12,7 @@
 defined('BASEPATH') || exit('No direct script access allowed');
 
 use Illuminate\Support\Facades\Cache;
+use Carbon\Carbon;
 use Modules\BankSampah\Models\LokasiModel;
 use Modules\BankSampah\Models\MemberModel;
 use Modules\BankSampah\Models\SampahModel;
@@ -46,15 +47,14 @@ class DashboardController extends AdminModulController
 
             $setoranBulan = TransaksiModel::query()
                 ->where('tipe', 'setor')
-                ->whereMonth('created_at', $bulan)
-                ->whereYear('created_at', $tahun)
+                ->whereBetween('created_at', $this->rentangBulan($bulan, $tahun))
                 ->sum('total');
 
             $tarikanBulan = TransaksiModel::query()
                 ->where('tipe', 'tarik')
-                ->whereMonth('created_at', $bulan)
-                ->whereYear('created_at', $tahun)
+                ->whereBetween('created_at', $this->rentangBulan($bulan, $tahun))
                 ->sum('total');
+
 
             $saldoKas = $setoranBulan - $tarikanBulan;
             $totalStok = SampahModel::query()->sum('stok');
@@ -124,5 +124,18 @@ class DashboardController extends AdminModulController
         ]);
 
         return [(int) ($data['bulan'] ?? date('m')), (int) ($data['tahun'] ?? date('Y'))];
+    }
+
+    /**
+     * Batas [mulai, akhir] bulan tertentu (issue #64).
+     * whereBetween sargable — memakai index (config_id, created_at),
+     * pengganti whereMonth/whereYear yang tidak bisa pakai index.
+     */
+    protected function rentangBulan(int $bulan, int $tahun): array
+    {
+        $mulai  = Carbon::create($tahun, $bulan, 1, 0, 0, 0)->startOfDay();
+        $akhir  = (clone $mulai)->endOfMonth();
+
+        return [$mulai, $akhir];
     }
 }

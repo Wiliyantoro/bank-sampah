@@ -95,26 +95,42 @@
 @push('scripts')
 <script>
 $(document).ready(function() {
-    // Info member
-    $('#member_id').on('change', function() {
-        var option = $(this).find(':selected');
-        if (option.val()) {
-            var saldo = parseInt(option.data('saldo')) || 0;
-            $('#infoSaldo').text('Rp ' + saldo.toLocaleString('id-ID'));
-            $('#infoPoin').text(option.data('poin') + ' poin');
-            $('#maxTarik').text('Rp ' + saldo.toLocaleString('id-ID'));
-            $('#nominal').attr('max', saldo);
-        } else {
+    // issue #64: cari nasabah via AJAX (endpoint member-cari) —
+    // form tidak lagi merender dropdown semua member aktif.
+    $('#member_id').select2({
+        theme: 'bootstrap',
+        ajax: {
+            url: '{!! ci_route('bank-sampah.ajax.member-cari') !!}',
+            dataType: 'json',
+            delay: 250,
+            data: function (params) { return { q: params.term || '' }; },
+            processResults: function (data) { return { results: data.results }; },
+            cache: true,
+        },
+        placeholder: 'Ketik nama / no. member',
+    });
+
+    // Info member — via AJAX getMember (data-saldo tak ada di mode AJAX)
+    $('#member_id').on('select2:select change', function() {
+        var id = $(this).val();
+        if (! id) {
             $('#infoSaldo').text('-');
             $('#infoPoin').text('-');
             $('#maxTarik').text('Rp 0');
             $('#nominal').removeAttr('max');
+            return;
         }
-    }).trigger('change');
+        $.getJSON('{!! ci_route('bank-sampah.ajax.member') !!}', { id: id }, function(m) {
+            $('#infoSaldo').text('Rp ' + parseInt(m.saldo).toLocaleString('id-ID'));
+            $('#infoPoin').text(m.poin + ' poin');
+            $('#maxTarik').text('Rp ' + parseInt(m.saldo).toLocaleString('id-ID'));
+            $('#nominal').attr('max', m.saldo);
+        });
+    });
 
     // Validasi nominal
     $('#nominal').on('input', function() {
-        var max = parseInt($('#member_id').find(':selected').data('saldo')) || 0;
+        var max = parseInt($('#nominal').attr('max')) || 0;
         var val = parseInt($(this).val()) || 0;
         if (val > max) {
             $(this).val(max);
