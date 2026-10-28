@@ -11,9 +11,9 @@
 
 defined('BASEPATH') || exit('No direct script access allowed');
 
-use Illuminate\Validation\Rule;
 use Modules\BankSampah\Models\KategoriModel;
 use Modules\BankSampah\Models\SampahModel;
+use Modules\BankSampah\Http\Requests\SampahRequest;
 
 class SampahController extends AdminModulController
 {
@@ -78,17 +78,8 @@ class SampahController extends AdminModulController
     public function insert()
     {
         isCan('u');
-        request()->validate([
-            'nama'        => 'required|string|max:150',
-            // BS-034: kategori wajib ada & milik desa aktif — tanpa ini
-            // id ngawur melempar QueryException FK (500) dan id milik
-            // desa lain bisa lolos (referensi lintas desa)
-            'kategori_id' => ['required', Rule::exists('bank_sampah_kategori', 'id')
-                ->where('config_id', identitas('id'))],
-            'satuan'      => 'required|string|max:20',
-            'harga_beli'  => 'required|numeric|min:0',
-            'harga_jual'  => 'nullable|numeric|min:0',
-        ]);
+        $req = SampahRequest::createFrom(request());
+        $req->validate($req->rules());
 
         SampahModel::create([
             'kategori_id' => request('kategori_id'),
@@ -109,15 +100,8 @@ class SampahController extends AdminModulController
         isCan('u');
         $sampah = SampahModel::query()->findOrFail($id);
 
-        request()->validate([
-            'nama'        => 'required|string|max:150',
-            // BS-034: lihat komentar insert()
-            'kategori_id' => ['required', Rule::exists('bank_sampah_kategori', 'id')
-                ->where('config_id', identitas('id'))],
-            'satuan'      => 'required|string|max:20',
-            'harga_beli'  => 'required|numeric|min:0',
-            'harga_jual'  => 'nullable|numeric|min:0',
-        ]);
+        $req = SampahRequest::createFrom(request());
+        $req->validate($req->rules());
 
         $sampah->update([
             'kategori_id' => request('kategori_id'),
