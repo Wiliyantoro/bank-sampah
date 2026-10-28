@@ -23,6 +23,9 @@
   workflow rilis IonCube reusable + CI (#59), `php ^8.4`
 
 ### Bug fix
+- 500 saat simpan nasabah tanpa memilih warga/lokasi: `penduduk_id`/
+  `lokasi_id` kosong dikirim sbg string `''`, MySQL strict menolak
+  (errno 1366) — kini dinormalisasi ke `null` via mutator model (#96)
 - #67: `lokasi_id` kosong → NULL (SQLSTATE 22007)
 - #56: notifikasi warga via mekanisme inti `log_notifikasi_mandiri`
   (library WhatsApp buatan dihapus); kontrak FK `id_user_mandiri` = `id_pend`
