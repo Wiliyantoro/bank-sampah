@@ -28,6 +28,12 @@
   (library WhatsApp buatan dihapus); kontrak FK `id_user_mandiri` = `id_pend`
 - #77: kartu statistik dashboard selalu 0 (nama variabel controller-view)
 - #81: `scopeDesa()` terbuang saat merge — halaman transaksi 500
+- #88: migrasi `add_index_transaksi_periode` idempotent — `up()`/`down()`
+  di-guard `Schema::getIndexes()`; runner migrasi modul terbundel tanpa state
+  tidak lagi memicu errno 1061 pada instalasi yang sudah menerapkan fix #64
+- #89: index duplikat kolom dihapus — `_date`/`_tipe` dari create migration
+  dibuang, `_tanggal`/`_tipe_tanggal` jadi satu-satunya; fresh install tidak
+  lagi membawa 4 index untuk 2 definisi kolom yang sama
 
 ### Performa (#63, #64)
 - N+1 dihapus: prefetch `keyBy` + batch insert + eager loading (#63)
