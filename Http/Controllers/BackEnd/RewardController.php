@@ -114,6 +114,10 @@ class RewardController extends AdminModulController
             if ($e->getMessage() === 'poin_tidak_cukup') {
                 return redirect_with('error', 'Poin tidak mencukupi. Silakan coba lagi.', ci_route('bank-sampah.reward'));
             }
+            // #105: pesan domain status aktif
+            if ($e->getMessage() === 'member_nonaktif') {
+                return redirect_with('error', 'Nasabah berstatus nonaktif. Aktifkan dulu untuk menukar poin.', ci_route('bank-sampah.reward'));
+            }
             return redirect_with('error', 'Gagal menukar poin. Silakan coba lagi.', ci_route('bank-sampah.reward'));
         }
     }
