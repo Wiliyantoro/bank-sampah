@@ -27,6 +27,11 @@ class TukarPoinAction
     public function handle(MemberModel $member, int $poin, string $keterangan): void
     {
         DB::transaction(function () use ($member, $poin, $keterangan) {
+            // #105: nasabah nonaktif tidak boleh menukar poin
+            if (! $member->aktif) {
+                throw new Exception('member_nonaktif');
+            }
+
             if (! $member->tukarPoin($poin)) {
                 throw new Exception('poin_tidak_cukup');
             }

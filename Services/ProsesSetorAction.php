@@ -42,6 +42,11 @@ class ProsesSetorAction
         return DB::transaction(function () use ($memberId, $lokasiId, $items, $keterangan) {
             $member = MemberModel::desa()->findOrFail($memberId);
 
+            // #105: nasabah nonaktif tidak boleh bertransaksi
+            if (! $member->aktif) {
+                throw new Exception('member_nonaktif');
+            }
+
             $total   = 0;
             $details = [];
 
@@ -56,6 +61,11 @@ class ProsesSetorAction
             foreach ($items as $item) {
                 $sampah = $sampahMap->get($item['sampah_id'])
                     ?? throw new Exception('jenis sampah tidak ditemukan');
+
+                // #105: jenis sampah nonaktif tidak boleh ditransaksikan
+                if (! $sampah->aktif) {
+                    throw new Exception('sampah_nonaktif');
+                }
 
                 $subtotal = $item['berat'] * $sampah->harga_beli;
                 $total += $subtotal;

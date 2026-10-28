@@ -35,6 +35,11 @@ class ProsesTarikAction
         return DB::transaction(function () use ($memberId, $nominal, $keterangan) {
             $member = MemberModel::desa()->findOrFail($memberId);
 
+            // #105: nasabah nonaktif tidak boleh bertransaksi
+            if (! $member->aktif) {
+                throw new Exception('member_nonaktif');
+            }
+
             if ($member->saldo < $nominal) {
                 throw new Exception('saldo_tidak_cukup');
             }

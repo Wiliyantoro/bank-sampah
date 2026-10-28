@@ -102,6 +102,15 @@ class TransaksiController extends AdminModulController
         } catch (Exception $e) {
             // BS-014: pesan exception bisa bocorkan SQL/tabel/path — log penuh, UI generik
             Log::error('[BankSampah] prosesSetor gagal', ['exception' => $e]);
+
+            // #105: pesan domain status aktif
+            if ($e->getMessage() === 'member_nonaktif') {
+                return redirect_with('error', 'Nasabah berstatus nonaktif. Aktifkan dulu untuk bertransaksi.', ci_route('bank-sampah.transaksi'));
+            }
+            if ($e->getMessage() === 'sampah_nonaktif') {
+                return redirect_with('error', 'Jenis sampah berstatus nonaktif. Aktifkan dulu untuk bertransaksi.', ci_route('bank-sampah.transaksi'));
+            }
+
             return redirect_with('error', 'Gagal memproses transaksi. Silakan coba lagi.', ci_route('bank-sampah.transaksi'));
         }
 
@@ -150,6 +159,10 @@ class TransaksiController extends AdminModulController
 
             if ($e->getMessage() === 'saldo_tidak_cukup') {
                 return redirect_with('error', 'Saldo tidak mencukupi.', ci_route('bank-sampah.transaksi'));
+            }
+            // #105: pesan domain status aktif
+            if ($e->getMessage() === 'member_nonaktif') {
+                return redirect_with('error', 'Nasabah berstatus nonaktif. Aktifkan dulu untuk bertransaksi.', ci_route('bank-sampah.transaksi'));
             }
 
             return redirect_with('error', 'Gagal memproses transaksi. Silakan coba lagi.', ci_route('bank-sampah.transaksi'));
