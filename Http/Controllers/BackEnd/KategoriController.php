@@ -11,8 +11,8 @@
 
 defined('BASEPATH') || exit('No direct script access allowed');
 
-use Illuminate\Validation\Rule;
 use Modules\BankSampah\Models\KategoriModel;
+use Modules\BankSampah\Http\Requests\KategoriRequest;
 
 class KategoriController extends AdminModulController
 {
@@ -73,10 +73,8 @@ class KategoriController extends AdminModulController
     public function insert()
     {
         isCan('u');
-        request()->validate([
-            'nama'       => 'required|string|max:150',
-            'keterangan' => 'nullable|string|max:255',
-        ]);
+        $req = KategoriRequest::createFrom(request());
+        $req->validate($req->rules());
 
         KategoriModel::create([
             'nama'       => request('nama'),
@@ -94,10 +92,8 @@ class KategoriController extends AdminModulController
         isCan('u');
         $kategori = KategoriModel::query()->findOrFail($id);
 
-        request()->validate([
-            'nama'       => 'required|string|max:150',
-            'keterangan' => 'nullable|string|max:255',
-        ]);
+        $req = KategoriRequest::createFrom(request());
+        $req->validate($req->rules());
 
         $kategori->update([
             'nama'       => request('nama'),

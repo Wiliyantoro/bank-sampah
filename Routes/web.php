@@ -56,13 +56,13 @@ Route::group('bank-sampah', ['namespace' => 'BankSampah/BackEnd'], static functi
     Route::post('member/insert', 'MemberController@insert')->name('bank-sampah.member.insert');
     Route::post('member/update/{id?}', 'MemberController@update')->name('bank-sampah.member.update');
     Route::post('member/delete/{id?}', 'MemberController@delete')->name('bank-sampah.member.delete');
-    Route::get('member/detail/{id}', 'MemberController@detail')->name('bank-sampah.member.detail');
-    Route::get('member/kartu/{id}', 'MemberController@cetakKartu')->name('bank-sampah.member.kartu');
+    Route::get('member/detail/{id}', 'MemberInfoController@detail')->name('bank-sampah.member.detail');
+    Route::get('member/kartu/{id}', 'MemberInfoController@cetakKartu')->name('bank-sampah.member.kartu');
 
     // Aksi admin atas akun warga (D-001: pindah dari controller publik warga)
-    Route::post('member/reset-uuid/{id}', 'MemberController@resetUuid')->name('bank-sampah.member.reset-uuid');
-    Route::post('member/set-pin/{id}', 'MemberController@setPin')->name('bank-sampah.member.set-pin');
-    Route::post('member/share-link/{id}', 'MemberController@shareLink')->name('bank-sampah.member.share-link');
+    Route::post('member/reset-uuid/{id}', 'MemberAkunController@resetUuid')->name('bank-sampah.member.reset-uuid');
+    Route::post('member/set-pin/{id}', 'MemberAkunController@setPin')->name('bank-sampah.member.set-pin');
+    Route::post('member/share-link/{id}', 'MemberAkunController@shareLink')->name('bank-sampah.member.share-link');
 
     // Transaksi Setor / Tarik
     Route::get('transaksi', 'TransaksiController@index')->name('bank-sampah.transaksi.index');
@@ -78,8 +78,8 @@ Route::group('bank-sampah', ['namespace' => 'BankSampah/BackEnd'], static functi
     Route::get('ajax/member', 'TransaksiController@getMember')->name('bank-sampah.ajax.member');
     Route::get('ajax/member-cari', 'TransaksiController@cariMember')->name('bank-sampah.ajax.member-cari');
     Route::get('ajax/sampah', 'TransaksiController@getSampah')->name('bank-sampah.ajax.sampah');
-    Route::get('ajax/penduduk', 'MemberController@ajaxPenduduk')->name('bank-sampah.ajax.penduduk');
-    Route::get('ajax/penduduk/{id}', 'MemberController@ajaxPendudukDetail')->name('bank-sampah.ajax.penduduk.detail');
+    Route::get('ajax/penduduk', 'MemberAjaxController@ajaxPenduduk')->name('bank-sampah.ajax.penduduk');
+    Route::get('ajax/penduduk/{id}', 'MemberAjaxController@ajaxPendudukDetail')->name('bank-sampah.ajax.penduduk.detail');
 
     // Lokasi (TPS)
     Route::get('lokasi', 'LokasiController@index')->name('bank-sampah.lokasi.index');
