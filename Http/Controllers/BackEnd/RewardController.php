@@ -92,7 +92,7 @@ class RewardController extends AdminModulController
         $minimal = (int) (setting('bank_sampah_minimal_poin_tukar') ?: 100);
 
         if ($member->poin < $req->input('poin')) {
-            return redirect_with('error', 'Poin tidak mencukupi. Poin saat ini: ' . $member->poin);
+            return redirect_with('error', 'Poin tidak mencukupi. Poin saat ini: ' . $member->poin, ci_route('bank-sampah.reward'));
         }
 
         if ((int) $req->input('poin') < $minimal) {
@@ -106,7 +106,7 @@ class RewardController extends AdminModulController
             Cache::forget("banksampah_dash_{$configId}_" . date('Ym'));
             Cache::forget("banksampah_dash_grafik_{$configId}");
 
-            return redirect_with('success', 'Berhasil menukar ' . $req->input('poin') . ' poin untuk ' . $member->nama);
+            return redirect_with('success', 'Berhasil menukar ' . $req->input('poin') . ' poin untuk ' . $member->nama, ci_route('bank-sampah.reward'));
         } catch (Exception $e) {
             // BS-014: pesan exception bisa bocorkan SQL/tabel/path — log penuh, UI generik
             Log::error('[BankSampah] prosesTukar gagal', ['exception' => $e]);
