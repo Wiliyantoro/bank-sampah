@@ -10,7 +10,7 @@
 @extends('admin.layouts.index')
 
 @section('title')
-    <h1><i class="fa fa-users"></i> Nasabah / Member</h1>
+    <h1>Nasabah / Member</h1>
 @endsection
 
 @section('breadcrumb')
@@ -23,7 +23,7 @@
     <div class="box box-info">
         <div class="box-header with-border">
             @if (can('u'))
-                <a href="{{ url('bank-sampah/member/form') }}" class="btn btn-social btn-success btn-sm"><i class="fa fa-plus"></i> Tambah Nasabah</a>
+                <a href="{{ url('bank-sampah/member/form') }}" class="btn btn-social btn-info btn-sm"><i class="fa fa-plus"></i> Tambah Nasabah</a>
             @endif
         </div>
         <div class="box-body">

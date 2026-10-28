@@ -57,7 +57,7 @@
     </button>
 
     <div class="header">
-        <h1>🏦 {{ setting("bank_sampah_nama", "Bank Sampah Desa") }}</h1>
+        <h1>{{ setting("bank_sampah_nama", "Bank Sampah Desa") }}</h1>
         <p>{{ setting("bank_sampah_alamat", "") }}</p>
         <p>Telp: {{ setting("bank_sampah_no_hp", "-") }}</p>
     </div>

@@ -9,7 +9,7 @@
 
 @section('content')
 <section class="content-header">
-    <h1><i class="fa fa-exchange"></i> Tukar Poin</h1>
+    <h1>Tukar Poin</h1>
 </section>
 
 <section class="content">
@@ -78,7 +78,7 @@
                     <a href="{{ url('bank-sampah/reward') }}" class="btn btn-default">
                         <i class="fa fa-arrow-left"></i> Kembali
                     </a>
-                    <button type="submit" class="btn btn-warning btn-lg pull-right">
+                    <button type="submit" class="btn btn-social btn-info btn-sm pull-right">
                         <i class="fa fa-check"></i> Tukar Poin
                     </button>
                 </div>

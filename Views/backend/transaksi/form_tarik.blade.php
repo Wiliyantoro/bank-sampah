@@ -9,7 +9,7 @@
 
 @section('content')
 <section class="content-header">
-    <h1><i class="fa fa-minus-circle text-danger"></i> Tarik Saldo</h1>
+    <h1>Tarik Saldo</h1>
 </section>
 
 <section class="content">
@@ -89,7 +89,7 @@
                     <a href="{{ url('bank-sampah/transaksi') }}" class="btn btn-default">
                         <i class="fa fa-arrow-left"></i> Kembali
                     </a>
-                    <button type="submit" class="btn btn-danger btn-lg pull-right" id="btnProses">
+                    <button type="submit" class="btn btn-social btn-info btn-sm pull-right" id="btnProses">
                         <i class="fa fa-check"></i> Proses Penarikan
                     </button>
                 </div>

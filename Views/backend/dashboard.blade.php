@@ -125,10 +125,10 @@
                 </div>
                 <div class="box-body">
                     <a href="{{ url('bank-sampah/transaksi/setor') }}" class="btn btn-success btn-block">
-                        <i class="fa fa-plus"></i> Setor Sampah
+                        <i class="fa fa-plus-circle"></i> Setor Sampah
                     </a>
                     <a href="{{ url('bank-sampah/transaksi/tarik') }}" class="btn btn-danger btn-block">
-                        <i class="fa fa-minus"></i> Tarik Saldo
+                        <i class="fa fa-minus-circle"></i> Tarik Saldo
                     </a>
                     <a href="{{ url('bank-sampah/member/form') }}" class="btn btn-primary btn-block">
                         <i class="fa fa-user-plus"></i> Tambah Nasabah

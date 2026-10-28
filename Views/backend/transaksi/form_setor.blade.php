@@ -9,7 +9,7 @@
 
 @section('content')
 <section class="content-header">
-    <h1><i class="fa fa-plus-circle text-success"></i> Setor Sampah</h1>
+    <h1>Setor Sampah</h1>
 </section>
 
 <section class="content">
@@ -134,7 +134,7 @@
                     <a href="{{ url('bank-sampah/transaksi') }}" class="btn btn-default">
                         <i class="fa fa-arrow-left"></i> Kembali
                     </a>
-                    <button type="submit" class="btn btn-success btn-lg pull-right" id="btnProses">
+                    <button type="submit" class="btn btn-social btn-info btn-sm pull-right" id="btnProses">
                         <i class="fa fa-check"></i> Proses Setor
                     </button>
                 </div>

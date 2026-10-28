@@ -10,7 +10,7 @@
 @extends('admin.layouts.index')
 
 @section('title')
-    <h1><i class="fa fa-exchange"></i> Setor / Tarik Saldo</h1>
+    <h1>Setor / Tarik Saldo</h1>
 @endsection
 
 @section('breadcrumb')
@@ -23,7 +23,7 @@
     <div class="box box-info">
         <div class="box-header with-border">
             @if (can('u'))
-                <a href="{{ url('bank-sampah/transaksi/setor') }}" class="btn btn-social btn-success btn-sm"><i class="fa fa-plus-circle"></i> Setor Sampah</a>
+                <a href="{{ url('bank-sampah/transaksi/setor') }}" class="btn btn-social btn-info btn-sm"><i class="fa fa-plus-circle"></i> Setor Sampah</a>
                 <a href="{{ url('bank-sampah/transaksi/tarik') }}" class="btn btn-social btn-danger btn-sm"><i class="fa fa-minus-circle"></i> Tarik Saldo</a>
             @endif
         </div>
