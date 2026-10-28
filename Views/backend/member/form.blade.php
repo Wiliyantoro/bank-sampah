@@ -129,7 +129,7 @@
                                 <div class="form-group">
                                     <label for="no_hp">No HP</label>
                                     <input type="text" class="form-control" id="no_hp" name="no_hp"
-                                        value="{{ old('no_hp', $member->no_hp ?? '') }}"
+                                        value="{{ old('no_hp', $noHpAwal ?? $member->no_hp ?? '') }}"
                                         placeholder="08xxxxxxxxxx">
                                     <small class="text-muted">Kontak nasabah</small>
                                 </div>

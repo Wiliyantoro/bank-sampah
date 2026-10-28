@@ -69,6 +69,19 @@ class MemberModel extends BaseModel
                 $member->uuid = Str::uuid()->toString();
             }
         });
+
+        // #103: nomor HP nasabah = satu sumber dengan data penduduk —
+        // bila terhubung penduduk dan no_hp diisi, simpan juga ke
+        // tweb_penduduk.telepon (tercakup semua jalur tulis).
+        static::saved(function (MemberModel $member) {
+            if ($member->penduduk_id && filled($member->no_hp)) {
+                DB::table('tweb_penduduk')
+                    // BS-015/BS-036: hanya penduduk desa aktif
+                    ->where('config_id', $member->config_id)
+                    ->where('id', $member->penduduk_id)
+                    ->update(['telepon' => $member->no_hp]);
+            }
+        });
     }
 
     /**

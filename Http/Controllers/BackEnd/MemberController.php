@@ -11,6 +11,7 @@
 
 defined('BASEPATH') || exit('No direct script access allowed');
 
+use Illuminate\Support\Facades\DB;
 use Modules\BankSampah\Models\LokasiModel;
 use Modules\BankSampah\Models\MemberModel;
 use Modules\BankSampah\Models\TransaksiModel;
@@ -71,10 +72,21 @@ class MemberController extends AdminModulController
         $noMember  = $member ? $member->no_member : MemberModel::generateNoMember($prefix);
         $lokasiList = LokasiModel::query()->aktif()->orderBy('nama')->get();
 
+        // #103: No HP ambil dari data penduduk bila terhubung
+        $noHpAwal = null;
+        if ($member && $member->penduduk_id) {
+            $telepon = DB::table('tweb_penduduk')
+                ->where('config_id', identitas('id'))
+                ->where('id', $member->penduduk_id)
+                ->value('telepon');
+            $noHpAwal = $telepon ?: $member->no_hp;
+        }
+
         return view('banksampah::backend.member.form', [
             'member'      => $member,
             'noMember'    => $noMember,
             'lokasiList'  => $lokasiList,
+            'noHpAwal'    => $noHpAwal,
             'form_action' => $id
                 ? ci_route('bank-sampah.member.update', $id)
                 : ci_route('bank-sampah.member.insert'),
