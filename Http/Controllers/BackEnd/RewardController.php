@@ -83,6 +83,7 @@ class RewardController extends AdminModulController
      */
     public function prosesTukar($memberId)
     {
+        isCan('u');
         // issue #65: validasi via FormRequest; logic bisnis via Service/Action
         $req = TukarPoinRequest::createFrom(request());
         $req->validate($req->rules(), $req->messages());

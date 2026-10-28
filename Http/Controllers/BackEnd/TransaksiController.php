@@ -86,6 +86,7 @@ class TransaksiController extends AdminModulController
      */
     public function prosesSetor()
     {
+        isCan('u');
         // issue #65: validasi via FormRequest; logic bisnis via Service/Action
         $req = SetorRequest::createFrom(request());
         $req->validate($req->rules(), $req->messages());
@@ -135,6 +136,7 @@ class TransaksiController extends AdminModulController
      */
     public function prosesTarik()
     {
+        isCan('u');
         // issue #65: validasi via FormRequest; logic bisnis via Service/Action
         $req = TarikRequest::createFrom(request());
         $req->validate($req->rules(), $req->messages());

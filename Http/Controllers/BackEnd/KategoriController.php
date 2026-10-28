@@ -72,6 +72,7 @@ class KategoriController extends AdminModulController
 
     public function insert()
     {
+        isCan('u');
         request()->validate([
             'nama'       => 'required|string|max:150',
             'keterangan' => 'nullable|string|max:255',
@@ -90,6 +91,7 @@ class KategoriController extends AdminModulController
 
     public function update($id = null)
     {
+        isCan('u');
         $kategori = KategoriModel::query()->findOrFail($id);
 
         request()->validate([
@@ -109,6 +111,7 @@ class KategoriController extends AdminModulController
 
     public function delete($id = null): void
     {
+        isCan('d');
         $kategori = KategoriModel::query()->findOrFail($id);
 
         // Data bawaan sistem tidak boleh dihapus
