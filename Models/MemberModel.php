@@ -44,6 +44,22 @@ class MemberModel extends BaseModel
     ];
 
     /**
+     * BS-041 (#96): hidden input kosong di form terkirim sbg string `''`,
+     * MySQL strict menolak `''` utk kolom integer nullable (errno 1366 /
+     * SQLSTATE 22007 → 500 saat simpan nasabah tanpa warga/lokasi).
+     * Normalisasi di model supaya semua sumber data (insert/update) aman.
+     */
+    public function setPendudukIdAttribute($value): void
+    {
+        $this->attributes['penduduk_id'] = ($value === '' || $value === null) ? null : (int) $value;
+    }
+
+    public function setLokasiIdAttribute($value): void
+    {
+        $this->attributes['lokasi_id'] = ($value === '' || $value === null) ? null : (int) $value;
+    }
+
+    /**
      * Auto-generate UUID on creation
      */
     protected static function booted(): void
