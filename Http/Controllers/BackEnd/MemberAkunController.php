@@ -12,6 +12,7 @@
 defined('BASEPATH') || exit('No direct script access allowed');
 
 use Illuminate\Support\Facades\DB;
+use Modules\BankSampah\Http\Requests\SetPinRequest;
 use Modules\BankSampah\Services\SecurityManager;
 use Modules\BankSampah\Models\MemberModel;
 
