@@ -23,6 +23,14 @@
   workflow rilis IonCube reusable + CI (#59), `php ^8.4`
 
 ### Bug fix
+- Set PIN warga = satu dengan Layanan Mandiri inti: PIN (bcrypt)
+  disimpan di `tweb_penduduk_mandiri` — akun mandiri dibuat otomatis
+  bila belum ada; sebelumnya menulis kolom `tweb_penduduk.pin` yang
+  tidak ada di inti v2610.1.0 (#100)
+- Regresi #95: import `SetPinRequest` hilang saat pemecahan
+  `MemberController` → 500 setiap Set PIN (#98)
+- 404 setelah tukar poin sukses: `redirect_with` tanpa URL menghasilkan
+  URL bertitik dari aliasController — kini selalu kirim URL eksplisit (#99)
 - 500 saat simpan nasabah tanpa memilih warga/lokasi: `penduduk_id`/
   `lokasi_id` kosong dikirim sbg string `''`, MySQL strict menolak
   (errno 1366) — kini dinormalisasi ke `null` via mutator model (#96)
