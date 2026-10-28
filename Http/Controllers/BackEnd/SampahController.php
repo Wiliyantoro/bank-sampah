@@ -77,6 +77,7 @@ class SampahController extends AdminModulController
 
     public function insert()
     {
+        isCan('u');
         request()->validate([
             'nama'        => 'required|string|max:150',
             // BS-034: kategori wajib ada & milik desa aktif — tanpa ini
@@ -105,6 +106,7 @@ class SampahController extends AdminModulController
 
     public function update($id = null)
     {
+        isCan('u');
         $sampah = SampahModel::query()->findOrFail($id);
 
         request()->validate([
@@ -132,6 +134,7 @@ class SampahController extends AdminModulController
 
     public function delete($id = null): void
     {
+        isCan('d');
         $sampah = SampahModel::query()->findOrFail($id);
 
         // Data bawaan sistem tidak boleh dihapus

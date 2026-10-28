@@ -71,6 +71,7 @@ class LokasiController extends AdminModulController
 
     public function insert()
     {
+        isCan('u');
         $configId = identitas('id');
 
         request()->validate([
@@ -99,6 +100,7 @@ class LokasiController extends AdminModulController
 
     public function update($id = null)
     {
+        isCan('u');
         $lokasi   = LokasiModel::query()->findOrFail($id);
         $configId = identitas('id');
 
@@ -125,6 +127,7 @@ class LokasiController extends AdminModulController
 
     public function delete($id = null): void
     {
+        isCan('d');
         $lokasi = LokasiModel::query()->findOrFail($id);
 
         if ($lokasi->isDefault()) {
