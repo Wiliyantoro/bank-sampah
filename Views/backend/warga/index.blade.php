@@ -49,7 +49,7 @@
 </head>
 <body>
     <div class="header">
-        <h1>🏦 {{ setting("bank_sampah_nama", "Bank Sampah Desa") }}</h1>
+        <h1>{{ setting("bank_sampah_nama", "Bank Sampah Desa") }}</h1>
         <p>Dashboard Nasabah</p>
     </div>
 

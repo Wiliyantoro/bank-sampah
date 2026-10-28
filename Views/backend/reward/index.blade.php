@@ -10,7 +10,7 @@
 @extends('admin.layouts.index')
 
 @section('title')
-    <h1><i class="fa fa-gift"></i> Reward & Poin</h1>
+    <h1>Reward & Poin</h1>
 @endsection
 
 @section('breadcrumb')

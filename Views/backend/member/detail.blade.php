@@ -10,7 +10,7 @@
 @section('content')
     @include('admin.layouts.components.notifikasi')
 <section class="content-header">
-    <h1><i class="fa fa-user"></i> Detail Nasabah</h1>
+    <h1>Detail Nasabah</h1>
 </section>
 
 <section class="content">

@@ -10,7 +10,7 @@
 @extends('admin.layouts.index')
 
 @section('title')
-    <h1><i class="fa fa-history"></i> Riwayat Poin - {{ $member->nama }}</h1>
+    <h1>Riwayat Poin - {{ $member->nama }}</h1>
 @endsection
 
 @section('breadcrumb')

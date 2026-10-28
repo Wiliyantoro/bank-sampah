@@ -9,7 +9,7 @@
 
 @section('content')
 <section class="content-header">
-    <h1><i class="fa fa-file-text-o"></i> Detail Transaksi</h1>
+    <h1>Detail Transaksi</h1>
 </section>
 
 <section class="content">
