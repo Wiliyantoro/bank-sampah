@@ -31,6 +31,9 @@
   `MemberController` → 500 setiap Set PIN (#98)
 - 404 setelah tukar poin sukses: `redirect_with` tanpa URL menghasilkan
   URL bertitik dari aliasController — kini selalu kirim URL eksplisit (#99)
+- No HP nasabah satu sumber dengan data penduduk: form mengambil
+  dari `tweb_penduduk.telepon` bila terhubung; No HP yang diisi
+  disimpan balik ke data penduduk (#103)
 - 500 saat simpan nasabah tanpa memilih warga/lokasi: `penduduk_id`/
   `lokasi_id` kosong dikirim sbg string `''`, MySQL strict menolak
   (errno 1366) — kini dinormalisasi ke `null` via mutator model (#96)
