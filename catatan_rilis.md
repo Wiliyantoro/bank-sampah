@@ -31,6 +31,8 @@
   `MemberController` → 500 setiap Set PIN (#98)
 - 404 setelah tukar poin sukses: `redirect_with` tanpa URL menghasilkan
   URL bertitik dari aliasController — kini selalu kirim URL eksplisit (#99)
+- Guard status aktif di semua transaksi: nasabah/jenis sampah
+  nonaktif kini ditolak dgn pesan jelas (setor, tarik, tukar poin) (#105)
 - No HP nasabah satu sumber dengan data penduduk: form mengambil
   dari `tweb_penduduk.telepon` bila terhubung; No HP yang diisi
   disimpan balik ke data penduduk (#103)
