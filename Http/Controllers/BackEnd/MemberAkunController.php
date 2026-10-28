@@ -57,8 +57,12 @@ class MemberAkunController extends AdminModulController
     }
 
     /**
-     * Set PIN Layanan Mandiri warga (D-001: PIN milik sesi inti, disimpan
-     * pada tweb_penduduk.pin — bukan kolom pin tabel member).
+     * Set PIN Layanan Mandiri warga — PIN jadi satu dengan Layanan Mandiri
+     * inti (D-001): disimpan di `tweb_penduduk_mandiri.pin` (bcrypt),
+     * satu row per penduduk per desa.
+     *
+     * #100: sebelumnya menulis `tweb_penduduk.pin` — kolom ini TIDAK ADA
+     * di inti v2610.1.0 → pasti 500 (errno 1054).
      */
     public function setPin($id)
     {
@@ -80,18 +84,39 @@ class MemberAkunController extends AdminModulController
             return redirect_with('error', 'PIN terlalu umum. Gunakan kombinasi angka yang lebih unik.', ci_route('bank-sampah.member'));
         }
 
-        DB::table('tweb_penduduk')
-            // BS-015/BS-036: hanya penduduk desa aktif
-            ->where('config_id', identitas('id'))
-            ->where('id', $member->penduduk_id)
-            ->update(['pin' => $pin]);
+        $hash = password_hash($pin, PASSWORD_BCRYPT);
+        $configId = identitas('id');
+
+        $mandiri = DB::table('tweb_penduduk_mandiri')
+            // BS-015/BS-036: hanya penduduk desa aktif yang bersangkutan
+            ->where('config_id', $configId)
+            ->where('id_pend', $member->penduduk_id)
+            ->first();
+
+        if ($mandiri) {
+            // Akun mandiri sudah ada → ganti PIN-nya saja
+            DB::table('tweb_penduduk_mandiri')
+                ->where('id', $mandiri->id)
+                ->update(['pin' => $hash, 'updated_at' => now()]);
+        } else {
+            // Belum punya akun mandiri → buatkan, langsung aktif
+            DB::table('tweb_penduduk_mandiri')->insert([
+                'config_id'    => $configId,
+                'id_pend'      => $member->penduduk_id,
+                'pin'          => $hash,
+                'aktif'        => 1,
+                'ganti_pin'    => 0,
+                'tanggal_buat' => now(),
+                'updated_at'   => now(),
+            ]);
+        }
 
         $security->logEvent('pin_changed', [
             'member_id' => $id,
             'admin_id'  => auth()->id(),
         ]);
 
-        return redirect_with('success', 'PIN berhasil diatur.', ci_route('bank-sampah.member'));
+        return redirect_with('success', 'PIN Layanan Mandiri berhasil diatur. Warga dapat login dengan NIK + PIN ini.', ci_route('bank-sampah.member'));
     }
 
     /**
