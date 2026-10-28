@@ -45,6 +45,17 @@
 - Controller ramping: FormRequest (`Http/Requests/`) + Actions
   (`Services/ProsesSetorAction`, `ProsesTarikAction`, `TukarPoinAction`,
   `LaporanBankSampah`), `Libraries/` → `Services/` (#65)
+- Validasi inline dihapus menyeluruh: 5 FormRequest baru (`KategoriRequest`,
+  `SampahRequest`, `LokasiRequest`, `MemberRequest`, `SetPinRequest`) (#92)
+- `MemberController` 363 → 139 baris: pecah jadi `MemberAkunController`
+  (aksi akun warga D-001), `MemberAjaxController` (autocomplete penduduk),
+  `MemberInfoController` (detail + kartu); helper cetak pindah ke
+  `Services/IdentitasBankSampah`; nama route tidak berubah (#92)
+- Otorisasi per-method: `isCan('u')` di 11 aksi tulis, `isCan('d')` di 4
+  aksi hapus — sebelumnya cukup `isCan('b')` di constructor sehingga
+  admin ber-hak baca bisa mengubah data (#92)
+- Konsistensi views pakem modul inti: judul `<h1>` tanpa icon/emoji,
+  toolbar `btn-social btn-info`, kamus icon baku (D-003) (#91)
 
 ### Test (#60)
 - 3 feature test (`KategoriHttpTest`, `TransaksiSetorHttpTest`, `MemberHttpTest`)
