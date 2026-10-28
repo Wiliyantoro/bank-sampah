@@ -37,6 +37,17 @@ return new class extends Migration
             if (! $indexes->contains('idx_transaksi_config_tipe_tanggal')) {
                 $table->index(['config_id', 'tipe', 'created_at'], 'idx_transaksi_config_tipe_tanggal');
             }
+
+            // #89: create migration (2026_08_29_000001) sudah membuat index
+            // identik dengan nama lain (_date/_tipe) — tanpa ini fresh install
+            // membawa 4 index untuk 2 definisi kolom yang sama (overhead tulis
+            // dua kali). Nama _tanggal/_tipe_tanggal dijadikan satu-satunya.
+            if ($indexes->contains('idx_transaksi_config_date')) {
+                $table->dropIndex('idx_transaksi_config_date');
+            }
+            if ($indexes->contains('idx_transaksi_config_tipe')) {
+                $table->dropIndex('idx_transaksi_config_tipe');
+            }
         });
     }
 
@@ -52,6 +63,15 @@ return new class extends Migration
             }
             if ($indexes->contains('idx_transaksi_config_tipe_tanggal')) {
                 $table->dropIndex('idx_transaksi_config_tipe_tanggal');
+            }
+
+            // #89: balikin index _date/_tipe milik create migration agar
+            // down() konsisten dengan skema pra-migrasi.
+            if (! $indexes->contains('idx_transaksi_config_date')) {
+                $table->index(['config_id', 'created_at'], 'idx_transaksi_config_date');
+            }
+            if (! $indexes->contains('idx_transaksi_config_tipe')) {
+                $table->index(['config_id', 'tipe', 'created_at'], 'idx_transaksi_config_tipe');
             }
         });
     }
